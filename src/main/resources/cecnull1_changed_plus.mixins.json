@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.github.cecnull1.cecnull1_changed_plus.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "cecnull1_changed_plus.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
