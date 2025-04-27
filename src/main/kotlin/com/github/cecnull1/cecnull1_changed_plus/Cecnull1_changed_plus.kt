@@ -5,9 +5,13 @@ import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.A_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus.entity.modEventBus
 import com.github.cecnull1.cecnull1_changed_plus.modules.AEntityModel
+import com.github.cecnull1.cecnull1_changed_plus.renderer.AEntityRenderer
 import net.ltxprogrammer.changed.entity.ChangedEntity
+import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraftforge.api.distmarker.Dist
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions
+import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod
@@ -41,10 +45,23 @@ object Events {
                 .build()
         )
     }
+}
 
+@EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = [Dist.CLIENT])
+object ClientEvents {
     @JvmStatic
     @SubscribeEvent
     fun registerLayerDefinitions(event: RegisterLayerDefinitions) {
         event.registerLayerDefinition(AEntityModel.LAYER_LOCATION, AEntityModel::createBodyLayer)
+    }
+
+    @JvmStatic
+    @SubscribeEvent
+    fun registerEntityRenderers(event: RegisterRenderers) {
+        event.registerEntityRenderer(
+            A_ENTITY.get()
+        ) { context: EntityRendererProvider.Context ->
+            AEntityRenderer(context)
+        }
     }
 }
