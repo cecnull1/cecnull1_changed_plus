@@ -18,7 +18,7 @@ public class AEntityRenderer extends AdvancedHumanoidRenderer<AEntity, AEntityMo
     private static final ResourceLocation TEXTURE = new ResourceLocation(Cecnull1_changed_plusKt.MODID, "textures/entities/a_entity.png");
 
     public AEntityRenderer(EntityRendererProvider.Context context) {
-        super(context, new AEntityModel(context.bakeLayer(AEntityModel.LAYER_LOCATION)), ArmorLatexMaleWolfModel.MODEL_SET, 0.5f);
+        super(context, new AEntityModel(context.bakeLayer(AEntityModel.Companion.getLAYER_LOCATION())), ArmorLatexMaleWolfModel.MODEL_SET, 0.5f);
         this.addLayer(new LatexParticlesLayer<>(this, getModel(), model::isPartNotMask));
         this.addLayer(TransfurCapeLayer.normalCape(this, context.getModelSet()));
         this.addLayer(CustomEyesLayer.builder(this, context.getModelSet())
