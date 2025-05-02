@@ -1,6 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus.renderer
 
-import com.github.cecnull1.cecnull1_changed_plus.MODID
+import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus.entity.AEntity
 import com.github.cecnull1.cecnull1_changed_plus.modules.AEntityModel
 import com.github.cecnull1.cecnull1_changed_plus.modules.AEntityModel.Companion.LAYER_LOCATION

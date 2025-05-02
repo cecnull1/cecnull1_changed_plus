@@ -171,6 +171,7 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     implementation fg.deobf(files('libs/Changed-m1.18.2-v0.14.1.jar'))
     implementation fg.deobf(files('libs/EnigmaticLegacy-2.25.0.jar'))
+    implementation fg.deobf(files('libs/cecnull1lib-1.0.jar'))
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
 }
 

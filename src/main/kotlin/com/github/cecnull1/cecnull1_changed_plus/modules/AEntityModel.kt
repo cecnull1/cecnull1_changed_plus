@@ -1,6 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus.modules
 
-import com.github.cecnull1.cecnull1_changed_plus.MODID
+import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus.entity.AEntity
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.A_ENTITY_ID
 import com.mojang.blaze3d.vertex.PoseStack
