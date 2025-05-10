@@ -81,7 +81,7 @@ class AEntityModel(root: ModelPart) : AdvancedHumanoidModel<AEntity>(root),
     }
 
     fun isPartNotMask(part: ModelPart): Boolean {
-        return Mask.allParts.noneMatch { obj: ModelPart? -> part.equals(obj) }
+        return Mask.allParts.noneMatch { obj: ModelPart? -> part == obj }
     }
 
     override fun prepareMobModel(p_102861_: AEntity, p_102862_: Float, p_102863_: Float, p_102864_: Float) {

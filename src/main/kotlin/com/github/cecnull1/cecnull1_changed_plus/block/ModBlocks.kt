@@ -20,8 +20,8 @@ import net.minecraftforge.registries.RegistryObject
 object ModBlocks {
     const val A_BLOCK_ID = "a_block"
 
-    val REGISTRY: DeferredRegister<Block> = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID)
-    val A_BLOCK: RegistryObject<ABlock> = REGISTRY.register(A_BLOCK_ID) { ABlock() }
+    val REGISTER: DeferredRegister<Block> = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID)
+    val A_BLOCK: RegistryObject<ABlock> = REGISTER.register(A_BLOCK_ID) { ABlock() }
 }
 
 class ABlock : ChangedBlock(Properties.of(Material.WATER)) {
@@ -36,7 +36,7 @@ class ABlock : ChangedBlock(Properties.of(Material.WATER)) {
         ProcessTransfur.transfur(
             p_60498_ as? LivingEntity ?: return,
             p_60496_,
-            ModTransfurVariant.A_ENTITY_TRANSFURVARIANT.get(),
+            ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT.get(),
             true,
             TransfurContext.hazard(TransfurCause.WHITE_LATEX))
     }
