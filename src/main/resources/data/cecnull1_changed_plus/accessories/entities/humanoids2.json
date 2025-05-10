@@ -1,0 +1,9 @@
+{
+  "entities": [
+    "cecnull1_changed_plus:a_entity"
+  ],
+  "slots": [
+    "changed:body",
+    "changed:legs"
+  ]
+}
