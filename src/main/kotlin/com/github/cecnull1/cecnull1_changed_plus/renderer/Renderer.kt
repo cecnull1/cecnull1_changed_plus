@@ -2,9 +2,11 @@ package com.github.cecnull1.cecnull1_changed_plus.renderer
 
 import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus.entity.AEntity
+import com.github.cecnull1.cecnull1_changed_plus.entity.Soul
 import com.github.cecnull1.cecnull1_changed_plus.entity.Zombie
 import com.github.cecnull1.cecnull1_changed_plus.modules.AEntityModel
 import com.github.cecnull1.cecnull1_changed_plus.modules.AEntityModel.Companion.LAYER_LOCATION
+import com.github.cecnull1.cecnull1_changed_plus.modules.SoulModel
 import com.github.cecnull1.cecnull1_changed_plus.modules.ZombieModel
 import net.ltxprogrammer.changed.client.renderer.AdvancedHumanoidRenderer
 import net.ltxprogrammer.changed.client.renderer.layers.CustomEyesLayer
@@ -65,3 +67,15 @@ class ZombieRenderer(context: EntityRendererProvider.Context) :
         private val TEXTURE = ResourceLocation(MODID, "textures/entities/zombie.png")
     }
     }
+
+class SoulRenderer(context:  EntityRendererProvider.Context): AdvancedHumanoidRenderer<Soul, SoulModel, ArmorHumanModel<Soul>>(
+    context, SoulModel(context.bakeLayer(LAYER_LOCATION)), ArmorHumanModel.MODEL_SET, 0.5f
+) {
+    override fun getTextureLocation(entity: Soul): ResourceLocation {
+        return TEXTURE
+    }
+
+    companion object {
+        private val TEXTURE = ResourceLocation(MODID, "textures/entities/soul.png")
+    }
+}

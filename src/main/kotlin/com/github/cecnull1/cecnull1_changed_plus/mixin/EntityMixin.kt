@@ -1,5 +1,8 @@
 package com.github.cecnull1.cecnull1_changed_plus.mixin
 
+import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
+import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.NBTKeys
+import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -23,4 +26,17 @@ open class ExoskeletonMixin { // 注意这里的 open 关键字
 }
 
 @Mixin(LivingEntity::class)
-open class LivingEntityMixin
+open class LivingEntityMixin {
+    @Inject(
+        method = ["m_21255_"],
+        at = [At("HEAD")],
+        cancellable = true
+    )
+    open fun isFallFlying(callback: CallbackInfoReturnable<Boolean>) {
+        val livingEntity = this as Any as LivingEntity
+        if (livingEntity.getModData(MODID).getBoolean(NBTKeys.FLYING)) {
+            callback.returnValue = true
+            callback.cancel()
+        }
+    }
+}
