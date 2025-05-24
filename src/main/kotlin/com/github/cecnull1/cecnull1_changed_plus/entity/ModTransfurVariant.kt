@@ -3,6 +3,7 @@ package com.github.cecnull1.cecnull1_changed_plus.entity
 import com.github.cecnull1.cecnull1_changed_plus.SOUL_USE_ITEM_MODE
 import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.A_ENTITY_ID
+import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.CPLAYER_ID
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.SOUL_ID
 import net.ltxprogrammer.changed.entity.LatexType
 import net.ltxprogrammer.changed.entity.TransfurMode
@@ -35,6 +36,12 @@ object ModTransfurVariant {
             .breatheMode(TransfurVariant.BreatheMode.NONE)
             .transfurMode(TransfurMode.NONE)
             .itemUseMode(SOUL_USE_ITEM_MODE)
+            .build()
+    }
+
+    val C_PLAYER_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<CPlayer>> = REGISTRY.register("form_$CPLAYER_ID") {
+        TransfurVariant.Builder.of(ModEntities.C_PLAYER)
+            .faction(LatexType.NEUTRAL)
             .build()
     }
 

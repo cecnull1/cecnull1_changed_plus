@@ -5,8 +5,6 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "cecnull1_changed_plus.refmap.json",
   "mixins": [
-    "ExoskeletonMixin",
-    "LivingEntityMixin"
   ],
   "client": [
   ],

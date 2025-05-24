@@ -7,6 +7,7 @@ import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.A_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.A_HORSE
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.CEXOSKELETON
+import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.C_PLAYER
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus.entity.modEventBus
@@ -16,6 +17,7 @@ import com.github.cecnull1.cecnull1_changed_plus.modules.ZombieModel
 import com.github.cecnull1.cecnull1_changed_plus.renderer.SoulRenderer
 import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
 import net.ltxprogrammer.changed.client.renderer.ExoskeletonRenderer
+import net.ltxprogrammer.changed.client.renderer.LatexHumanRenderer
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.UseItemMode
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton
@@ -117,6 +119,11 @@ object ClientEvents {
             SOUL.get()
         ) { context: EntityRendererProvider.Context ->
             SoulRenderer(context)
+        }
+        event.registerEntityRenderer(
+            C_PLAYER.get()
+        ) { context: EntityRendererProvider.Context ->
+            LatexHumanRenderer(context, true)
         }
     }
 }

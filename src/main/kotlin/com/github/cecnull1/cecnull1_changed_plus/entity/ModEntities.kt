@@ -1,6 +1,7 @@
 package com.github.cecnull1.cecnull1_changed_plus.entity
 
 import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
+import com.github.cecnull1.cecnull1_changed_plus.sendAbilitiesUpdate
 import com.github.cecnull1.cecnull1_changed_plus.utils.DismountingAble
 import com.github.cecnull1.cecnull1_changed_plus.utils.MountAble
 import com.github.cecnull1.cecnull1_changed_plus.utils.VariantTickPlusAble
@@ -8,6 +9,7 @@ import net.ltxprogrammer.changed.entity.*
 import net.ltxprogrammer.changed.entity.beast.AquaticEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexYufeng
+import net.ltxprogrammer.changed.entity.beast.LatexHuman
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedMobCategories
@@ -38,6 +40,7 @@ object ModEntities {
     const val ZOMBIE_ID = "zombie"
     const val A_HORSE_ID = "a_horse"
     const val SOUL_ID  = "soul"
+    const val CPLAYER_ID = "cplayer"
 
     val REGISTER: DeferredRegister<EntityType<*>> = DeferredRegister.create(ForgeRegistries.ENTITIES, MODID)
 
@@ -62,6 +65,12 @@ object ModEntities {
         EntityType.Builder.of(::Soul, ChangedMobCategories.CHANGED)
             .sized(0f, 0f)
             .build(SOUL_ID)
+    }
+
+    val C_PLAYER : RegistryObject<EntityType<CPlayer>> = REGISTER.register(CPLAYER_ID) {
+        EntityType.Builder.of(::CPlayer, MobCategory.MISC)
+            .sized(0.7f, 1.8f)
+            .build(CPLAYER_ID)
     }
 
 //    val ZOMBIE: RegistryObject<EntityType<Zombie>> = REGISTER.register(ZOMBIE_ID) {
@@ -111,14 +120,7 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>?, level: Level?) : Dark
     }
 }
 
-open class CExoskeleton(p_21368_: EntityType<out Exoskeleton>?, p_21369_: Level?) : Exoskeleton(p_21368_, p_21369_) {
-    override fun playerTouch(p_20081_: Player) {
-        super.playerTouch(p_20081_)
-        if (this.vehicle == null) {
-            this.startRiding(p_20081_)
-        }
-    }
-}
+open class CExoskeleton(p_21368_: EntityType<out Exoskeleton>?, p_21369_: Level?) : Exoskeleton(p_21368_, p_21369_)
 
 open class Zombie(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level) {
     override fun getLatexType(): LatexType? {
@@ -206,10 +208,17 @@ open class Soul(type: EntityType<out ChangedEntity>, level: Level) : ChangedEnti
         if (!abilities.flying) {
             abilities.flying = true
             player.onUpdateAbilities()
-            if (player is ServerPlayer) {
-                val abilitiesPacket = ClientboundPlayerAbilitiesPacket(abilities)
-                player.connection.send(abilitiesPacket)
-            }
+            if (player is ServerPlayer) player.sendAbilitiesUpdate()
         }
+    }
+}
+
+open class CPlayer(p_19870_: EntityType<out LatexHuman>, p_19871_: Level) : LatexHuman(p_19870_, p_19871_) {
+    override fun getTransfurMode(): TransfurMode? {
+        return TransfurMode.NONE
+    }
+
+    override fun getLatexType(): LatexType? {
+        return LatexType.NEUTRAL
     }
 }
