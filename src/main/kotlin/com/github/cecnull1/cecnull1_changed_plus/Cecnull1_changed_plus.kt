@@ -26,6 +26,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.client.renderer.entity.HorseRenderer
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.animal.horse.Horse
 import net.minecraftforge.api.distmarker.Dist
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinitions
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers
@@ -66,18 +67,17 @@ object Events {
         )
         event.put(
             A_HORSE.get(),
-            LivingEntity.createLivingAttributes()
+            Horse.createBaseHorseAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
                 .add(ForgeMod.SWIM_SPEED.get(), 2.0)
                 .add(Attributes.ATTACK_DAMAGE, 0.0)
-                .add(Attributes.JUMP_STRENGTH, 1.0)
                 .build()
         )
         event.put(
             SOUL.get(),
             ChangedEntity.createLatexAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MAX_HEALTH, 1.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.0)
                 .add(ForgeMod.SWIM_SPEED.get(), 0.0)
                 .add(Attributes.ATTACK_DAMAGE, 0.01)

@@ -5,6 +5,8 @@ import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.NBTKeys.BetterNeon.WFXC
 import com.github.cecnull1.cecnull1_changed_plus.damage.DamageSource.SOUL_ATTACK
 import com.github.cecnull1.cecnull1_changed_plus.damage.SoulAttack
+import com.github.cecnull1.cecnull1_changed_plus.entity.AEntity
+import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus.utils.DismountingAble
 import com.github.cecnull1.cecnull1_changed_plus.utils.MountAble
@@ -15,6 +17,7 @@ import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.google.common.collect.Iterables
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.TransfurContext
+import net.ltxprogrammer.changed.entity.beast.DarkLatexYufeng
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton
 import net.ltxprogrammer.changed.init.ChangedGameRules
 import net.ltxprogrammer.changed.process.ProcessTransfur
@@ -32,6 +35,7 @@ import net.minecraftforge.event.TickEvent.PlayerTickEvent
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.LivingAttackEvent
 import net.minecraftforge.event.entity.living.LivingDeathEvent
+import net.minecraftforge.event.entity.living.LivingEvent
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
@@ -75,6 +79,19 @@ object Event {
                 player.health = 0.0f
                 if (player is ServerPlayer) player.sendHealthUpdate()
             }
+        }
+    }
+
+    @JvmStatic
+    @SubscribeEvent
+    fun onLivingTick(event: LivingEvent.LivingUpdateEvent) {
+        if (event.entity::class == DarkLatexYufeng::class) {
+            val aEntity = AEntity(ModEntities.A_ENTITY.get(), event.entity.level)
+            aEntity.setPos(event.entity.position())
+            aEntity.yRot = event.entity.yRot
+            aEntity.xRot = event.entity.xRot
+            event.entity.level.addFreshEntity(aEntity)
+            event.entity.remove(Entity.RemovalReason.DISCARDED)
         }
     }
 
@@ -157,14 +174,18 @@ object Event {
                         attacker.setPos(livingEntity.x, livingEntity.y, livingEntity.z)
                         attacker.xRot = livingEntity.xRot
                         attacker.yRot = livingEntity.yRot
+                        attacker.health = livingEntity.health
+                        if (livingEntity is Player) {
+                            attacker.foodData.foodLevel = livingEntity.foodData.foodLevel
+                            attacker.foodData.setSaturation(livingEntity.foodData.saturationLevel)
+                        } else {
+                            attacker.foodData.foodLevel = 20
+                            attacker.foodData.setSaturation(20f)
+                        }
                         if (attacker is ServerPlayer) {
                             attacker.sendPositionUpdate()
+                            attacker.sendHealthUpdate()
                         }
-                        // 恢复状态
-                        attacker.health = attacker.maxHealth
-                        attacker.foodData.foodLevel = 20
-                        attacker.foodData.setSaturation(5f)
-
                         // 删除/杀死livingEntity
                         if (livingEntity is Player) livingEntity.hurt(SOUL_ATTACK, Float.POSITIVE_INFINITY)
                         else livingEntity.remove(Entity.RemovalReason.KILLED)

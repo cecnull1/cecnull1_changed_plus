@@ -15,7 +15,6 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedMobCategories
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.ltxprogrammer.changed.util.Color3
-import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EntityType
@@ -33,7 +32,6 @@ import net.minecraftforge.registries.RegistryObject
 import java.util.*
 import kotlin.math.sin
 
-
 object ModEntities {
     const val A_ENTITY_ID = "a_entity"
     const val CEXOSKELETON_ID = "cexoskeleton"
@@ -41,7 +39,6 @@ object ModEntities {
     const val A_HORSE_ID = "a_horse"
     const val SOUL_ID  = "soul"
     const val CPLAYER_ID = "cplayer"
-
     val REGISTER: DeferredRegister<EntityType<*>> = DeferredRegister.create(ForgeRegistries.ENTITIES, MODID)
 
     val A_ENTITY: RegistryObject<EntityType<AEntity>> = REGISTER.register(A_ENTITY_ID) {
@@ -138,9 +135,7 @@ open class AHorse(p_30689_: EntityType<out Horse>, p_30690_: Level) : Horse(p_30
         this.inventory.setItem(INV_SLOT_SADDLE, ItemStack(Items.SADDLE))
     }
 
-    override fun isNoAi(): Boolean {
-        return true
-    }
+    override fun isNoAi(): Boolean = true
 
     override fun tick() {
         if (this.isVehicle) {
@@ -163,14 +158,8 @@ open class AHorse(p_30689_: EntityType<out Horse>, p_30690_: Level) : Horse(p_30
         super.tick()
     }
 
-    override fun isSaddled(): Boolean {
-        return true
-    }
-
-    override fun isSaddleable(): Boolean {
-        return true
-    }
-
+    override fun isSaddled(): Boolean = true
+    override fun isSaddleable(): Boolean = true
     override fun canDismount(): Boolean = false
 }
 
