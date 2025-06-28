@@ -5,19 +5,18 @@ import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.NBTKeys.BetterNeon.WFXC
 import com.github.cecnull1.cecnull1_changed_plus.damage.DamageSource.SOUL_ATTACK
 import com.github.cecnull1.cecnull1_changed_plus.damage.SoulAttack
-import com.github.cecnull1.cecnull1_changed_plus.entity.AEntity
-import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus.utils.DismountingAble
 import com.github.cecnull1.cecnull1_changed_plus.utils.MountAble
 import com.github.cecnull1.cecnull1_changed_plus.utils.VariantTickPlusAble
+import com.github.cecnull1.cecnull1_changed_plus.utils.ifPlayerNotTransfurred
+import com.github.cecnull1.cecnull1_changed_plus.utils.ifPlayerTransfurred
 import com.github.cecnull1.cecnull1lib.utils.InfixFunction.serverRun
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.google.common.collect.Iterables
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.TransfurContext
-import net.ltxprogrammer.changed.entity.beast.DarkLatexYufeng
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton
 import net.ltxprogrammer.changed.init.ChangedGameRules
 import net.ltxprogrammer.changed.process.ProcessTransfur
@@ -40,7 +39,7 @@ import net.minecraftforge.event.entity.player.EntityItemPickupEvent
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber
-import java.util.Collections
+import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.FORGE)
@@ -51,8 +50,7 @@ object Event {
         val player = event.player
         if (player is Player) {
             if (player.getModData(MODID).getBoolean(Constant.NBTKeys.BODY_WARNING)) {
-                ProcessTransfur.ifPlayerTransfurred(player, {
-                }) {
+                player.ifPlayerNotTransfurred {
                     ProcessTransfur.progressTransfur(
                         player,
                         1f,
@@ -69,7 +67,7 @@ object Event {
                 }
             }
 
-            ProcessTransfur.ifPlayerTransfurred(player) {
+            player.ifPlayerTransfurred {
                 val changedEntity = it.changedEntity
                 when {
                     changedEntity is VariantTickPlusAble -> changedEntity.playerVariantTick(player, event.player.level)
@@ -85,14 +83,6 @@ object Event {
     @JvmStatic
     @SubscribeEvent
     fun onLivingTick(event: LivingEvent.LivingUpdateEvent) {
-        if (event.entity::class == DarkLatexYufeng::class) {
-            val aEntity = AEntity(ModEntities.A_ENTITY.get(), event.entity.level)
-            aEntity.setPos(event.entity.position())
-            aEntity.yRot = event.entity.yRot
-            aEntity.xRot = event.entity.xRot
-            event.entity.level.addFreshEntity(aEntity)
-            event.entity.remove(Entity.RemovalReason.DISCARDED)
-        }
     }
 
     @JvmStatic

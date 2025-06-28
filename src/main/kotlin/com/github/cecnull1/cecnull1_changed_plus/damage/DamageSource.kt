@@ -9,5 +9,4 @@ object DamageSource {
     val SOUL_ATTACK: DamageSource = SoulAttack().bypassMagic().bypassArmor().bypassInvul()
 }
 
-class SoulAttack : DamageSource(SOUL_ATTACK_ID) {
-}
+class SoulAttack : DamageSource(SOUL_ATTACK_ID)

@@ -39,12 +39,19 @@ object ModEntities {
     const val A_HORSE_ID = "a_horse"
     const val SOUL_ID  = "soul"
     const val CPLAYER_ID = "cplayer"
+    const val PURE_WHITE_LATEX_YUFENG_ID = "pure_white_latex_yufeng"
     val REGISTER: DeferredRegister<EntityType<*>> = DeferredRegister.create(ForgeRegistries.ENTITIES, MODID)
 
     val A_ENTITY: RegistryObject<EntityType<AEntity>> = REGISTER.register(A_ENTITY_ID) {
         EntityType.Builder.of(::AEntity, ChangedMobCategories.CHANGED)
             .sized(0.7f, 1.93f)
             .build(A_ENTITY_ID)
+    }
+
+    val PURE_WHITE_LATEX_YUFENG : RegistryObject<EntityType<PureWhiteLatexYufeng>> = REGISTER.register(PURE_WHITE_LATEX_YUFENG_ID) {
+        EntityType.Builder.of(::PureWhiteLatexYufeng, ChangedMobCategories.CHANGED)
+            .sized(0.7f, 1.93f)
+            .build(PURE_WHITE_LATEX_YUFENG_ID)
     }
 
     val CEXOSKELETON: RegistryObject<EntityType<CExoskeleton>> = REGISTER.register(CEXOSKELETON_ID) {
@@ -77,7 +84,7 @@ object ModEntities {
 //    }
 }
 
-open class AEntity(type: EntityType<out DarkLatexYufeng>?, level: Level?) : DarkLatexYufeng(type, level),
+open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkLatexYufeng(type, level),
     DarkLatexEntity,
     PowderSnowWalkable,
     AquaticEntity {
@@ -90,26 +97,7 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>?, level: Level?) : Dark
 
     override fun variantTick(level: Level?) {
         super.variantTick(level)
-        val entity = maybeGetUnderlying()
-        val delta = entity.deltaMovement
-        val rotation = entity.lookAngle
-        if (entity.isInWaterOrBubble) {
-            entity.deltaMovement = Vec3(delta.x, delta.y.coerceAtMost(0.0), delta.z)
-        }
-        if (entity.isFallFlying) {
-            entity.deltaMovement = Vec3(
-                delta.x + sin(rotation.x) / 64,
-                delta.y + sin(rotation.y) / 64,
-                delta.z + sin(rotation.z) / 64
-            )
-        }
-        applyTerminalVelocity(entity)
-    }
-
-    private fun applyTerminalVelocity(entity: LivingEntity) {
-        val delta = entity.deltaMovement
-        entity.deltaMovement = Vec3(delta.x, Mth.clamp(delta.y, -0.5, 0.5), delta.z)
-        entity.resetFallDistance()
+        flyAndInWaterLogic()
     }
 
     override fun getOwnerUUID(): UUID? {
@@ -202,6 +190,15 @@ open class Soul(type: EntityType<out ChangedEntity>, level: Level) : ChangedEnti
     }
 }
 
+open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : AEntity(type, level) {
+    override fun getLatexType(): LatexType = LatexType.WHITE_LATEX
+    override fun getTransfurMode(): TransfurMode = TransfurMode.REPLICATION
+    override fun isNoAi(): Boolean = true
+    override fun variantTick(level: Level?) {
+        super.variantTick(level)
+    }
+}
+
 open class CPlayer(p_19870_: EntityType<out LatexHuman>, p_19871_: Level) : LatexHuman(p_19870_, p_19871_) {
     override fun getTransfurMode(): TransfurMode? {
         return TransfurMode.NONE
@@ -210,4 +207,27 @@ open class CPlayer(p_19870_: EntityType<out LatexHuman>, p_19871_: Level) : Late
     override fun getLatexType(): LatexType? {
         return LatexType.NEUTRAL
     }
+}
+
+fun ChangedEntity.flyAndInWaterLogic() {
+    val entity = maybeGetUnderlying()
+    val delta = entity.deltaMovement
+    val rotation = entity.lookAngle
+    if (entity.isInWaterOrBubble) {
+        entity.deltaMovement = Vec3(delta.x, delta.y.coerceAtMost(0.0), delta.z)
+    }
+    if (entity.isFallFlying) {
+        entity.deltaMovement = Vec3(
+            delta.x + sin(rotation.x) / 64,
+            delta.y + sin(rotation.y) / 64,
+            delta.z + sin(rotation.z) / 64
+        )
+    }
+    applyTerminalVelocity(entity)
+}
+
+fun applyTerminalVelocity(entity: LivingEntity) {
+    val delta = entity.deltaMovement
+    entity.deltaMovement = Vec3(delta.x, Mth.clamp(delta.y, -0.5, 0.5), delta.z)
+    entity.resetFallDistance()
 }
