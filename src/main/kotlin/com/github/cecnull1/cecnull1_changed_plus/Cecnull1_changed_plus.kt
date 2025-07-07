@@ -1,28 +1,34 @@
 package com.github.cecnull1.cecnull1_changed_plus
 
+//import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.C_PLAYER
 import com.github.cecnull1.cecnull1_changed_plus.block.ModBlocks
 import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.A_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.A_HORSE
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.CEXOSKELETON
-import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.C_PLAYER
+import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.MISC
+import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.NONE_ENTITY
+import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.NOT_CAN_DISMOUNT_BOAT
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.PURE_WHITE_LATEX_YUFENG
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus.entity.modEventBus
 import com.github.cecnull1.cecnull1_changed_plus.item.ModItems
-import com.github.cecnull1.cecnull1_changed_plus.modules.AEntityModel
-import com.github.cecnull1.cecnull1_changed_plus.modules.ZombieModel
-import com.github.cecnull1.cecnull1_changed_plus.psi.E
+import com.github.cecnull1.cecnull1_changed_plus.model.AEntityModel
+import com.github.cecnull1.cecnull1_changed_plus.model.ZombieModel
+import com.github.cecnull1.cecnull1_changed_plus.packet.NetworkHandler
+import com.github.cecnull1.cecnull1_changed_plus.psi.PieceOperatorEntityGetTransfurVariant
+import com.github.cecnull1.cecnull1_changed_plus.psi.PieceTrickTransfurLivingEntity
+import com.github.cecnull1.cecnull1_changed_plus.renderer.NoneTransfurVariantRenderer
 import com.github.cecnull1.cecnull1_changed_plus.renderer.SoulRenderer
 import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
 import net.ltxprogrammer.changed.client.renderer.ExoskeletonRenderer
-import net.ltxprogrammer.changed.client.renderer.LatexHumanRenderer
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.UseItemMode
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton
 import net.ltxprogrammer.changed.init.ChangedAttributes
+import net.minecraft.client.renderer.entity.BoatRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.client.renderer.entity.HorseRenderer
 import net.minecraft.resources.ResourceLocation
@@ -37,18 +43,22 @@ import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.ModList
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
 import vazkii.psi.api.PsiAPI
 
 
 @Mod(MODID)
 class Cecnull1_changed_plus {
     init {
+        // 其他初始化代码...
         ModEntities.REGISTER.register(modEventBus)
         ModTransfurVariant.REGISTRY.register(modEventBus)
         ModBlocks.REGISTER.register(modEventBus)
         ModItems.REGISTER.register(modEventBus)
+
         if (ModList.get().isLoaded("psi")) {
-            PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "e"), E::class.java)
+            PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
+            PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
         }
     }
 }
@@ -57,12 +67,20 @@ class Cecnull1_changed_plus {
 object Events {
     @JvmStatic
     @SubscribeEvent
+    fun onCommonSetup(event: FMLCommonSetupEvent) {
+        event.enqueueWork {
+            NetworkHandler.register()
+        }
+    }
+
+    @JvmStatic
+    @SubscribeEvent
     fun registerEntityAttributes(event: EntityAttributeCreationEvent) {
         event.put(
             A_ENTITY.get(),
             ChangedEntity.createLatexAttributes().apply {
                 add(Attributes.MAX_HEALTH, 24.0)
-                add(Attributes.MOVEMENT_SPEED, 0.3)
+                add(Attributes.MOVEMENT_SPEED, 0.4)
                 add(ForgeMod.SWIM_SPEED.get(), 2.0)
                 add(Attributes.ATTACK_DAMAGE, 20.0)
                 add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
@@ -97,7 +115,21 @@ object Events {
             PURE_WHITE_LATEX_YUFENG.get(),
             ChangedEntity.createLatexAttributes().apply {
                 add(Attributes.MAX_HEALTH, 24.0)
-                add(Attributes.MOVEMENT_SPEED, 0.3)
+                add(Attributes.MOVEMENT_SPEED, 0.4)
+                add(ForgeMod.SWIM_SPEED.get(), 2.0)
+                add(Attributes.ATTACK_DAMAGE, 20.0)
+                add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
+            }.build()
+        )
+        event.put(
+            NONE_ENTITY.get(),
+            ChangedEntity.createLatexAttributes().build()
+        )
+        event.put(
+            MISC.get(),
+            ChangedEntity.createLatexAttributes().apply {
+                add(Attributes.MAX_HEALTH, 24.0)
+                add(Attributes.MOVEMENT_SPEED, 0.4)
                 add(ForgeMod.SWIM_SPEED.get(), 2.0)
                 add(Attributes.ATTACK_DAMAGE, 20.0)
                 add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
@@ -138,15 +170,30 @@ object ClientEvents {
         ) { context: EntityRendererProvider.Context ->
             SoulRenderer(context)
         }
-        event.registerEntityRenderer(
-            C_PLAYER.get()
-        ) { context: EntityRendererProvider.Context ->
-            LatexHumanRenderer(context, true)
-        }
+//        event.registerEntityRenderer(
+//            C_PLAYER.get()
+//        ) { context: EntityRendererProvider.Context ->
+//            LatexHumanRenderer(context, true)
+//        }
         event.registerEntityRenderer(
             PURE_WHITE_LATEX_YUFENG.get()
         ) { context: EntityRendererProvider.Context ->
             DarkLatexYufengRenderer(context)
+        }
+        event.registerEntityRenderer(
+            NONE_ENTITY.get()
+        ) { context: EntityRendererProvider.Context ->
+            NoneTransfurVariantRenderer(context)
+        }
+        event.registerEntityRenderer(
+            NOT_CAN_DISMOUNT_BOAT.get()
+        ) { context: EntityRendererProvider.Context ->
+            BoatRenderer(context)
+        }
+        event.registerEntityRenderer(
+            MISC.get()
+        ) { context: EntityRendererProvider.Context ->
+            NoneTransfurVariantRenderer(context)
         }
     }
 }

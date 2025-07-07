@@ -28,6 +28,9 @@ object ModItems {
     val WHITE_LATEX_BLOCK_V2: RegistryObject<WhiteLatexBlockV2Item> = REGISTER.register(ModBlocks.WHITE_LATEX_BLOCK_V2_ID) {
         WhiteLatexBlockV2Item()
     }
+    val XIN_YUE: RegistryObject<XinYueItem> = REGISTER.register("xin_yue") {
+        XinYueItem()
+    }
 }
 
 class ABlock : ItemNameBlockItem(ModBlocks.A_BLOCK.get(), Properties().tab(CreativeModeTab.TAB_MISC))
@@ -50,3 +53,15 @@ class AArmorItem : ArmorItem(ArmorMaterials.IRON, EquipmentSlot.CHEST, Propertie
 class WhiteLatexBlockV2Item : ItemNameBlockItem(
     ModBlocks.WHITE_LATEX_BLOCK_V2.get(), Properties().tab(ChangedTabs.TAB_CHANGED_BLOCKS)
 )
+
+class XinYueItem : Item(Properties().tab(ChangedTabs.TAB_CHANGED_ITEMS)) {
+    override fun hurtEnemy(
+        itemStack: ItemStack,
+        entity: LivingEntity,
+        sourceentity: LivingEntity
+    ): Boolean {
+        super.hurtEnemy(itemStack, entity, sourceentity)
+        entity.hurt(net.minecraft.world.damagesource.DamageSource.LAVA, 20f)
+        return false
+    }
+}

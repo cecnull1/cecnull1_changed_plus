@@ -4,10 +4,11 @@ import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus.entity.AEntity
 import com.github.cecnull1.cecnull1_changed_plus.entity.Soul
 import com.github.cecnull1.cecnull1_changed_plus.entity.Zombie
-import com.github.cecnull1.cecnull1_changed_plus.modules.AEntityModel
-import com.github.cecnull1.cecnull1_changed_plus.modules.AEntityModel.Companion.LAYER_LOCATION
-import com.github.cecnull1.cecnull1_changed_plus.modules.SoulModel
-import com.github.cecnull1.cecnull1_changed_plus.modules.ZombieModel
+import com.github.cecnull1.cecnull1_changed_plus.model.AEntityModel
+import com.github.cecnull1.cecnull1_changed_plus.model.AEntityModel.Companion.LAYER_LOCATION
+import com.github.cecnull1.cecnull1_changed_plus.model.SoulModel
+import com.github.cecnull1.cecnull1_changed_plus.model.ZombieModel
+import com.mojang.blaze3d.vertex.PoseStack
 import net.ltxprogrammer.changed.client.renderer.AdvancedHumanoidRenderer
 import net.ltxprogrammer.changed.client.renderer.layers.CustomEyesLayer
 import net.ltxprogrammer.changed.client.renderer.layers.LatexParticlesLayer
@@ -16,8 +17,11 @@ import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorHumanModel
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorLatexMaleWolfModel
 import net.ltxprogrammer.changed.util.Color3
 import net.minecraft.client.model.geom.ModelPart
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.entity.EntityRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.entity.Entity
 import java.util.function.Predicate
 
 class AEntityRenderer(context: EntityRendererProvider.Context) :
@@ -77,5 +81,26 @@ class SoulRenderer(context:  EntityRendererProvider.Context): AdvancedHumanoidRe
 
     companion object {
         private val TEXTURE = ResourceLocation(MODID, "textures/entities/soul.png")
+    }
+}
+
+class NoneTransfurVariantRenderer<T: Entity>(context: EntityRendererProvider.Context)
+    : EntityRenderer<T>(context) {
+
+    // 不渲染任何内容
+    override fun render(
+        entity: T,
+        yaw: Float,
+        partial: Float,
+        stack: PoseStack,
+        buffers: MultiBufferSource,
+        light: Int
+    ) {
+        // 完全空实现
+    }
+
+    // 返回null避免默认名称渲染
+    override fun getTextureLocation(entity: T): ResourceLocation? {
+        return null
     }
 }

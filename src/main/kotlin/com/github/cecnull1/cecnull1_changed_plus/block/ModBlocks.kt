@@ -7,6 +7,13 @@ import com.github.cecnull1.cecnull1_changed_plus.constant.Constant.NBTKeys
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus.entity.PureWhiteLatexYufeng
+import com.github.cecnull1.cecnull1_changed_plus.utils.TransfurData
+import com.github.cecnull1.cecnull1_changed_plus.utils.TransfurData.Companion.transfurData
+import com.github.cecnull1.cecnull1_changed_plus.utils.ifPlayerNotTransfurred
+import com.github.cecnull1.cecnull1_changed_plus.utils.ifPlayerTransfurred
+import com.github.cecnull1.cecnull1_changed_plus.utils.progressTransfur
+import com.github.cecnull1.cecnull1_changed_plus.utils.setPlayerTransfurVariant
+import com.github.cecnull1.cecnull1_changed_plus.utils.transfur
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import net.ltxprogrammer.changed.block.ChangedBlock
@@ -15,12 +22,15 @@ import net.ltxprogrammer.changed.block.WhiteLatexTransportInterface
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.TransfurContext
 import net.ltxprogrammer.changed.init.ChangedBlocks
+import net.ltxprogrammer.changed.init.ChangedEntities
+import net.ltxprogrammer.changed.init.ChangedTransfurVariants
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.TranslatableComponent
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties
@@ -28,6 +38,9 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.material.FluidState
 import net.minecraft.world.level.material.Material
 import net.minecraft.world.level.material.MaterialColor
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.phys.shapes.Shapes
+import net.minecraft.world.phys.shapes.VoxelShape
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
@@ -40,7 +53,12 @@ object ModBlocks {
     val A_BLOCK: RegistryObject<ABlock> = REGISTER.register(A_BLOCK_ID) { ABlock() }
     val WHITE_LATEX_BLOCK_V2: RegistryObject<WhiteLatexBlockV2> = REGISTER.register(WHITE_LATEX_BLOCK_V2_ID) {
         WhiteLatexBlockV2(
-            Properties.copy(ChangedBlocks.WHITE_LATEX_BLOCK.get()).color(MaterialColor.QUARTZ).noOcclusion()
+            Properties.copy(ChangedBlocks.WHITE_LATEX_BLOCK.get()).apply {
+                color(MaterialColor.QUARTZ)
+                noOcclusion()
+                dynamicShape()
+                isSuffocating { _,_, _ -> true }
+            }
         )
     }
 }
@@ -55,11 +73,11 @@ class ABlock : ChangedBlock(Properties.of(Material.WATER).jumpFactor(0f)) {
     override fun entityInside(p_60495_: BlockState, p_60496_: Level, p_60497_: BlockPos, p_60498_: Entity) {
         super.entityInside(p_60495_, p_60496_, p_60497_, p_60498_)
         val livingEntity = p_60498_ as? LivingEntity?: return
-        ProcessTransfur.progressTransfur(
-            livingEntity,
-            4f,
-            ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT.get(),
-            TransfurContext.hazard(TransfurCause.LATEX_SYRINGE_FLOOR)
+        livingEntity.progressTransfur(
+            1f,
+            TransfurData(
+                ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT.get()
+            )
         )
     }
 
@@ -77,7 +95,7 @@ class ABlock : ChangedBlock(Properties.of(Material.WATER).jumpFactor(0f)) {
             if (!playerModData.getBoolean(NBTKeys.BODY_WARNING)) {
                 player.displayClientMessage(TranslatableComponent(MODID + MESSAGE + BODY_WARNING), true)
 
-                ProcessTransfur.ifPlayerTransfurred(player, {
+                player.ifPlayerTransfurred {
                     if (it.parent.canGlide) {
                         playerModData[NBTKeys.FLYING] = true
                     } else {
@@ -92,7 +110,8 @@ class ABlock : ChangedBlock(Properties.of(Material.WATER).jumpFactor(0f)) {
                         }
                         playerModData[NBTKeys.NO_DISMOUNTING] = true
                     }
-                }) {
+                }
+                player.ifPlayerNotTransfurred {
                     playerModData[NBTKeys.BODY_WARNING] = true
                 }
                 persistentData[MODID] = playerModData
@@ -117,8 +136,36 @@ open class WhiteLatexBlockV2(properties: Properties) : WhiteLatexBlock(propertie
                 ModEntities.PURE_WHITE_LATEX_YUFENG.get(),
                 level
             )
-            pureWhiteLatexYufeng.setPos(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
+            pureWhiteLatexYufeng.setPos(blockPos.x.toDouble()+0.5, blockPos.y.toDouble()+0.5, blockPos.z.toDouble()+0.5)
             level.addFreshEntity(pureWhiteLatexYufeng)
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun getCollisionShape(
+        p_60572_: BlockState,
+        p_60573_: BlockGetter,
+        p_60574_: BlockPos,
+        p_60575_: CollisionContext
+    ): VoxelShape {
+        return Shapes.empty()
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun entityInside(p_60495_: BlockState, p_60496_: Level, p_60497_: BlockPos, entity: Entity) {
+        super.entityInside(p_60495_, p_60496_, p_60497_, entity)
+        if (entity is Player) {
+            entity.ifPlayerTransfurred {
+                if (it.`is`(ChangedTransfurVariants.PURE_WHITE_LATEX_WOLF.get())) {
+                    entity.setPlayerTransfurVariant(
+                        TransfurData(
+                            ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get(),
+                            true
+                        ),
+                        progress = it.transfurProgression
+                    )
+                }
+            }
         }
     }
 }
