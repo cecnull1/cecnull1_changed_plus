@@ -1,0 +1,12 @@
+{
+  "entities": [
+    "cecnull1_changed_plus_v2:a_entity",
+    "cecnull1_changed_plus_v2:pure_white_latex_yufeng"
+  ],
+  "slots": [
+    "changed:body",
+    "changed:hands",
+    "changed:full_body",
+    "changed:legs"
+  ]
+}

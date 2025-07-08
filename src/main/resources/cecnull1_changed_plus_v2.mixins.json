@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.github.cecnull1.cecnull1_changed_plus_v2.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "cecnull1_changed_plus_v2.refmap.json",
+  "mixins": [
+    "LivingEntityMixin",
+    "PlayerMixin",
+    "InventoryMixin",
+    "MixinServerGamePacketListenerImpl"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
