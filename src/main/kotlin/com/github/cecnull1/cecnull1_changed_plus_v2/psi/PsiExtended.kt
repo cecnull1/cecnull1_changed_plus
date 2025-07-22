@@ -2,9 +2,9 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.psi
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.ParamTransfurVariant
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TransfurData
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.entityVariant
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.transfur
+import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
+import com.github.cecnull1.cecnull1lib.utils.changed.entityVariant
+import com.github.cecnull1.cecnull1lib.utils.changed.transfur
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity

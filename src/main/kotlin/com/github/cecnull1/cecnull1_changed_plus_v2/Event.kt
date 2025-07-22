@@ -1,8 +1,8 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
+import com.github.cecnull1.cecnull1_changed_plus_v2.capability.ExtendedPlayerDataProvider
 import com.github.cecnull1.cecnull1_changed_plus_v2.capability.HAState
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.HAStateProvider
 import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haEnabled
 import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
@@ -10,33 +10,41 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
-import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TransfurContextUtils.toTransfurContext
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TransfurData.Companion.toTransfurDataOrNull
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TransfurData.Companion.transfurData
+import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
+import com.github.cecnull1.cecnull1_changed_plus_v2.packet.HaStateNetworkHandler
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IMount
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.VariantTickPlusAble
+import com.github.cecnull1.cecnull1lib.utils.changed.*
+import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
+import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTransfurDataOrNull
+import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.transfurData
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.google.common.collect.Iterables
 import net.ltxprogrammer.changed.entity.TransfurCause
+import net.ltxprogrammer.changed.entity.beast.PureWhiteLatexWolf
+import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
 import net.ltxprogrammer.changed.init.ChangedBlocks
 import net.ltxprogrammer.changed.process.ProcessTransfur
+import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.client.Minecraft
-import net.minecraft.core.NonNullList
 import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.RelativeMovement
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.phys.Vec3
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent
 import net.minecraftforge.event.AttachCapabilitiesEvent
 import net.minecraftforge.event.TickEvent
@@ -44,6 +52,8 @@ import net.minecraftforge.event.TickEvent.PlayerTickEvent
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.LivingAttackEvent
 import net.minecraftforge.event.entity.living.LivingEvent
+import net.minecraftforge.event.entity.living.LivingFallEvent
+import net.minecraftforge.event.entity.living.LivingKnockBackEvent
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent
 import net.minecraftforge.event.entity.player.PlayerEvent
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
@@ -51,6 +61,7 @@ import net.minecraftforge.event.level.BlockEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber
 import kotlin.jvm.optionals.getOrNull
+import kotlin.math.sqrt
 
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.FORGE)
 object Event {
@@ -86,6 +97,20 @@ object Event {
                 player.health = 0.0f
                 if (player is ServerPlayer) player.sendHealthUpdate()
             }
+            for (itemStack in ItemUtil.getWearingItems(player)) {
+                if (itemStack.itemStack.item is NotCanTakeOffWetsuit) {
+                    val fixSpeed = 20.0
+                    if (!player.isFallFlying) {
+                        val delta = player.deltaMovement
+                        val rotation = player.lookAngle
+                        player.deltaMovement = Vec3(
+                            delta.x + rotation.x / fixSpeed,
+                            delta.y + rotation.x / fixSpeed,
+                            delta.z + rotation.z / fixSpeed
+                        )
+                    }
+                }
+            }
             if (player.haItem.isEmpty) {
                 if (player.haEnabled) {
                     player.haEnabled = false
@@ -97,7 +122,7 @@ object Event {
             fun sync() {
                 if (event.phase != TickEvent.Phase.END) return
                 if (event.side.isClient && event.player == Minecraft.getInstance().player) {
-                    NetworkHandler.sendToServer()
+                    HaStateNetworkHandler.sendToServer()
                 }
             }
             sync()
@@ -116,7 +141,7 @@ object Event {
         val entityBeingMounted: Entity = event.entityBeingMounted ?: return
         if (entityMounting.isAlive && entityBeingMounted.isAlive && event.isDismounting) {
             when {
-                entityBeingMounted is DismountAble && !entityBeingMounted.canDismount() -> event.isCanceled = true
+                entityBeingMounted is IDismount && !entityBeingMounted.canDismount() -> event.isCanceled = true
                 entityBeingMounted.persistentData.getBoolean(WFXC) -> event.isCanceled = true
                 entityMounting.getModData(MODID).getBoolean(Constant.NBTKeys.NO_DISMOUNTING) -> event.isCanceled = true
             }
@@ -127,7 +152,7 @@ object Event {
     @SubscribeEvent
     fun onInteract(event: PlayerInteractEvent.EntityInteract) {
         val target = event.target ?: return
-        if (target is MountAble && target.canMount()) {
+        if (target is IMount && target.canMount()) {
             event.entity.startRiding(event.target ?: return)
         }
 //        if (!event.world.isClientSide) {
@@ -152,73 +177,103 @@ object Event {
     fun onLivingAttack(event: LivingAttackEvent) {
         val livingEntity = event.entity ?: return
         val attacker = event.source.entity
+
         (livingEntity as? Player)?.ifPlayerTransfurred {
-            if (it.`is`(ModTransfurVariant.SOUL_TRANSFUR_VARIANT)) {
-                event.isCanceled = true
+            // 检测玩家所代表的实体存在FanJi接口
+            val changedEntity = it.changedEntity
+            if (changedEntity is IFanJi<*>) {
+                attacker?.let {
+                    it1 ->
+                    changedEntity.onAttackedBy(it1)
+                }
             }
         }
-        (attacker as? Player)?.ifPlayerTransfurred {
+        (livingEntity as? Player)?.ifPlayerTransfurred {
+            // 检测玩家所代表的生物是否是魂体
             if (it.`is`(ModTransfurVariant.SOUL_TRANSFUR_VARIANT)) {
-                // 取消攻击
                 event.isCanceled = true
-                // 获取 LivingEntity 的数据
-                val persistentData = livingEntity.persistentData
-                // 获取 LivingEntity 的 ModData
-                val entityModData = livingEntity.getModData(MODID)
-                // 获取 LivingEntity 的变体
-                val entityVariant = ProcessTransfur.getEntityVariant(livingEntity).getOrNull()
-                // 如果 LivingEntity 有变体，或 LivingEntity 是 Player
-                if (entityVariant != null || livingEntity is Player) {
-                    // 增加 LivingEntity 的攻击值
-                    entityModData[Constant.NBTKeys.SOUL_SP_ATTACK_VALUE] =
-                        entityModData.getDouble(Constant.NBTKeys.SOUL_SP_ATTACK_VALUE) + 1.0
-                    // 如果 LivingEntity 的攻击值 >= LivingEntity 的生命值
-                    if (entityModData.getDouble(Constant.NBTKeys.SOUL_SP_ATTACK_VALUE) >= livingEntity.health) {
-                        // 移除 LivingEntity 的攻击值
-                        entityModData.remove(Constant.NBTKeys.SOUL_SP_ATTACK_VALUE)
-                        // 将 attacker 的变体改为 entityVariant
-                        attacker.transfurData = entityVariant.toTransfurDataOrNull()
-                        // 将 attacker 的当前飞行状态改为 false ，以防止变体设置后仍然处于 true 的情况
-                        attacker.abilities.flying = false
-                        // 实体间覆盖
-                        attacker.movePosToTarget(livingEntity)
-                        attacker.removeAllEffects()
-                        livingEntity.activeEffectsMap.values.forEach {
-                            attacker.addEffect(MobEffectInstance(it))
-                        }
-                        livingEntity.removeAllEffects()
-                        attacker.health = livingEntity.health
-                        if (livingEntity is Player) {
-                            attacker.moveItemToTarget(livingEntity)
-                            attacker.foodData.foodLevel = livingEntity.foodData.foodLevel
-                            attacker.foodData.setSaturation(livingEntity.foodData.saturationLevel)
-                            attacker.experienceLevel = livingEntity.experienceLevel
-                            attacker.experienceProgress = livingEntity.experienceProgress
-                        } else {
-                            attacker.foodData.foodLevel = 20
-                            attacker.foodData.setSaturation(20f)
-                        }
-                        if (attacker is ServerPlayer) {
-                            attacker.sendPositionUpdate()
-                            attacker.sendHealthUpdate()
-                        }
-                        // 删除/杀死livingEntity
-                        if (livingEntity is Player) {
-                            livingEntity.hurt(
-                                livingEntity.damageSources().lava(),  // 使用 DamageSources 获取岩浆伤害
-                                Float.POSITIVE_INFINITY
-                            )
-                        }
-                        else livingEntity.remove(Entity.RemovalReason.KILLED)
-                        // 如果 livingEntity 的健康值为 NaN，则将其设置为 0
-                        if (livingEntity.health.isNaN()) {
-                            livingEntity.health = 0f
-                        }
+            }
+
+        }
+        (attacker as? Player)?.ifPlayerTransfurred {
+            // 调用灵魂附身
+            lingHunFuShen(event, it, livingEntity, attacker)
+        }
+    }
+    private fun lingHunFuShen(
+        event: LivingAttackEvent,
+        instance: TransfurVariantInstance<*>,
+        livingEntity: LivingEntity,
+        attacker: Player
+    ) {
+        if (instance.`is`(ModTransfurVariant.SOUL_TRANSFUR_VARIANT)) {
+            // 取消攻击
+            event.isCanceled = true
+            // 获取 LivingEntity 的数据
+            val persistentData = livingEntity.persistentData
+            // 获取 LivingEntity 的 ModData
+            val entityModData = livingEntity.getModData(MODID)
+            // 获取 LivingEntity 的变体
+            val entityVariant = ProcessTransfur.getEntityVariant(livingEntity).getOrNull()
+            // 如果 LivingEntity 有变体，或 LivingEntity 是 Player
+            if (entityVariant != null || livingEntity is Player) {
+                // 增加 LivingEntity 的攻击值
+                entityModData[Constant.NBTKeys.SOUL_SP_ATTACK_VALUE] =
+                    entityModData.getDouble(Constant.NBTKeys.SOUL_SP_ATTACK_VALUE) + 1.0
+                // 如果 LivingEntity 的攻击值 >= LivingEntity 的生命值
+                if (entityModData.getDouble(Constant.NBTKeys.SOUL_SP_ATTACK_VALUE) >= livingEntity.health) {
+                    // 移除 LivingEntity 的攻击值
+                    entityModData.remove(Constant.NBTKeys.SOUL_SP_ATTACK_VALUE)
+                    // 将 attacker 的变体改为 entityVariant
+                    attacker.transfurData = entityVariant.toTransfurDataOrNull()
+                    // 将 attacker 的当前飞行状态改为 false ，以防止变体设置后仍然处于 true 的情况
+                    attacker.abilities.flying = false
+                    // 实体间覆盖
+                    attacker.movePosToTarget(livingEntity)
+                    attacker.removeAllEffects()
+                    livingEntity.activeEffectsMap.values.forEach {
+                        attacker.addEffect(MobEffectInstance(it))
+                    }
+                    livingEntity.removeAllEffects()
+                    attacker.health = livingEntity.health
+                    if (livingEntity is Player) {
+                        attacker.moveItemToTarget(livingEntity)
+                        attacker.foodData.foodLevel = livingEntity.foodData.foodLevel
+                        attacker.foodData.setSaturation(livingEntity.foodData.saturationLevel)
+                        attacker.experienceLevel = livingEntity.experienceLevel
+                        attacker.experienceProgress = livingEntity.experienceProgress
+                    } else {
+                        attacker.foodData.foodLevel = 20
+                        attacker.foodData.setSaturation(20f)
+                    }
+                    if (attacker is ServerPlayer) {
+                        attacker.sendPositionUpdate()
+                        attacker.sendHealthUpdate()
+                    }
+                    // 删除/杀死livingEntity
+                    if (livingEntity is Player) {
+                        livingEntity.hurt(
+                            livingEntity.damageSources().fellOutOfWorld(),  // 使用 DamageSources 获取岩浆伤害
+                            Float.POSITIVE_INFINITY
+                        )
+                    } else livingEntity.remove(Entity.RemovalReason.KILLED)
+                    // 如果 livingEntity 的健康值为 NaN，则将其设置为 0
+                    if (livingEntity.health.isNaN()) {
+                        livingEntity.health = 0f
                     }
                 }
-                // 将 entityModData 存储到 persistentData 中
-                persistentData[MODID] = entityModData
             }
+            // 将 entityModData 存储到 persistentData 中
+            persistentData[MODID] = entityModData
+        }
+    }
+
+    @JvmStatic
+    @SubscribeEvent
+    fun onLivingKnockBack(event: LivingKnockBackEvent) {
+        if (event.entity.entityVariant is IFanJi<*>) {
+            event.ratioX *= -1.0f
+            event.ratioZ *= -1.0f
         }
     }
 
@@ -239,13 +294,13 @@ object Event {
         if (!level.isClientSide) {
             when (event.state.block) {
                 ChangedBlocks.WHITE_LATEX_BLOCK.get() -> {
-                    if (level.random.nextInt(4) == 0) {
-                        level.setBlock(
-                            event.pos, ModBlocks.WHITE_LATEX_BLOCK_V2.get().defaultBlockState(),
-                            Block.UPDATE_NEIGHBORS or Block.UPDATE_CLIENTS or Block.UPDATE_IMMEDIATE
-                        )
-
+                    if (level.random.nextInt(4) == 0 && event.player?.isCreative == false) {
                         if (level is Level) {
+                            event.isCanceled = true
+                            level.setBlock(
+                                event.pos, ModBlocks.WHITE_LATEX_BLOCK_V2.get().defaultBlockState(),
+                                Block.UPDATE_NEIGHBORS or Block.UPDATE_CLIENTS or Block.UPDATE_IMMEDIATE
+                            )
                             val newNotCanDismountBoat = ModEntities.NOT_CAN_DISMOUNT_BOAT.get().create(level)
                             if (newNotCanDismountBoat != null) {
                                 newNotCanDismountBoat.setPos(event.pos.x + 0.5, event.pos.y + 0.5, event.pos.z + 0.5)
@@ -276,10 +331,10 @@ object Event {
     @SubscribeEvent
     fun onAttachCapabilities(event: AttachCapabilitiesEvent<Entity>) {
         if (event.`object` is Player) {
-            if (!event.`object`.getCapability(HAStateProvider.PLAYER_HA_STATE).isPresent) {
+            if (!event.`object`.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).isPresent) {
                 event.addCapability(
                     ResourceLocation(MODID, "ha_state"),
-                    HAStateProvider()
+                    ExtendedPlayerDataProvider()
                 )
             }
         }
@@ -289,9 +344,9 @@ object Event {
     @SubscribeEvent
     fun onPlayerCloned(event: PlayerEvent.Clone) {
         if (event.isWasDeath) {
-            event.original.getCapability(HAStateProvider.PLAYER_HA_STATE).ifPresent {
+            event.original.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).ifPresent {
                 oldState ->
-                event.original.getCapability(HAStateProvider.PLAYER_HA_STATE).ifPresent {
+                event.entity.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).ifPresent {
                     newState ->
                     newState.copyFrom(oldState)
                 }
@@ -310,8 +365,47 @@ object Event {
     fun onPlayerLogin(event: PlayerEvent.PlayerLoggedInEvent) {
         // 玩家登录时同步数据
         if (!event.entity.level().isClientSide) {
-            NetworkHandler.sendToClient(event.entity)
+            HaStateNetworkHandler.sendToClient(event.entity)
         }
+    }
+
+    // 核心摔伤处理逻辑
+    @JvmStatic
+    @SubscribeEvent
+    fun onLivingFall(event: LivingFallEvent) {
+        val entity = event.entity
+        if (entity !is Player) return
+
+        // 使用您提供的扩展属性获取兽化状态
+        val variant = entity.playerTransfurVariant ?: return
+
+        // 检查是否为纯粹的白胶狼
+        if (isPureWhiteWolf(variant)) {
+            // 应用摔伤免疫规则
+            handleFallImmunity(event)
+        }
+    }
+
+    private fun isPureWhiteWolf(variant: TransfurVariantInstance<*>): Boolean {
+        // 直接比较变体注册对象
+        return variant.changedEntity is PureWhiteLatexWolf
+    }
+
+    private fun handleFallImmunity(event: LivingFallEvent) {
+        // 计算原版应受伤害
+        val originalDamage = calculateFallDamage(event.distance, event.damageMultiplier)
+
+        // 应用免疫规则：最多只受1点伤害
+        event.damageMultiplier = if (originalDamage > 1f) {
+            1f / originalDamage
+        } else {
+            1f
+        }
+    }
+
+    private fun calculateFallDamage(distance: Float, multiplier: Float): Float {
+        // 原版摔伤计算公式 (Minecraft 1.20.1)
+        return Mth.clamp(distance - 3.0f, 0.0f, 40.0f) * multiplier
     }
 }
 
@@ -323,22 +417,38 @@ fun Player.movePosToTarget(
     yRot = livingEntity.yRot
 }
 
-fun Player.moveItemToTarget(
-    sourceEntity: Player
-) {
-    inventory.items = sourceEntity.inventory.items
-    inventory.selected = sourceEntity.inventory.selected
-    inventory.offhand = sourceEntity.inventory.offhand
-    inventory.armor = sourceEntity.inventory.armor
-    sourceEntity.inventory.items =
-        NonNullList.withSize<ItemStack>(sourceEntity.inventory.items.size, ItemStack(Items.AIR))
-    sourceEntity.inventory.selected = 0
-    sourceEntity.inventory.offhand =
-        NonNullList.withSize<ItemStack>(sourceEntity.inventory.offhand.size, ItemStack(Items.AIR))
-    sourceEntity.inventory.armor =
-        NonNullList.withSize<ItemStack>(sourceEntity.inventory.armor.size, ItemStack(Items.AIR))
-}
+fun Player.moveItemToTarget(sourceEntity: Player) {
+    // 1. 先保存源玩家的 selected 槽位（int 类型，直接赋值）
+    val sourceSelected = sourceEntity.inventory.selected
 
+    // 2. 遍历并直接替换当前玩家的 ItemStack（不修改列表结构）
+    for (i in 0 until inventory.items.size) {
+        inventory.items[i] = sourceEntity.inventory.items[i].copy()  // 使用 copy() 避免引用问题
+    }
+    inventory.selected = sourceSelected  // 直接赋值 selected
+
+    for (i in 0 until inventory.offhand.size) {
+        inventory.offhand[i] = sourceEntity.inventory.offhand[i].copy()
+    }
+
+    for (i in 0 until inventory.armor.size) {
+        inventory.armor[i] = sourceEntity.inventory.armor[i].copy()
+    }
+
+    // 3. 清空源玩家的 inventory（同样仅修改，不添加/删除）
+    for (i in 0 until sourceEntity.inventory.items.size) {
+        sourceEntity.inventory.items[i] = ItemStack.EMPTY
+    }
+    sourceEntity.inventory.selected = 0
+
+    for (i in 0 until sourceEntity.inventory.offhand.size) {
+        sourceEntity.inventory.offhand[i] = ItemStack.EMPTY
+    }
+
+    for (i in 0 until sourceEntity.inventory.armor.size) {
+        sourceEntity.inventory.armor[i] = ItemStack.EMPTY
+    }
+}
 fun Player.forceInventory(f: (ItemStack) -> Unit) {
     for (itemStack in Iterables.concat(
         inventory.items,
@@ -377,4 +487,24 @@ fun ServerPlayer.sendPositionUpdate() {
 fun ServerPlayer.sendAbilitiesUpdate() {
     val clientBoundPlayerAbilitiesPacket = ClientboundPlayerAbilitiesPacket(abilities)
     connection.send(clientBoundPlayerAbilitiesPacket)
+}
+
+fun LivingEntity.faceEntity(attackTarget: Entity) {
+    val dx = attackTarget.x - this.x
+    val dz = attackTarget.z - this.z
+    val dy = attackTarget.eyeY - this.eyeY
+
+    // 计算 yaw（水平方向）
+    val targetYaw = Mth.atan2(dz, dx) * (180.0f / Math.PI).toFloat() - 90.0f
+
+    // 计算 pitch（垂直方向），注意负号！
+    val distanceXZ = sqrt(dx * dx + dz * dz)
+    val targetPitch = Mth.atan2(dy, distanceXZ) * (180.0f / Math.PI).toFloat()
+
+    // 设置旋转
+    this.xRot = targetPitch.toFloat()
+    this.yRot = targetYaw.toFloat()
+
+    // 同步头部朝向
+    this.yHeadRot = targetYaw.toFloat()
 }

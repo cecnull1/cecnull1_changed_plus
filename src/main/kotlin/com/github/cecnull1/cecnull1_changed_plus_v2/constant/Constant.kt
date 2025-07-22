@@ -25,4 +25,5 @@ object Constant {
         const val PLAYERS = "players"
         const val PLAYER = "player"
     }
+    const val NI_BU_YING_GAI_CHUAN_DAI_ZHE_GE_WU_PIN_DE = "你不应该穿戴这个物品的……"
 }

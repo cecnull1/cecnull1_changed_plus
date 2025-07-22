@@ -7,13 +7,12 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.PureWhiteLatexYufeng
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
+import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import net.ltxprogrammer.changed.block.ChangedBlock
 import net.ltxprogrammer.changed.block.WhiteLatexBlock
 import net.ltxprogrammer.changed.block.WhiteLatexTransportInterface
-import net.ltxprogrammer.changed.init.ChangedBlocks
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.minecraft.core.BlockPos

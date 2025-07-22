@@ -5,7 +5,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL_ID
-import net.ltxprogrammer.changed.entity.LatexType
+import net.ltxprogrammer.changed.entity.MiningStrength
 import net.ltxprogrammer.changed.entity.TransfurMode
 import net.ltxprogrammer.changed.entity.VisionType
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
@@ -21,8 +21,8 @@ object ModTransfurVariant {
         TransfurVariant.Builder.of(ModEntities.A_ENTITY).apply {
             glide()
             visionType(VisionType.NIGHT_VISION)
-            faction(LatexType.DARK_LATEX)
             stepSize(320 + 64f) // 320-(-64) = 320+64
+            miningStrength(MiningStrength.STRONG)
             breatheMode(TransfurVariant.BreatheMode.ANY)
             addAbility(ChangedAbilities.TOGGLE_WAVE_VISION)
         }.build()
@@ -31,7 +31,6 @@ object ModTransfurVariant {
     val SOUL_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Soul>> = REGISTRY.register("form_$SOUL_ID") {
         TransfurVariant.Builder.of(ModEntities.SOUL).apply {
             visionType(VisionType.NIGHT_VISION)
-            faction(LatexType.NEUTRAL)
             breatheMode(TransfurVariant.BreatheMode.NONE)
             transfurMode(TransfurMode.NONE)
             itemUseMode(SOUL_USE_ITEM_MODE)
@@ -47,7 +46,6 @@ object ModTransfurVariant {
     val PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<PureWhiteLatexYufeng>> = REGISTRY.register("form_$PURE_WHITE_LATEX_YUFENG_ID") {
         TransfurVariant.Builder.of(ModEntities.PURE_WHITE_LATEX_YUFENG).apply {
             visionType(VisionType.NIGHT_VISION)
-            faction(LatexType.WHITE_LATEX)
             breatheMode(TransfurVariant.BreatheMode.ANY)
             glide()
         }.build()

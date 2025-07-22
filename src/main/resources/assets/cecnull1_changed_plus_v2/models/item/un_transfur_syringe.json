@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "cecnull1_changed_plus_v2:item/un_transfur_syringe"
+  }
+}

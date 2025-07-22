@@ -1,6 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.capability
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
+import com.github.cecnull1.cecnull1_changed_plus_v2.packet.HaStateNetworkHandler
 import net.minecraft.core.Direction
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.entity.player.Player
@@ -11,6 +11,22 @@ import net.minecraftforge.common.capabilities.CapabilityToken
 import net.minecraftforge.common.capabilities.ICapabilityProvider
 import net.minecraftforge.common.util.INBTSerializable
 import net.minecraftforge.common.util.LazyOptional
+
+data class ExtendedPlayerData(
+    val haState: HAState = HAState(),
+) {
+    fun saveNBTData(nbt: CompoundTag) {
+        haState.saveNBTData(nbt)
+    }
+
+    fun loadNBTData(nbt: CompoundTag) {
+        haState.loadNBTData(nbt)
+    }
+
+    fun copyFrom(other: ExtendedPlayerData) {
+        haState.copyFrom(other.haState)
+    }
+}
 
 data class HAState(
     var hasHA: Boolean = false,
@@ -32,25 +48,25 @@ data class HAState(
     }
 }
 
-class HAStateProvider : ICapabilityProvider, INBTSerializable<CompoundTag> {
+class ExtendedPlayerDataProvider : ICapabilityProvider, INBTSerializable<CompoundTag> {
     companion object {
         @JvmField
-        var PLAYER_HA_STATE: Capability<HAState> =
-            CapabilityManager.get<HAState>(object : CapabilityToken<HAState>() {})
+        val EXTENDED_PLAYER_DATA: Capability<ExtendedPlayerData> =
+            CapabilityManager.get<ExtendedPlayerData>(object : CapabilityToken<ExtendedPlayerData>() {})
     }
 
-    private var haState: HAState? = null
+    private var extendedPlayerData: ExtendedPlayerData? = null
 
-    private val optional: LazyOptional<HAState> = LazyOptional.of(this::createHAState)
+    private val optional: LazyOptional<ExtendedPlayerData> = LazyOptional.of(this::createExtendedPlayerData)
 
-    private fun createHAState(): HAState {
-        val naStateL = haState ?: HAState()
-        haState = naStateL
+    private fun createExtendedPlayerData(): ExtendedPlayerData {
+        val naStateL = extendedPlayerData ?: ExtendedPlayerData()
+        extendedPlayerData = ExtendedPlayerData()
         return naStateL
     }
 
     override fun <T : Any?> getCapability(cap: Capability<T>, side: Direction?): LazyOptional<T> {
-        return if (cap == PLAYER_HA_STATE) {
+        return if (cap == EXTENDED_PLAYER_DATA) {
             optional.cast()
         } else {
             LazyOptional.empty()
@@ -59,35 +75,42 @@ class HAStateProvider : ICapabilityProvider, INBTSerializable<CompoundTag> {
 
     override fun serializeNBT(): CompoundTag {
         val nbt = CompoundTag()
-        createHAState().saveNBTData(nbt)
+        createExtendedPlayerData().saveNBTData(nbt)
         return nbt
     }
 
     override fun deserializeNBT(nbt: CompoundTag) {
-        createHAState().loadNBTData(nbt)
+        createExtendedPlayerData().loadNBTData(nbt)
     }
 }
 
 var Player.haEnabled
     get(): Boolean {
-        return this.getCapability(HAStateProvider.PLAYER_HA_STATE).orElse(HAState()).hasHA
+        return this.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).orElse(ExtendedPlayerData()).haState.hasHA
     }
     set(value) {
-        this.getCapability(HAStateProvider.PLAYER_HA_STATE).orElse(HAState()).hasHA = value
-        // 每次更新时同步到客户端
-        if (!level().isClientSide) {
-            NetworkHandler.sendToClient(this)
+        val old = this.haEnabled
+        if (old != value) {
+            this.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).orElse(ExtendedPlayerData()).haState.hasHA = value
+            // 每次更新时同步到客户端
+            if (!level().isClientSide) {
+                HaStateNetworkHandler.sendToClient(this)
+            }
         }
     }
 
 var Player.haItem
     get(): ItemStack {
-        return this.getCapability(HAStateProvider.PLAYER_HA_STATE).orElse(HAState()).haItem
+        return this.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).orElse(ExtendedPlayerData()).haState.haItem
     }
     set(value) {
-        this.getCapability(HAStateProvider.PLAYER_HA_STATE).orElse(HAState()).haItem = value
-        // 每次更新时同步到客户端
-        if (!level().isClientSide) {
-            NetworkHandler.sendToClient(this)
+        val old = this.haItem
+        if (old !== value && !ItemStack.matches(old, value)) {
+            this.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA)
+                .orElse(ExtendedPlayerData()).haState.haItem = value
+            // 每次更新时同步到客户端
+            if (!level().isClientSide) {
+                HaStateNetworkHandler.sendToClient(this)
+            }
         }
     }

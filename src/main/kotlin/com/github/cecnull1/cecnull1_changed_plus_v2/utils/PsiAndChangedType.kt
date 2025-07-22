@@ -1,5 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 
+import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import vazkii.psi.api.spell.param.ParamSpecific
 

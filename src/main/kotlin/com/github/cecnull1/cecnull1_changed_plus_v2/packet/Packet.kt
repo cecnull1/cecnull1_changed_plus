@@ -43,7 +43,7 @@ class SyncHaStateMessage(
     }
 }
 
-object NetworkHandler {
+object HaStateNetworkHandler {
     private const val PROTOCOL_VERSION = "1"
     private val CHANNEL: SimpleChannel = NetworkRegistry.newSimpleChannel(
         ResourceLocation(MODID, "sync_ha_state"),

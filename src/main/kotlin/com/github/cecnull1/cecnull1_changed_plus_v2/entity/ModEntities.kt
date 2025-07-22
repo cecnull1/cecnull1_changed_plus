@@ -4,30 +4,42 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haEnabled
 import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PLAYER
+import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.sendAbilitiesUpdate
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TransfurContextUtils.toTransfurContext
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IMount
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.VariantTickPlusAble
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
+import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
+import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
+import com.github.cecnull1.cecnull1lib.utils.changed.ifPlayerNotTransfurred
+import com.github.cecnull1.cecnull1lib.utils.changed.removePlayerTransfurVariant
+import com.github.cecnull1.cecnull1lib.utils.changed.transfur
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
-import net.ltxprogrammer.changed.entity.*
+import com.github.cecnull1.cecnull1lib.utils.vector.div
+import com.github.cecnull1.cecnull1lib.utils.vector.plus
+import com.github.cecnull1.cecnull1lib.utils.vector.times
+import net.ltxprogrammer.changed.entity.ChangedEntity
+import net.ltxprogrammer.changed.entity.PowderSnowWalkable
+import net.ltxprogrammer.changed.entity.TransfurCause
+import net.ltxprogrammer.changed.entity.TransfurMode
 import net.ltxprogrammer.changed.entity.beast.AquaticEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexYufeng
 import net.ltxprogrammer.changed.entity.beast.LatexHuman
+import net.ltxprogrammer.changed.entity.latex.LatexType
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
-import net.ltxprogrammer.changed.init.ChangedAccessorySlots
-import net.ltxprogrammer.changed.init.ChangedItems
-import net.ltxprogrammer.changed.init.ChangedMobCategories
+import net.ltxprogrammer.changed.init.*
 import net.ltxprogrammer.changed.util.Color3
 import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Mth
-import net.minecraft.world.entity.EntityType
-import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.MobCategory
+import net.minecraft.world.entity.*
+import net.minecraft.world.entity.ai.attributes.Attribute
+import net.minecraft.world.entity.ai.attributes.AttributeMap
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.horse.Horse
@@ -38,12 +50,12 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec3
+import net.minecraftforge.common.ForgeMod
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
 import java.util.*
 import kotlin.math.abs
-import kotlin.math.sin
 
 object ModEntities {
     const val A_ENTITY_ID = "a_entity"
@@ -116,12 +128,15 @@ object ModEntities {
 //    }
 }
 
+
+
 open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkLatexYufeng(type, level),
     DarkLatexEntity,
     PowderSnowWalkable,
-    AquaticEntity {
+    AquaticEntity,
+    IFanJi<AEntity>{
 
-    override fun getLatexType() = LatexType.DARK_LATEX
+    override fun getLatexType(): LatexType = ChangedLatexTypes.DARK_LATEX.get()
     override fun getTransfurMode() = TransfurMode.REPLICATION
     override fun getTransfurColor(cause: TransfurCause?) = Color3.fromInt(0x3d3d3d)!!
     override fun isMaskless() = false
@@ -129,19 +144,28 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
 
     override fun variantTick(level: Level?) {
         super.variantTick(level)
-        flyAndInWaterLogic()
+        aEntityTick()
     }
 
     override fun getOwnerUUID(): UUID? {
         return entityData.get(DATA_OWNERUUID_ID).orElse(null)
+    }
+
+    protected override fun setAttributes(attributes: AttributeMap) {
+        super.setAttributes(attributes)
+        attributes[Attributes.MOVEMENT_SPEED] = 1.5
+        attributes[Attributes.MAX_HEALTH] = 40.0
+        attributes[ForgeMod.SWIM_SPEED.get()] = 2.0
+        attributes[Attributes.ATTACK_DAMAGE] = 20.0
+        attributes[ChangedAttributes.TRANSFUR_DAMAGE.get()] = 20.0
     }
 }
 
 open class CExoskeleton(p_21368_: EntityType<out Exoskeleton>?, p_21369_: Level?) : Exoskeleton(p_21368_, p_21369_)
 
 open class Zombie(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level) {
-    override fun getLatexType(): LatexType? {
-        return LatexType.NEUTRAL
+    override fun getLatexType(): LatexType {
+        return ChangedLatexTypes.NONE.get()
     }
 
     override fun getTransfurMode(): TransfurMode? {
@@ -149,8 +173,8 @@ open class Zombie(type: EntityType<out ChangedEntity>, level: Level) : ChangedEn
     }
 }
 
-open class AHorse(p_30689_: EntityType<out Horse>, p_30690_: Level) : Horse(p_30689_, p_30690_), DismountAble,
-    MountAble {
+open class AHorse(p_30689_: EntityType<out Horse>, p_30690_: Level) : Horse(p_30689_, p_30690_), IDismount,
+    IMount {
     init {
         this.isTamed = true
         this.inventory.setItem(INV_SLOT_SADDLE, ItemStack(Items.SADDLE))
@@ -190,7 +214,7 @@ open class Soul(type: EntityType<out ChangedEntity>, level: Level) : ChangedEnti
     }
 
     override fun getLatexType(): LatexType {
-        return LatexType.NEUTRAL
+        return ChangedLatexTypes.NONE.get()
     }
 
     override fun getTransfurMode(): TransfurMode {
@@ -223,8 +247,9 @@ open class Soul(type: EntityType<out ChangedEntity>, level: Level) : ChangedEnti
     }
 }
 
-open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : AEntity(type, level) {
-    override fun getLatexType(): LatexType = LatexType.WHITE_LATEX
+open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : AEntity(type, level), VariantTickPlusAble, IFanJi<PureWhiteLatexYufeng> {
+
+    override fun getLatexType() = ChangedLatexTypes.WHITE_LATEX.get()
     override fun getTransfurMode(): TransfurMode = TransfurMode.REPLICATION
     override fun isNoAi(): Boolean = false
     override fun variantTick(level: Level?) {
@@ -237,12 +262,12 @@ open class CPlayer(p_19870_: EntityType<out LatexHuman>, p_19871_: Level) : Late
         return TransfurMode.NONE
     }
 
-    override fun getLatexType(): LatexType? {
-        return LatexType.NEUTRAL
+    override fun getLatexType(): LatexType {
+        return ChangedLatexTypes.NONE.get()
     }
 }
 
-open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(type, level), DismountAble {
+open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(type, level), IDismount {
     companion object {
         const val YU_ZHI = 10f
     }
@@ -299,39 +324,39 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
         )
         ItemUtil.tryEquipAccessory(
             player,
-            ItemStack(ChangedItems.BLACK_TSHIRT.get()).apply {
-                enchant(Enchantments.BINDING_CURSE, 1)
+            ItemStack(ModItems.NOT_CAN_TAKE_OFF_WETSUIT.get()).apply {
                 enchant(Enchantments.VANISHING_CURSE, 1)
                 count = 1
             },
             ChangedAccessorySlots.BODY.get()
         )
+        player.haEnabled = true
+        player.haItem = ItemStack(Items.NETHERITE_SWORD).apply {
+            val modifierIdString = "${MODID}:${player.uuid}.riderIn(${this@NotCanDismountBoat.uuid})"
+            val uuid = UUID.nameUUIDFromBytes(modifierIdString.toByteArray(Charsets.US_ASCII)) // 将字符串转化为UUID
+            addAttributeModifier(
+                Attributes.ATTACK_DAMAGE,
+                AttributeModifier(
+                    uuid,
+                    modifierIdString,
+                    5.0,
+                    AttributeModifier.Operation.ADDITION
+                ),
+                EquipmentSlot.MAINHAND
+            )
+        }
     }
 
     override fun tick() {
         level().findNearestEntity(x, y, z, 2.0, Player::class.java)?.let {
                 player ->
             if (player.health >= YU_ZHI) {
-                player.startRiding(this)
-                player.haEnabled = true
-                player.haItem = ItemStack(Items.DIAMOND_SWORD).apply {
-                    val modifierIdString = "${MODID}:${player.uuid}.riderIn[${this@NotCanDismountBoat.uuid}]"
-                    val uuid = UUID.nameUUIDFromBytes(modifierIdString.toByteArray(Charsets.US_ASCII)) // 将字符串转化为UUID
-                    addAttributeModifier(
-                        Attributes.ATTACK_DAMAGE,
-                        AttributeModifier(
-                            uuid,
-                            modifierIdString,
-                            5.0,
-                            AttributeModifier.Operation.ADDITION
-                        ),
-                        EquipmentSlot.MAINHAND
-                    )
-                }
+                player.vehicle ?: player.startRiding(this)
+
                 this.deltaMovement = Vec3(
-                    this.deltaMovement.x + sin( this.lookAngle.x)/3/(abs(this.deltaMovement.x*8)+1),
+                    this.deltaMovement.x +  this.lookAngle.x/3/(abs(this.deltaMovement.x*8)+1),
                     this.deltaMovement.y.coerceAtLeast(0.0)+0.04,
-                    this.deltaMovement.z + sin( this.lookAngle.z)/3/(abs(this.deltaMovement.z*8)+1)
+                    this.deltaMovement.z + this.lookAngle.z/3/(abs(this.deltaMovement.z*8)+1)
                 )
             } else {
                 player.haEnabled = false
@@ -358,8 +383,8 @@ open class NoneTransfurVariant(type: EntityType<out ChangedEntity>, level: Level
     init {
         this.remove(RemovalReason.DISCARDED)
     }
-    override fun getLatexType(): LatexType? {
-        return LatexType.NEUTRAL
+    override fun getLatexType(): LatexType {
+        return ChangedLatexTypes.NONE.get()
     }
     override fun getTransfurMode(): TransfurMode? {
         return TransfurMode.NONE
@@ -374,33 +399,68 @@ open class Misc(type: EntityType<out ChangedEntity>, level: Level) : ChangedEnti
         return TransfurMode.REPLICATION
     }
 
-    override fun getLatexType(): LatexType? {
-        return LatexType.NEUTRAL
+    override fun getLatexType(): LatexType {
+        return ChangedLatexTypes.NONE.get()
     }
 }
 
-fun ChangedEntity.flyAndInWaterLogic(speed: Double = 64.0) {
+fun ChangedEntity.aEntityTick(speed: Double = 64.0) {
     val entity = maybeGetUnderlying()
-    val delta = entity.deltaMovement
-    val rotation = entity.lookAngle
-    if (entity.isInWaterOrBubble) {
-        entity.deltaMovement = Vec3(delta.x, delta.y.coerceAtMost(0.0), delta.z)
-    }
     if (entity.isFallFlying) {
         val fixSpeed =
             if (speed == 0.0 || speed.isNaN()) Double.POSITIVE_INFINITY /*返回无穷大以停止推进*/
             else speed
-        entity.deltaMovement = Vec3(
-            delta.x + sin(rotation.x) / fixSpeed,
-            delta.y + sin(rotation.y) / fixSpeed,
-            delta.z + sin(rotation.z) / fixSpeed
-        )
+        autoMove(fixSpeed)
+    }
+    if (entity.isInWaterOrBubble) {
+        autoMove(48)
+    }
+    if (entity.isOnFire) {
+        if (entity is Player) {
+            entity.startFallFlying()
+        }
+        autoMove(24, false)
+        entity.remainingFireTicks -= 2 // 额外减火
     }
     applyTerminalVelocity(entity)
 }
+
+operator fun <T: Number> AttributeMap.set(attribute: Attribute, value: T) = this.getInstance(attribute)?.baseValue = value.toDouble()
+operator fun AttributeMap.get(attribute: Attribute) = this.getInstance(attribute)?.baseValue ?: 0.0
+
+/**
+ * 有副作用函数：自动调整实体的移动增量（修改 deltaMovement）。
+ * @param divSpeed 速度除数（越大，移动速度越慢）。
+ * @throws NullPointerException 如果 maybeGetUnderlying() 意外返回 null。
+ */
+inline fun <reified T: Number> Entity.autoMove(divSpeed: T, yEnabled: Boolean = true) {
+    val doubleSpeed = divSpeed.toDouble() // 安全转换（所有 Number 子类型均支持）
+    val entity = this
+    entity.deltaMovement = entity.deltaMovement.funcAutoMove(
+        rotation = entity.lookAngle,
+        divSpeed = doubleSpeed,
+        yEnabled = yEnabled
+    )
+}
+
+/**
+ * 无副作用纯函数：计算自动移动的位移向量（不修改实体状态）。
+ * @param rotation 旋转角度向量（影响移动方向）。
+ * @param divSpeed 基础速度（各轴使用此值）。
+ * @param yEnabled 是否启用 Y 轴移动（`true` 保留 Y 轴速度，`false` 禁用）。
+ */
+fun Vec3.funcAutoMove(rotation: Vec3, divSpeed: Double, yEnabled: Boolean = true) = this + ((rotation * Vec3(1.0, yEnabled.compareTo(false).toDouble(), 1.0)) / Vec3(divSpeed, divSpeed, divSpeed))
+
+/**
+ * 将布尔值转换为整数。
+ *
+ * @return 如果布尔值为 `true`，则返回 1；否则返回 0。
+ */
+fun Boolean.toInt() = if (this) 1 else 0
 
 fun applyTerminalVelocity(entity: LivingEntity) {
     val delta = entity.deltaMovement
     entity.deltaMovement = Vec3(delta.x, Mth.clamp(delta.y, -0.5, 0.5), delta.z)
     entity.resetFallDistance()
 }
+

@@ -13,17 +13,20 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NOT_CAN_D
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.modEventBus
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.ZombieModel
-import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
+import com.github.cecnull1.cecnull1_changed_plus_v2.packet.HaStateNetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceOperatorEntityGetTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceTrickTransfurLivingEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.NoneTransfurVariantRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.SoulRenderer
 import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
 import net.ltxprogrammer.changed.client.renderer.ExoskeletonRenderer
+import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer
+import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer.ModelComponent
+import net.ltxprogrammer.changed.client.renderer.layers.AccessoryLayer
+import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.UseItemMode
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton
@@ -32,6 +35,7 @@ import net.minecraft.client.renderer.entity.BoatRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.client.renderer.entity.HorseRenderer
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.horse.Horse
 import net.minecraftforge.api.distmarker.Dist
@@ -43,13 +47,16 @@ import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.ModList
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 import vazkii.psi.api.PsiAPI
 
 
 @Mod(MODID)
-class Cecnull1_changed_plus {
+class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
     init {
+        val modEventBus = context.modEventBus
         // 其他初始化代码...
         ModEntities.REGISTER.register(modEventBus)
         ModTransfurVariant.REGISTRY.register(modEventBus)
@@ -68,7 +75,7 @@ object Events {
     @SubscribeEvent
     fun onCommonSetup(event: FMLCommonSetupEvent) {
         event.enqueueWork {
-            NetworkHandler.register()
+            HaStateNetworkHandler.register()
         }
     }
 
@@ -77,13 +84,7 @@ object Events {
     fun registerEntityAttributes(event: EntityAttributeCreationEvent) {
         event.put(
             A_ENTITY.get(),
-            ChangedEntity.createLatexAttributes().apply {
-                add(Attributes.MAX_HEALTH, 24.0)
-                add(Attributes.MOVEMENT_SPEED, 0.4)
-                add(ForgeMod.SWIM_SPEED.get(), 2.0)
-                add(Attributes.ATTACK_DAMAGE, 20.0)
-                add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
-            }.build()
+            ChangedEntity.createLatexAttributes().build()
         )
         event.put(
             CEXOSKELETON.get(),
@@ -91,34 +92,27 @@ object Events {
         )
         event.put(
             A_HORSE.get(),
-            Horse.createBaseHorseAttributes().apply {
-                add(Attributes.MAX_HEALTH, 20.0)
-                add(Attributes.MOVEMENT_SPEED, 0.3)
-                add(ForgeMod.SWIM_SPEED.get(), 2.0)
-                add(Attributes.ATTACK_DAMAGE, 0.0)
-
-            }.build()
+            Horse.createBaseHorseAttributes()
+                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MOVEMENT_SPEED, 3.0)
+                .add(ForgeMod.SWIM_SPEED.get(), 2.0)
+                .add(Attributes.ATTACK_DAMAGE, 0.0)
+                .build()
         )
         event.put(
             SOUL.get(),
-            ChangedEntity.createLatexAttributes().apply {
-                add(Attributes.MAX_HEALTH, 1.0)
-                add(Attributes.MOVEMENT_SPEED, 0.0)
-                add(ForgeMod.SWIM_SPEED.get(), 0.0)
-                add(Attributes.ATTACK_DAMAGE, 0.01)
-                add(Attributes.JUMP_STRENGTH, 0.0)
-                add(Attributes.FLYING_SPEED) // 使用默认值，不禁用飞行能力
-            }.build()
+            ChangedEntity.createLatexAttributes()
+                .add(Attributes.MAX_HEALTH, 1.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.0)
+                .add(ForgeMod.SWIM_SPEED.get(), 0.0)
+                .add(Attributes.ATTACK_DAMAGE, 0.01)
+                .add(Attributes.JUMP_STRENGTH, 0.0)
+                .add(Attributes.FLYING_SPEED)
+                .build()
         )
         event.put(
             PURE_WHITE_LATEX_YUFENG.get(),
-            ChangedEntity.createLatexAttributes().apply {
-                add(Attributes.MAX_HEALTH, 24.0)
-                add(Attributes.MOVEMENT_SPEED, 0.4)
-                add(ForgeMod.SWIM_SPEED.get(), 2.0)
-                add(Attributes.ATTACK_DAMAGE, 20.0)
-                add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
-            }.build()
+            ChangedEntity.createLatexAttributes().build()
         )
         event.put(
             NONE_ENTITY.get(),
@@ -126,19 +120,32 @@ object Events {
         )
         event.put(
             MISC.get(),
-            ChangedEntity.createLatexAttributes().apply {
-                add(Attributes.MAX_HEALTH, 24.0)
-                add(Attributes.MOVEMENT_SPEED, 0.4)
-                add(ForgeMod.SWIM_SPEED.get(), 2.0)
-                add(Attributes.ATTACK_DAMAGE, 20.0)
-                add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
-            }.build()
+            ChangedEntity.createLatexAttributes()
+                .add(Attributes.MAX_HEALTH, 24.0)
+                .add(Attributes.MOVEMENT_SPEED, 4.0)
+                .add(ForgeMod.SWIM_SPEED.get(), 2.0)
+                .add(Attributes.ATTACK_DAMAGE, 20.0)
+                .add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
+                .build()
         )
     }
 }
 
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = [Dist.CLIENT])
 object ClientEvents {
+    @JvmStatic
+    @SubscribeEvent
+    fun registerAccessoryRenderers(event: FMLClientSetupEvent) {
+        AccessoryLayer.registerRenderer(
+            ModItems.NOT_CAN_TAKE_OFF_WETSUIT.get(), SimpleClothingRenderer.of(
+                ArmorModel.CLOTHING_INNER, mutableSetOf<ModelComponent?>(
+                    ModelComponent(ArmorModel.CLOTHING_INNER, EquipmentSlot.CHEST),
+                    ModelComponent(ArmorModel.CLOTHING_INNER, EquipmentSlot.LEGS)
+                )
+            )
+        )
+    }
+
     @JvmStatic
     @SubscribeEvent
     fun registerLayerDefinitions(event: RegisterLayerDefinitions) {
@@ -212,4 +219,3 @@ private fun registerUseItemMode(
 }
 
 val SOUL_USE_ITEM_MODE = registerUseItemMode("SOUL_USE_ITEM_MODE", false, true, false, false, false)
-

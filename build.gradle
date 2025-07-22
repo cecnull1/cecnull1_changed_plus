@@ -15,6 +15,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    //id 'com.google.devtools.ksp' version '2.2.0-2.0.2'
 }
 
 apply plugin: 'org.spongepowered.mixin'
@@ -28,7 +29,7 @@ base {
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(17)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
 minecraft {
@@ -169,11 +170,12 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    implementation fg.deobf(files("libs/Changed-m1.20.1-v0.15.0-all.jar"))
+    implementation fg.deobf(files("libs/Changed-m1.20.1-v0.15.0-all_.jar"))
     implementation fg.deobf(files("libs/Psi-1.20.1-102.jar"))
-    implementation fg.deobf(files("libs/cecnull1lib-2.0.jar"))
+    implementation fg.deobf(files("libs/cecnull1lib-2.0_.jar"))
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-
+    //ksp ("com.google.auto.service:auto-service:1.0")
+    //implementation("com.google.auto.service:auto-service-annotations:1.0")
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
@@ -214,5 +216,5 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
