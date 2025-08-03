@@ -3,6 +3,7 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.item
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.ICanTakeOff
 import com.github.cecnull1.cecnull1lib.utils.EnchantmentUtils.hasEnchantment
 import com.github.cecnull1.cecnull1lib.utils.changed.removePlayerTransfurVariant
 import net.ltxprogrammer.changed.data.AccessorySlotContext
@@ -16,6 +17,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.*
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.Level
@@ -85,26 +87,16 @@ class XinYueItem : Item(Properties()) {
     }
 }
 
-class NotCanTakeOffWetsuit : WetsuitItem() {
-
-    // 性能优化：避免每tick检查
-    override fun accessoryTick(slotContext: AccessorySlotContext<*>) {
-        super.accessoryTick(slotContext)
-        val itemStack = slotContext.stack ?: return
-
-        // 仅当物品第一次被穿戴时添加诅咒
-        if (itemStack.enchantmentTags.isEmpty) {
-            itemStack.enchant(Enchantments.BINDING_CURSE, 1)
-        }
-    }
-
+class NotCanTakeOffWetsuit : WetsuitItem(), ICanTakeOff {
     // 完全保留您原始纹理实现
     override fun getArmorTexture(stack: ItemStack?, entity: Entity?, slot: EquipmentSlot?, type: String?): String? {
         return "changed:textures/models/wetsuit.png"
     }
+
+    override fun canTakeOff(slot: Slot, item: ItemStack): Boolean = false
 }
 
-class NotCanTakeOffLabCoat: LabCoatItem() {
+class NotCanTakeOffLabCoat(): LabCoatItem(), ICanTakeOff {
     override fun allowedInSlot(itemStack: ItemStack?, wearer: LivingEntity?, slot: AccessorySlotType?): Boolean {
         return true
     }
@@ -114,10 +106,11 @@ class NotCanTakeOffLabCoat: LabCoatItem() {
     }
 
     override fun accessoryInteract(slotContext: AccessorySlotContext<*>) {
-        val state = this.getClothingState(slotContext.stack())
+        val itemStack = slotContext.stack() ?: ItemStack.EMPTY
+        val state = this.getClothingState(itemStack)
         if (!state.getValue<Boolean>(CLOSED)) {
-            this.setClothingState(slotContext.stack(), this.getClothingState(slotContext.stack()).cycle<Boolean?>(CLOSED))
-            val changeSound = this.getEquipSound(slotContext.stack())
+            this.setClothingState(itemStack, this.getClothingState(itemStack).cycle<Boolean?>(CLOSED))
+            val changeSound = this.getEquipSound(itemStack)
             if (changeSound != null) slotContext.wearer().playSound(changeSound, 1f, 1f)
         } else {
             slotContext.wearer?.let {
@@ -130,13 +123,14 @@ class NotCanTakeOffLabCoat: LabCoatItem() {
         }
     }
 
-    override fun accessoryTick(slotContext: AccessorySlotContext<*>) {
-        super.accessoryTick(slotContext)
-        val itemStack = slotContext.stack ?: return
-        if (this.getClothingState(itemStack).getValue<Boolean>(CLOSED) && !hasEnchantment(itemStack, Enchantments.BINDING_CURSE)) {
-            itemStack.enchant(Enchantments.BINDING_CURSE, 1)
-        }
+    override fun getArmorTexture(stack: ItemStack, entity: Entity?, slot: EquipmentSlot?, type: String?): String? {
+        return if (this.getClothingState(stack)
+                .getValue<Boolean?>(CLOSED)
+        ) "changed:textures/models/lab_coat_closed.png"
+        else "changed:textures/models/lab_coat.png"
     }
+
+    override fun canTakeOff(slot: Slot, item: ItemStack): Boolean = this.getClothingState(item)?.getValue<Boolean>(CLOSED) != true
 }
 
 class UnTransfurSyringe(p_41383_: Properties) : BloodSyringe(p_41383_) {

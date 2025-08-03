@@ -5,6 +5,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL_ID
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID
 import net.ltxprogrammer.changed.entity.MiningStrength
 import net.ltxprogrammer.changed.entity.TransfurMode
 import net.ltxprogrammer.changed.entity.VisionType
@@ -50,6 +51,14 @@ object ModTransfurVariant {
             glide()
         }.build()
     }
+
+    val PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<PureWhiteLatexYufengByNCDBoat>> = REGISTRY.register("form_$PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID") {
+        TransfurVariant.Builder.of(ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT).apply {
+            visionType(VisionType.NIGHT_VISION)
+            breatheMode(TransfurVariant.BreatheMode.ANY)
+            glide()
+        }.build()
+     }
 
     val NONE_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<NoneTransfurVariant>> = REGISTRY.register("form_none") {
         TransfurVariant.Builder.of(ModEntities.NONE_ENTITY).build()

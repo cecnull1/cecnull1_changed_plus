@@ -36,7 +36,7 @@ class AEntityRenderer(context: EntityRendererProvider.Context) :
         this.addLayer(
             LatexParticlesLayer(
                 this, getModel(),
-                Predicate { part: ModelPart? -> model.isPartNotMask(part!!) })
+                Predicate { part: ModelPart? -> part != null && model.isPartNotMask(part) })
         )
         this.addLayer(TransfurCapeLayer.normalCape(this, context.modelSet))
         this.addLayer(
@@ -100,7 +100,7 @@ class NoneTransfurVariantRenderer<T: Entity>(context: EntityRendererProvider.Con
     }
 
     // 返回null避免默认名称渲染
-    override fun getTextureLocation(entity: T): ResourceLocation? {
-        return null
+    override fun getTextureLocation(entity: T): ResourceLocation {
+        return ResourceLocation("")
     }
 }

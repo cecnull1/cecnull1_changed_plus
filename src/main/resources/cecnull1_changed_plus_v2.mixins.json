@@ -11,7 +11,9 @@
     "MixinServerGamePacketListenerImpl",
     "BlockMixin",
     "FluidMixin",
-    "FluidTypeMixin"
+    "FluidTypeMixin",
+    "InventoryMenu$1Mixin",
+    "AccessoryAccessMenu$1Mixin"
   ],
   "client": [
   ],

@@ -1,16 +1,14 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.packet
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.capability.HAState
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haEnabled
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IPlayerExtendedData
 import net.minecraft.client.Minecraft
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
 import net.minecraftforge.network.NetworkDirection
 import net.minecraftforge.network.NetworkEvent
 import net.minecraftforge.network.NetworkRegistry
@@ -35,8 +33,9 @@ class SyncHaStateMessage(
         context.get().enqueueWork {
             val player = Minecraft.getInstance().level?.getEntity(playerId) as? Player
             if (player != null && data != null) {
-                player.haEnabled = data.getBoolean("hasHA")
-                player.haItem = ItemStack.of(data.getCompound("haItem"))
+                if (player is IPlayerExtendedData) {
+                    player.getMPlayerExtendedData().haState.deserialize(data)
+                }
             }
         }
         context.get().packetHandled = true
@@ -69,11 +68,8 @@ object HaStateNetworkHandler {
             SyncHaStateMessage(
                 playerId = player.id,
                 data = HAState().apply {
-                    hasHA = player.haEnabled
-                    haItem = player.haItem
-                }.let { state ->
-                    CompoundTag().apply { state.saveNBTData(this) }
-                }
+                    copyFrom(player)
+                }.serialize()
             ),
             (player as ServerPlayer).connection.connection,
             NetworkDirection.PLAY_TO_CLIENT

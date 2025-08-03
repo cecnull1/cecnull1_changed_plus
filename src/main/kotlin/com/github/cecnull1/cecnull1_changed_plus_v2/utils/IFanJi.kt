@@ -7,26 +7,22 @@ import net.minecraft.commands.arguments.EntityAnchorArgument
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 
-interface IFanJi<T : ChangedEntity> {
+interface IFanJi {
     fun onAttackedBy(attacker: Entity) {
         if (this !is ChangedEntity) return
 
         val livingEntity = this.maybeGetUnderlying()
 
-        lookAt(EntityAnchorArgument.Anchor.EYES, attacker.position() ?: Vec3.ZERO)
+        livingEntity.lookAt(EntityAnchorArgument.Anchor.EYES, attacker.position() ?: Vec3.ZERO)
         if (livingEntity is Player) {
             livingEntity.attack(attacker)
             if (livingEntity is ServerPlayer) livingEntity.sendPositionUpdate()
             getLogger().info("$livingEntity attack $attacker")
         } else {
-            attacker.hurt(
-                livingEntity.damageSources().mobAttack(livingEntity),
-                livingEntity.getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
-            )
+            livingEntity.doHurtTarget(attacker)
         }
 
         livingEntity.swing(InteractionHand.MAIN_HAND, true)

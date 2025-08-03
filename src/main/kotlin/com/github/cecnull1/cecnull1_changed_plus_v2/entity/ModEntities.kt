@@ -1,14 +1,17 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haEnabled
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
+import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.IS_HA
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PLAYER
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.sendAbilitiesUpdate
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IMount
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.VariantTickPlusAble
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
@@ -32,11 +35,16 @@ import net.ltxprogrammer.changed.entity.beast.LatexHuman
 import net.ltxprogrammer.changed.entity.latex.LatexType
 import net.ltxprogrammer.changed.entity.robot.Exoskeleton
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
-import net.ltxprogrammer.changed.init.*
+import net.ltxprogrammer.changed.init.ChangedAccessorySlots
+import net.ltxprogrammer.changed.init.ChangedAttributes
+import net.ltxprogrammer.changed.init.ChangedLatexTypes
+import net.ltxprogrammer.changed.init.ChangedMobCategories
+import net.ltxprogrammer.changed.item.ClothingItem.CLOSED
 import net.ltxprogrammer.changed.util.Color3
 import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Mth
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.*
 import net.minecraft.world.entity.ai.attributes.Attribute
 import net.minecraft.world.entity.ai.attributes.AttributeMap
@@ -47,7 +55,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.vehicle.Boat
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec3
 import net.minecraftforge.common.ForgeMod
@@ -68,6 +75,8 @@ object ModEntities {
     const val NOT_CAN_DISMOUNT_BOAT_ID = "not_can_dismount_boat"
     const val NONE_ENTITY_ID = "none_entity"
     const val MISC_ID = "misc"
+    const val PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID = "pure_white_latex_yufeng_by_ncdboat"
+
     val REGISTER: DeferredRegister<EntityType<*>> = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID)
 
     val A_ENTITY: RegistryObject<EntityType<AEntity>> = REGISTER.register(A_ENTITY_ID) {
@@ -105,6 +114,12 @@ object ModEntities {
             .build(MISC_ID)
     }
 
+    val PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT: RegistryObject<EntityType<PureWhiteLatexYufengByNCDBoat>> = REGISTER.register(PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID) {
+        EntityType.Builder.of(::PureWhiteLatexYufengByNCDBoat, ChangedMobCategories.CHANGED)
+            .sized(0.7f, 1.93f)
+            .build(PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID)
+    }
+
 //    val C_PLAYER : RegistryObject<EntityType<CPlayer>> = REGISTER.register(CPLAYER_ID) {
 //        EntityType.Builder.of(::CPlayer, MobCategory.MISC)
 //            .sized(0.7f, 1.8f)
@@ -134,11 +149,11 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
     DarkLatexEntity,
     PowderSnowWalkable,
     AquaticEntity,
-    IFanJi<AEntity>{
+    IFanJi {
 
     override fun getLatexType(): LatexType = ChangedLatexTypes.DARK_LATEX.get()
     override fun getTransfurMode() = TransfurMode.REPLICATION
-    override fun getTransfurColor(cause: TransfurCause?) = Color3.fromInt(0x3d3d3d)!!
+    override fun getTransfurColor(cause: TransfurCause): Color3 = Color3.fromInt(0x3d3d3d)
     override fun isMaskless() = false
     override fun getTransfurVariant(): TransfurVariant<*>? = this.selfVariant
 
@@ -247,7 +262,7 @@ open class Soul(type: EntityType<out ChangedEntity>, level: Level) : ChangedEnti
     }
 }
 
-open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : AEntity(type, level), VariantTickPlusAble, IFanJi<PureWhiteLatexYufeng> {
+open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : AEntity(type, level), VariantTickPlusAble, IFanJi {
 
     override fun getLatexType() = ChangedLatexTypes.WHITE_LATEX.get()
     override fun getTransfurMode(): TransfurMode = TransfurMode.REPLICATION
@@ -266,6 +281,10 @@ open class CPlayer(p_19870_: EntityType<out LatexHuman>, p_19871_: Level) : Late
         return ChangedLatexTypes.NONE.get()
     }
 }
+
+open class PureWhiteLatexYufengByNCDBoat(type: EntityType<out AEntity>, level: Level?) : PureWhiteLatexYufeng(type,
+    level
+)
 
 open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(type, level), IDismount {
     companion object {
@@ -297,53 +316,18 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
         return passengers.filterIsInstance<Player>().let {
             it.forEach {
                 it.ifPlayerNotTransfurred {
-                    transfurAndAddArmor(it)
+                    it.transfur(
+                        transfurData = TransfurData(
+                            variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT.get(),
+                            keepConscious = true
+                        )
+                    )
+                    notCanDismountBoatAddArmor(it)
                 }
             }
             it.any {
                 it.health <= YU_ZHI
             }
-        }
-    }
-
-    private fun transfurAndAddArmor(player: Player) {
-        player.transfur(
-            transfurData = TransfurData(
-                variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get(),
-                keepConscious = true
-            )
-        )
-        ItemUtil.tryEquipAccessory(
-            player,
-            ItemStack(ChangedItems.LAB_COAT.get()).apply {
-                enchant(Enchantments.BINDING_CURSE, 1)
-                enchant(Enchantments.VANISHING_CURSE, 1)
-                count = 1
-            },
-            ChangedAccessorySlots.FULL_BODY.get()
-        )
-        ItemUtil.tryEquipAccessory(
-            player,
-            ItemStack(ModItems.NOT_CAN_TAKE_OFF_WETSUIT.get()).apply {
-                enchant(Enchantments.VANISHING_CURSE, 1)
-                count = 1
-            },
-            ChangedAccessorySlots.BODY.get()
-        )
-        player.haEnabled = true
-        player.haItem = ItemStack(Items.NETHERITE_SWORD).apply {
-            val modifierIdString = "${MODID}:${player.uuid}.riderIn(${this@NotCanDismountBoat.uuid})"
-            val uuid = UUID.nameUUIDFromBytes(modifierIdString.toByteArray(Charsets.US_ASCII)) // 将字符串转化为UUID
-            addAttributeModifier(
-                Attributes.ATTACK_DAMAGE,
-                AttributeModifier(
-                    uuid,
-                    modifierIdString,
-                    5.0,
-                    AttributeModifier.Operation.ADDITION
-                ),
-                EquipmentSlot.MAINHAND
-            )
         }
     }
 
@@ -359,7 +343,7 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
                     this.deltaMovement.z + this.lookAngle.z/3/(abs(this.deltaMovement.z*8)+1)
                 )
             } else {
-                player.haEnabled = false
+                player.hasHA = false
             }
             this.persistentData[MODID] = this.getModData(MODID).also {
                     persistentData ->
@@ -391,6 +375,7 @@ open class NoneTransfurVariant(type: EntityType<out ChangedEntity>, level: Level
     }
     override fun playerVariantTick(player: Player, level: Level?) {
         player.removePlayerTransfurVariant()
+
     }
 }
 
@@ -402,27 +387,140 @@ open class Misc(type: EntityType<out ChangedEntity>, level: Level) : ChangedEnti
     override fun getLatexType(): LatexType {
         return ChangedLatexTypes.NONE.get()
     }
+
+    override fun registerGoals() {}
+    override fun isNoAi() = false
 }
 
-fun ChangedEntity.aEntityTick(speed: Double = 64.0) {
+fun ChangedEntity.aEntityTick() {
     val entity = maybeGetUnderlying()
     if (entity.isFallFlying) {
-        val fixSpeed =
-            if (speed == 0.0 || speed.isNaN()) Double.POSITIVE_INFINITY /*返回无穷大以停止推进*/
-            else speed
-        autoMove(fixSpeed)
+        entity.autoMove(48)
     }
     if (entity.isInWaterOrBubble) {
-        autoMove(48)
+        if (entity.isSwimming) {
+            entity.autoMove(32)
+        } else {
+            entity.autoMove(40)
+        }
     }
-    if (entity.isOnFire) {
+    if (false
+        || entity.isOnFire
+        || entity.isInLava
+        || entity.activeEffects.any {
+            it.effect.let {
+                false
+                    || it == MobEffects.WITHER
+                    || it == MobEffects.POISON
+                    || it == MobEffects.HUNGER
+                    || it == MobEffects.WEAKNESS
+            }
+        }) {
         if (entity is Player) {
             entity.startFallFlying()
         }
-        autoMove(24, false)
-        entity.remainingFireTicks -= 2 // 额外减火
+        entity.autoMove(12)
+    }
+    if (entity is Player) {
+        if (entity.foodData.foodLevel <= 6) {
+            entity.autoMove(32)
+            entity.startFallFlying()
+        }
     }
     applyTerminalVelocity(entity)
+}
+
+fun Entity.notCanDismountBoatAddArmor(player: Player) {
+    ItemUtil.tryEquipAccessory(
+        player,
+        run {
+            val item = ModItems.NOT_CAN_TAKE_OFF_LAB_COAT.get()
+            val itemStack = ItemStack(item)
+            item.setClothingState(itemStack, item.getClothingState(itemStack).setValue(CLOSED, true))
+            itemStack.count = 1
+            itemStack.tag = itemStack.orCreateTag.apply {
+                this[IS_HA] = true
+            }
+            itemStack
+        },
+        ChangedAccessorySlots.FULL_BODY.get()
+    )
+    ItemUtil.tryEquipAccessory(
+        player,
+        ItemStack(ModItems.NOT_CAN_TAKE_OFF_WETSUIT.get()).apply {
+            count = 1
+            this.tag = orCreateTag.apply {
+                this[IS_HA] = true
+            }
+        },
+        ChangedAccessorySlots.BODY.get()
+    )
+
+    val modifierIdString = "${MODID}:${player.uuid}.riderIn(${this.uuid})"
+    val uuid = UUID.nameUUIDFromBytes(modifierIdString.toByteArray(Charsets.US_ASCII)) // 将字符串转化为UUID
+    player.hasHA = true
+    player.haItem = ItemStack(Items.DIAMOND_SWORD).apply {
+        addAttributeModifier(
+            Attributes.ATTACK_DAMAGE,
+            AttributeModifier(
+                uuid,
+                modifierIdString,
+                15.0,
+                AttributeModifier.Operation.ADDITION
+            ),
+            EquipmentSlot.MAINHAND
+        )
+        addAttributeModifier(
+            Attributes.ATTACK_SPEED,
+            AttributeModifier(
+                uuid,
+                modifierIdString,
+                -1.6,
+                AttributeModifier.Operation.ADDITION
+            ),
+            EquipmentSlot.MAINHAND
+        )
+    }
+
+    fun ItemStack.addArmorAttributeModifiers(): ItemStack {
+        val slot = when (val item = this.item) {
+            is net.minecraft.world.item.ArmorItem -> item.type.slot // 通过原版盔甲系统获取槽位
+            else -> EquipmentSlot.MAINHAND // 默认槽位（主手）
+        }
+
+        val modifierIdString = "${MODID}:${player.uuid}.riderIn(${this@notCanDismountBoatAddArmor.uuid}) item=$item slot=$slot"
+        val uuid = UUID.nameUUIDFromBytes(modifierIdString.toByteArray(Charsets.US_ASCII))
+
+        this.addAttributeModifier(
+            Attributes.ARMOR,
+            AttributeModifier(
+                uuid,
+                modifierIdString,
+                10.0,
+                AttributeModifier.Operation.ADDITION
+            ),
+            slot
+        )
+        this.addAttributeModifier(
+            Attributes.ARMOR_TOUGHNESS,
+            AttributeModifier(
+                uuid,
+                modifierIdString,
+                10.0,
+                AttributeModifier.Operation.ADDITION
+            ),
+            slot
+        )
+
+        return this
+    }
+    player.hasArmorHA = true
+    player.haArmorItems = mutableMapOf<EquipmentSlot, ItemStack>(
+        EquipmentSlot.HEAD to ItemStack(Items.DIAMOND_HELMET).addArmorAttributeModifiers(),
+        EquipmentSlot.CHEST to ItemStack(Items.DIAMOND_CHESTPLATE).addArmorAttributeModifiers(),
+        EquipmentSlot.LEGS to ItemStack(Items.DIAMOND_LEGGINGS).addArmorAttributeModifiers(),
+        EquipmentSlot.FEET to ItemStack(Items.DIAMOND_BOOTS).addArmorAttributeModifiers()
+    )
 }
 
 operator fun <T: Number> AttributeMap.set(attribute: Attribute, value: T) = this.getInstance(attribute)?.baseValue = value.toDouble()
@@ -431,7 +529,6 @@ operator fun AttributeMap.get(attribute: Attribute) = this.getInstance(attribute
 /**
  * 有副作用函数：自动调整实体的移动增量（修改 deltaMovement）。
  * @param divSpeed 速度除数（越大，移动速度越慢）。
- * @throws NullPointerException 如果 maybeGetUnderlying() 意外返回 null。
  */
 inline fun <reified T: Number> Entity.autoMove(divSpeed: T, yEnabled: Boolean = true) {
     val doubleSpeed = divSpeed.toDouble() // 安全转换（所有 Number 子类型均支持）
@@ -450,13 +547,6 @@ inline fun <reified T: Number> Entity.autoMove(divSpeed: T, yEnabled: Boolean = 
  * @param yEnabled 是否启用 Y 轴移动（`true` 保留 Y 轴速度，`false` 禁用）。
  */
 fun Vec3.funcAutoMove(rotation: Vec3, divSpeed: Double, yEnabled: Boolean = true) = this + ((rotation * Vec3(1.0, yEnabled.compareTo(false).toDouble(), 1.0)) / Vec3(divSpeed, divSpeed, divSpeed))
-
-/**
- * 将布尔值转换为整数。
- *
- * @return 如果布尔值为 `true`，则返回 1；否则返回 0。
- */
-fun Boolean.toInt() = if (this) 1 else 0
 
 fun applyTerminalVelocity(entity: LivingEntity) {
     val delta = entity.deltaMovement

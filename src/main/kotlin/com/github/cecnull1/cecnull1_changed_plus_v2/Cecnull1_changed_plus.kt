@@ -11,6 +11,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.MISC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NONE_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NOT_CAN_DISMOUNT_BOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
@@ -128,6 +129,10 @@ object Events {
                 .add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
                 .build()
         )
+        event.put(
+            PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get(),
+            ChangedEntity.createLatexAttributes().build()
+        )
     }
 }
 
@@ -138,9 +143,17 @@ object ClientEvents {
     fun registerAccessoryRenderers(event: FMLClientSetupEvent) {
         AccessoryLayer.registerRenderer(
             ModItems.NOT_CAN_TAKE_OFF_WETSUIT.get(), SimpleClothingRenderer.of(
-                ArmorModel.CLOTHING_INNER, mutableSetOf<ModelComponent?>(
+                ArmorModel.CLOTHING_INNER, setOf<ModelComponent>(
                     ModelComponent(ArmorModel.CLOTHING_INNER, EquipmentSlot.CHEST),
                     ModelComponent(ArmorModel.CLOTHING_INNER, EquipmentSlot.LEGS)
+                )
+            )
+        )
+        AccessoryLayer.registerRenderer(
+            ModItems.NOT_CAN_TAKE_OFF_LAB_COAT.get(), SimpleClothingRenderer.of(
+                ArmorModel.CLOTHING_OUTER, setOf<ModelComponent>(
+                    ModelComponent(ArmorModel.CLOTHING_OUTER, EquipmentSlot.CHEST),
+                    ModelComponent(ArmorModel.CLOTHING_MIDDLE, EquipmentSlot.LEGS)
                 )
             )
         )
@@ -200,6 +213,11 @@ object ClientEvents {
             MISC.get()
         ) { context: EntityRendererProvider.Context ->
             NoneTransfurVariantRenderer(context)
+        }
+        event.registerEntityRenderer(
+            PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get()
+        ) { context: EntityRendererProvider.Context ->
+            DarkLatexYufengRenderer(context)
         }
     }
 }

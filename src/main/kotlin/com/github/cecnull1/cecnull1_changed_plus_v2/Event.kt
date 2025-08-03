@@ -1,21 +1,19 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.ExtendedPlayerDataProvider
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.HAState
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haEnabled
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.notCanDismountBoatAddArmor
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.HaStateNetworkHandler
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IMount
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.VariantTickPlusAble
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTransfurDataOrNull
@@ -23,21 +21,23 @@ import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.tran
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.google.common.collect.Iterables
+import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.beast.PureWhiteLatexWolf
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
 import net.ltxprogrammer.changed.init.ChangedBlocks
+import net.ltxprogrammer.changed.init.ChangedGameRules
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.client.Minecraft
 import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.RelativeMovement
 import net.minecraft.world.entity.player.Player
@@ -45,7 +45,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent
 import net.minecraftforge.event.AttachCapabilitiesEvent
 import net.minecraftforge.event.TickEvent
 import net.minecraftforge.event.TickEvent.PlayerTickEvent
@@ -97,28 +96,58 @@ object Event {
                 player.health = 0.0f
                 if (player is ServerPlayer) player.sendHealthUpdate()
             }
-            for (itemStack in ItemUtil.getWearingItems(player)) {
-                if (itemStack.itemStack.item is NotCanTakeOffWetsuit) {
+
+            for (itemStack in ItemUtil.getWearingItems(player).toImmutableSafeList()) {
+                if (itemStack.itemStack.item is NotCanTakeOffWetsuit && player.isInWater) {
                     val fixSpeed = 20.0
+                    val delta = player.deltaMovement
+                    val rotation = player.lookAngle
                     if (!player.isFallFlying) {
-                        val delta = player.deltaMovement
-                        val rotation = player.lookAngle
                         player.deltaMovement = Vec3(
                             delta.x + rotation.x / fixSpeed,
                             delta.y + rotation.x / fixSpeed,
                             delta.z + rotation.z / fixSpeed
                         )
                     }
+                    if (!player.isUnderWater) {
+                        delta.y = delta.y.coerceAtMost(0.0)
+                    }
                 }
             }
-            if (player.haItem.isEmpty) {
-                if (player.haEnabled) {
-                    player.haEnabled = false
-                    player.haItem = player.mainHandItem.copy()
-                    player.mainHandItem.count = 0
-                    player.haEnabled = true
+
+            // 检查是否在劫持状态
+            if (player.hasHA) {
+                // 检查劫持物品是否意外丢失
+                if (player.haItem.isEmpty) {
+                    // 获取当前选中的快捷栏槽位
+                    val selectedSlot = player.inventory.selected
+
+                    // 直接访问底层物品栏（避免通过属性访问器）
+                    val slotItem = player.inventory.items[selectedSlot]
+
+                    // 确保槽位有可劫持物品
+                    if (!slotItem.isEmpty) {
+                        // 执行真正的物品转移
+                        player.haItem = slotItem.copy()
+
+                        // 清空原始槽位（关键操作）
+                        slotItem.count = 0
+
+                        // 不添加额外日志 - setter 会处理变更记录
+                    }
                 }
             }
+            if (player.hasArmorHA) {
+                player.haArmorItems = player.haArmorItems.mapValues<EquipmentSlot, ItemStack, ItemStack> {
+                    if (it.value.isEmpty) {
+                        val itemStack = player.inventory.armor[it.key.index]
+                        val itemStack2 = itemStack.copy()
+                        itemStack.count = 0
+                        itemStack2
+                    } else it.value
+                }.toMutableMap()
+            }
+
             fun sync() {
                 if (event.phase != TickEvent.Phase.END) return
                 if (event.side.isClient && event.player == Minecraft.getInstance().player) {
@@ -132,6 +161,22 @@ object Event {
     @JvmStatic
     @SubscribeEvent
     fun onLivingTick(event: LivingEvent.LivingTickEvent) {
+        (event.entity as? PureWhiteLatexWolf)?.let {
+            entity ->
+            when (entity.random.nextInt(20*60)) {
+                0 -> {
+                    val newEntity = ModEntities.PURE_WHITE_LATEX_YUFENG.get().create(entity.level())?: return
+                    newEntity.setPos(entity.position())
+                    entity.level().addFreshEntity(newEntity)
+                }
+                199 -> {
+                    val newEntity = ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get().create(entity.level())?: return
+                    newEntity.setPos(entity.position())
+                    entity.level().addFreshEntity(newEntity)
+                }
+                else -> {}
+            }
+        }
     }
 
     @JvmStatic
@@ -163,13 +208,17 @@ object Event {
     @JvmStatic
     @SubscribeEvent
     fun onEntityVariantAssigned(event: ProcessTransfur.EntityVariantAssigned.ChangedVariant) {
-        val player = event.livingEntity
+        val player = event.livingEntity as? Player ?: return
         val persistentData = player.persistentData
         val playerModData = player.getModData(MODID)
         if (playerModData.getBoolean(Constant.NBTKeys.BODY_WARNING)) {
             playerModData.remove(Constant.NBTKeys.BODY_WARNING)
         }
         persistentData[MODID] = playerModData
+
+        if (event.newVariant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT) == true) {
+            player.notCanDismountBoatAddArmor(player)
+        }
     }
 
     @JvmStatic
@@ -181,7 +230,7 @@ object Event {
         (livingEntity as? Player)?.ifPlayerTransfurred {
             // 检测玩家所代表的实体存在FanJi接口
             val changedEntity = it.changedEntity
-            if (changedEntity is IFanJi<*>) {
+            if (changedEntity is IFanJi) {
                 attacker?.let {
                     it1 ->
                     changedEntity.onAttackedBy(it1)
@@ -271,7 +320,7 @@ object Event {
     @JvmStatic
     @SubscribeEvent
     fun onLivingKnockBack(event: LivingKnockBackEvent) {
-        if (event.entity.entityVariant is IFanJi<*>) {
+        if (event.entity.entityVariant is IFanJi) {
             event.ratioX *= -1.0f
             event.ratioZ *= -1.0f
         }
@@ -330,34 +379,59 @@ object Event {
     @JvmStatic
     @SubscribeEvent
     fun onAttachCapabilities(event: AttachCapabilitiesEvent<Entity>) {
-        if (event.`object` is Player) {
-            if (!event.`object`.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).isPresent) {
-                event.addCapability(
-                    ResourceLocation(MODID, "ha_state"),
-                    ExtendedPlayerDataProvider()
-                )
-            }
-        }
+//        if (event.`object` is Player) {
+//            if (!event.`object`.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).isPresent) {
+//                event.addCapability(
+//                    ResourceLocation(MODID, "ha_state"),
+//                    ExtendedPlayerDataProvider()
+//                )
+//            }
+//        }
     }
 
     @JvmStatic
     @SubscribeEvent
     fun onPlayerCloned(event: PlayerEvent.Clone) {
-        if (event.isWasDeath) {
-            event.original.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).ifPresent {
-                oldState ->
-                event.entity.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).ifPresent {
-                    newState ->
-                    newState.copyFrom(oldState)
-                }
+//        if (event.isWasDeath) {
+//            event.original.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).ifPresent {
+//                oldState ->
+//                event.entity.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).ifPresent {
+//                    newState ->
+//                    newState.copyFrom(oldState)
+//                }
+//            }
+//        }
+        val newEntity = event.entity
+        if (newEntity is IPlayerExtendedData) {
+            val oldEntity  = event.original
+            if (oldEntity is IPlayerExtendedData) {
+                newEntity.getMPlayerExtendedData().haState.deserialize(oldEntity.getMPlayerExtendedData().haState.serialize())
             }
         }
     }
 
     @JvmStatic
     @SubscribeEvent
-    fun onRegisterCapabilities(event: RegisterCapabilitiesEvent) {
-        event.register(HAState::class.java)
+    fun onPlayerRespawn(event: PlayerEvent.PlayerRespawnEvent) {
+        val player = event.entity
+        if (player is ServerPlayer && player is IPlayerExtendedData) {
+            if (!player.level().gameRules.getBoolean(ChangedGameRules.RULE_KEEP_FORM)) {
+                player.haArmorItems = initHaArmorItems()
+                player.haItem = ItemStack.EMPTY
+                player.hasHA = false
+                player.hasArmorHA = false
+            }
+            if (player.transfurData?.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT) == true) {
+                player.notCanDismountBoatAddArmor(player)
+            }
+            HaStateNetworkHandler.sendToClient(event.entity)
+        }
+    }
+
+    @JvmStatic
+    @SubscribeEvent
+    fun onDimensionChange(event: PlayerEvent.PlayerChangedDimensionEvent) {
+        HaStateNetworkHandler.sendToClient(event.entity as? ServerPlayer ?: return)
     }
 
     @JvmStatic
@@ -368,6 +442,20 @@ object Event {
             HaStateNetworkHandler.sendToClient(event.entity)
         }
     }
+
+    @JvmStatic
+    @SubscribeEvent
+    fun onAccessoryDrop(event: AccessorySlots.DropItemEvent) {
+        val player = event.entity as? ServerPlayer ?: return
+        if (player is IPlayerExtendedData) {
+            if (player.hasArmorHA && player.level().gameRules.getBoolean(ChangedGameRules.RULE_KEEP_FORM)) event.keepItem()
+        }
+    }
+//    @JvmStatic
+//    @SubscribeEvent
+//    fun onRegisterCapabilities(event: RegisterCapabilitiesEvent) {
+//        event.register(HAState::class.java)
+//    }
 
     // 核心摔伤处理逻辑
     @JvmStatic
@@ -408,6 +496,13 @@ object Event {
         return Mth.clamp(distance - 3.0f, 0.0f, 40.0f) * multiplier
     }
 }
+
+fun initHaArmorItems(): MutableMap<EquipmentSlot, ItemStack> = mutableMapOf(
+    EquipmentSlot.HEAD to ItemStack.EMPTY,
+    EquipmentSlot.CHEST to ItemStack.EMPTY,
+    EquipmentSlot.LEGS to ItemStack.EMPTY,
+    EquipmentSlot.FEET to ItemStack.EMPTY
+)
 
 fun Player.movePosToTarget(
     livingEntity: LivingEntity
