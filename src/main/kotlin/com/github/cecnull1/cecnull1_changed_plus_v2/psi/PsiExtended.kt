@@ -19,7 +19,10 @@ open class PieceTrickTransfurLivingEntity(spell: Spell) : PieceTrick(spell) {
 
     override fun initParams() {
         targetParam = ParamEntity("target", SpellParam.RED, false, false)
-        transfurVariantParam = ParamTransfurVariant("transfurVariant", SpellParam.GREEN, true, false)
+        transfurVariantParam = ParamTransfurVariant("transfurVariant", SpellParam.GREEN,
+            canDisable = true,
+            constant = false
+        )
         addParam(targetParam)
         addParam(transfurVariantParam)
     }
@@ -29,8 +32,8 @@ open class PieceTrickTransfurLivingEntity(spell: Spell) : PieceTrick(spell) {
     }
 
     override fun execute(context: SpellContext?): Any? {
-        val target = getParamValue(context, targetParam)
-        val transfurVariant = getParamValue(context, transfurVariantParam)
+        val target = getParamValue(context, if (this::targetParam.isInitialized) targetParam else return null)
+        val transfurVariant = getParamValue(context, if (this::transfurVariantParam.isInitialized) transfurVariantParam else return null)
         if (target is LivingEntity) {
             target.transfur(TransfurData(
                 variant = transfurVariant ?: ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get(),
@@ -58,7 +61,8 @@ open class PieceOperatorEntityGetTransfurVariant(spell: Spell) : PieceOperator(s
     }
 
     override fun execute(context: SpellContext?): Any? {
-        val target = getParamValue(context, targetParam) as? LivingEntity ?: return ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get()
+        val target = getParamValue(context, if (this::targetParam.isInitialized) targetParam else return null)
+                as? LivingEntity ?: return ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get()
         return target.entityVariant ?: ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get()
     }
 }

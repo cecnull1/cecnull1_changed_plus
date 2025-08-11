@@ -89,11 +89,11 @@ class XinYueItem : Item(Properties()) {
 
 class NotCanTakeOffWetsuit : WetsuitItem(), ICanTakeOff {
     // 完全保留您原始纹理实现
-    override fun getArmorTexture(stack: ItemStack?, entity: Entity?, slot: EquipmentSlot?, type: String?): String? {
+    override fun getArmorTexture(stack: ItemStack?, entity: Entity?, slot: EquipmentSlot?, type: String?): String {
         return "changed:textures/models/wetsuit.png"
     }
 
-    override fun canTakeOff(slot: Slot, item: ItemStack): Boolean = false
+    override fun canTakeOff(player: Player, slot: Slot, item: ItemStack): Boolean = false
 }
 
 class NotCanTakeOffLabCoat(): LabCoatItem(), ICanTakeOff {
@@ -108,8 +108,8 @@ class NotCanTakeOffLabCoat(): LabCoatItem(), ICanTakeOff {
     override fun accessoryInteract(slotContext: AccessorySlotContext<*>) {
         val itemStack = slotContext.stack() ?: ItemStack.EMPTY
         val state = this.getClothingState(itemStack)
-        if (!state.getValue<Boolean>(CLOSED)) {
-            this.setClothingState(itemStack, this.getClothingState(itemStack).cycle<Boolean?>(CLOSED))
+        if (!state.getValue(CLOSED)) {
+            this.setClothingState(itemStack, this.getClothingState(itemStack).cycle(CLOSED))
             val changeSound = this.getEquipSound(itemStack)
             if (changeSound != null) slotContext.wearer().playSound(changeSound, 1f, 1f)
         } else {
@@ -123,14 +123,14 @@ class NotCanTakeOffLabCoat(): LabCoatItem(), ICanTakeOff {
         }
     }
 
-    override fun getArmorTexture(stack: ItemStack, entity: Entity?, slot: EquipmentSlot?, type: String?): String? {
+    override fun getArmorTexture(stack: ItemStack, entity: Entity?, slot: EquipmentSlot?, type: String?): String {
         return if (this.getClothingState(stack)
-                .getValue<Boolean?>(CLOSED)
+                .getValue(CLOSED)
         ) "changed:textures/models/lab_coat_closed.png"
         else "changed:textures/models/lab_coat.png"
     }
 
-    override fun canTakeOff(slot: Slot, item: ItemStack): Boolean = this.getClothingState(item)?.getValue<Boolean>(CLOSED) != true
+    override fun canTakeOff(player: Player, slot: Slot, item: ItemStack) = this.getClothingState(item)?.getValue(CLOSED) != true
 }
 
 class UnTransfurSyringe(p_41383_: Properties) : BloodSyringe(p_41383_) {

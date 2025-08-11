@@ -4,7 +4,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.IS_HA
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PLAYER
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
-import com.github.cecnull1.cecnull1_changed_plus_v2.sendAbilitiesUpdate
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.sendAbilitiesUpdate
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IMount
@@ -168,11 +168,13 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
 
     protected override fun setAttributes(attributes: AttributeMap) {
         super.setAttributes(attributes)
+        attributes[Attributes.ARMOR] = 20.0
+        attributes[Attributes.ARMOR_TOUGHNESS] = 20.0
         attributes[Attributes.MOVEMENT_SPEED] = 1.5
         attributes[Attributes.MAX_HEALTH] = 40.0
         attributes[ForgeMod.SWIM_SPEED.get()] = 2.0
-        attributes[Attributes.ATTACK_DAMAGE] = 20.0
-        attributes[ChangedAttributes.TRANSFUR_DAMAGE.get()] = 20.0
+        attributes[Attributes.ATTACK_DAMAGE] = 40.0
+        attributes[ChangedAttributes.TRANSFUR_DAMAGE.get()] = 40.0
     }
 }
 
@@ -314,19 +316,19 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
     override fun canDismount(): Boolean {
         val passengers = this.passengers.asSequence()
         return passengers.filterIsInstance<Player>().let {
-            it.forEach {
-                it.ifPlayerNotTransfurred {
-                    it.transfur(
+            it.forEach { player ->
+                player.ifPlayerNotTransfurred {
+                    player.transfur(
                         transfurData = TransfurData(
                             variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT.get(),
                             keepConscious = true
                         )
                     )
-                    notCanDismountBoatAddArmor(it)
+                    notCanDismountBoatAddArmor(player)
                 }
             }
-            it.any {
-                it.health <= YU_ZHI
+            it.any { player ->
+                player.health <= YU_ZHI
             }
         }
     }
@@ -404,16 +406,9 @@ fun ChangedEntity.aEntityTick() {
             entity.autoMove(40)
         }
     }
-    if (false
-        || entity.isOnFire
-        || entity.isInLava
-        || entity.activeEffects.any {
-            it.effect.let {
-                false
-                    || it == MobEffects.WITHER
-                    || it == MobEffects.POISON
-                    || it == MobEffects.HUNGER
-                    || it == MobEffects.WEAKNESS
+    if (entity.isOnFire || entity.isInLava || entity.activeEffects.any {
+            it.effect.let { mobEffect ->
+                mobEffect == MobEffects.WITHER || mobEffect == MobEffects.POISON || mobEffect == MobEffects.HUNGER || mobEffect == MobEffects.WEAKNESS
             }
         }) {
         if (entity is Player) {
@@ -515,12 +510,13 @@ fun Entity.notCanDismountBoatAddArmor(player: Player) {
         return this
     }
     player.hasArmorHA = true
-    player.haArmorItems = mutableMapOf<EquipmentSlot, ItemStack>(
+    player.haArmorItems = mutableMapOf(
         EquipmentSlot.HEAD to ItemStack(Items.DIAMOND_HELMET).addArmorAttributeModifiers(),
         EquipmentSlot.CHEST to ItemStack(Items.DIAMOND_CHESTPLATE).addArmorAttributeModifiers(),
         EquipmentSlot.LEGS to ItemStack(Items.DIAMOND_LEGGINGS).addArmorAttributeModifiers(),
         EquipmentSlot.FEET to ItemStack(Items.DIAMOND_BOOTS).addArmorAttributeModifiers()
     )
+
 }
 
 operator fun <T: Number> AttributeMap.set(attribute: Attribute, value: T) = this.getInstance(attribute)?.baseValue = value.toDouble()
@@ -546,7 +542,9 @@ inline fun <reified T: Number> Entity.autoMove(divSpeed: T, yEnabled: Boolean = 
  * @param divSpeed 基础速度（各轴使用此值）。
  * @param yEnabled 是否启用 Y 轴移动（`true` 保留 Y 轴速度，`false` 禁用）。
  */
-fun Vec3.funcAutoMove(rotation: Vec3, divSpeed: Double, yEnabled: Boolean = true) = this + ((rotation * Vec3(1.0, yEnabled.compareTo(false).toDouble(), 1.0)) / Vec3(divSpeed, divSpeed, divSpeed))
+fun Vec3.funcAutoMove(rotation: Vec3, divSpeed: Double, yEnabled: Boolean = true) = this + ((rotation * Vec3(1.0, yEnabled.toInt().toDouble(), 1.0)) / Vec3(divSpeed, divSpeed, divSpeed))
+
+fun Boolean.toInt() = if (this) 1 else 0
 
 fun applyTerminalVelocity(entity: LivingEntity) {
     val delta = entity.deltaMovement

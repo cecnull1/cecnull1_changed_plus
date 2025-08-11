@@ -22,7 +22,6 @@ import net.minecraft.client.renderer.entity.EntityRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.Entity
-import java.util.function.Predicate
 
 class AEntityRenderer(context: EntityRendererProvider.Context) :
     AdvancedHumanoidRenderer<AEntity, AEntityModel, ArmorLatexMaleWolfModel<AEntity>>(
@@ -35,8 +34,8 @@ class AEntityRenderer(context: EntityRendererProvider.Context) :
     init {
         this.addLayer(
             LatexParticlesLayer(
-                this, getModel(),
-                Predicate { part: ModelPart? -> part != null && model.isPartNotMask(part) })
+                this, getModel()
+            ) { part: ModelPart? -> part != null && model.isPartNotMask(part) }
         )
         this.addLayer(TransfurCapeLayer.normalCape(this, context.modelSet))
         this.addLayer(

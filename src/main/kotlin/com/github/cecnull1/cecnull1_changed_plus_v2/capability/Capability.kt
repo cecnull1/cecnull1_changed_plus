@@ -1,8 +1,11 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.capability
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.initHaArmorItems
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.initHaArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IPlayerExtendedData
-import com.github.cecnull1.cecnull1lib.utils.nbt.*
+import com.github.cecnull1.cecnull1lib.utils.nbt.asCompoundTag
+import com.github.cecnull1.cecnull1lib.utils.nbt.buildNBT
+import com.github.cecnull1.cecnull1lib.utils.nbt.entries
+import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.mojang.logging.LogUtils.getLogger
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.minecraft.core.Direction
@@ -16,7 +19,7 @@ import net.minecraftforge.common.capabilities.CapabilityToken
 import net.minecraftforge.common.capabilities.ICapabilityProvider
 import net.minecraftforge.common.util.INBTSerializable
 import net.minecraftforge.common.util.LazyOptional
-import java.util.Locale
+import java.util.*
 
 @Deprecated("")
 data class ExtendedPlayerData(
@@ -102,7 +105,8 @@ data class HAState(
     var hasArmorHA: Boolean = false,
     var haItem: ItemStack = ItemStack.EMPTY,
     var haArmorItems: MutableMap<EquipmentSlot, ItemStack> = initHaArmorItems(),
-    var haAccessorySlots: AccessorySlots = AccessorySlots()
+    var haAccessorySlots: AccessorySlots = AccessorySlots(),
+    var wuDiTime: Int = 0
 ) {
     fun copyFrom(other: HAState, deepCopy: Boolean = false) {
         hasHA = other.hasHA
@@ -111,6 +115,19 @@ data class HAState(
         haArmorItems = other.haArmorItems.mapValues { (_, itemStack) ->
             if (deepCopy) itemStack.copy() else itemStack
         }.toMutableMap()
+
+        val otherHaAccessorySlots = other.haAccessorySlots
+        haAccessorySlots = if (deepCopy) AccessorySlots(otherHaAccessorySlots.owner).apply {
+            load(otherHaAccessorySlots.save())
+            // 2. 复制 lastItems（通过公共方法读写）
+            otherHaAccessorySlots.slotTypes.forEach { slotType ->
+                val lastStack = otherHaAccessorySlots.getLastItem(slotType)
+                this.setLastItem(slotType, lastStack)
+            }
+            orderedSlots
+        } else other.haAccessorySlots
+
+        wuDiTime = other.wuDiTime
     }
 
     fun copyFrom(player: Player) {
@@ -133,6 +150,7 @@ data class HAState(
             }
         }.toMutableMap()
         haAccessorySlots.load(nbt.getCompound("haAccessorySlots"))
+        wuDiTime = nbt.getInt("wuDiTime")
         return this
     }
 
@@ -147,6 +165,7 @@ data class HAState(
             }
         }
         tag["haAccessorySlots"] = haAccessorySlots.save()
+        tag["wuDiTime"] = wuDiTime
         return tag
     }
 
@@ -157,7 +176,6 @@ data class HAState(
     fun serialize(): CompoundTag = writeTo(CompoundTag())
 
     fun deserialize(nbt: CompoundTag): HAState = loadNBTData(nbt)
-
 }
 
 /*

@@ -1,12 +1,16 @@
-package com.github.cecnull1.cecnull1_changed_plus_v2
+package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
+import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEvent.post
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.AEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.notCanDismountBoatAddArmor
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.toInt
+import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.HaStateNetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
@@ -14,6 +18,8 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Co
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.wuDiTime
+import com.github.cecnull1.cecnull1lib.utils.InfixFunction.serverRun
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTransfurDataOrNull
@@ -26,7 +32,6 @@ import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.beast.PureWhiteLatexWolf
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
 import net.ltxprogrammer.changed.init.ChangedBlocks
-import net.ltxprogrammer.changed.init.ChangedGameRules
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.client.Minecraft
@@ -45,6 +50,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
+import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.AttachCapabilitiesEvent
 import net.minecraftforge.event.TickEvent
 import net.minecraftforge.event.TickEvent.PlayerTickEvent
@@ -52,11 +58,14 @@ import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.LivingAttackEvent
 import net.minecraftforge.event.entity.living.LivingEvent
 import net.minecraftforge.event.entity.living.LivingFallEvent
+import net.minecraftforge.event.entity.living.LivingHurtEvent
 import net.minecraftforge.event.entity.living.LivingKnockBackEvent
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent
 import net.minecraftforge.event.entity.player.PlayerEvent
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
 import net.minecraftforge.event.level.BlockEvent
+import net.minecraftforge.eventbus.api.Event
+import net.minecraftforge.eventbus.api.IEventBus
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber
 import kotlin.jvm.optionals.getOrNull
@@ -64,8 +73,6 @@ import kotlin.math.sqrt
 
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.FORGE)
 object Event {
-    @JvmStatic
-    @SubscribeEvent
     fun onPlayerTick(event: PlayerTickEvent) {
         val player = event.player
         if (player is Player) {
@@ -110,7 +117,11 @@ object Event {
                         )
                     }
                     if (!player.isUnderWater) {
-                        delta.y = delta.y.coerceAtMost(0.0)
+                        player.deltaMovement = Vec3(
+                            delta.x,
+                            delta.y.coerceAtMost(0.0),
+                            delta.z
+                        )
                     }
                 }
             }
@@ -148,6 +159,10 @@ object Event {
                 }.toMutableMap()
             }
 
+            if (player.wuDiTime > 0) {
+                player.wuDiTime--
+            }
+
             fun sync() {
                 if (event.phase != TickEvent.Phase.END) return
                 if (event.side.isClient && event.player == Minecraft.getInstance().player) {
@@ -158,8 +173,6 @@ object Event {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onLivingTick(event: LivingEvent.LivingTickEvent) {
         (event.entity as? PureWhiteLatexWolf)?.let {
             entity ->
@@ -179,8 +192,6 @@ object Event {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onMount(event: EntityMountEvent) {
         val entityMounting: Entity = event.entityMounting ?: return
         val entityBeingMounted: Entity = event.entityBeingMounted ?: return
@@ -193,8 +204,6 @@ object Event {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onInteract(event: PlayerInteractEvent.EntityInteract) {
         val target = event.target ?: return
         if (target is IMount && target.canMount()) {
@@ -205,8 +214,6 @@ object Event {
 //        }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onEntityVariantAssigned(event: ProcessTransfur.EntityVariantAssigned.ChangedVariant) {
         val player = event.livingEntity as? Player ?: return
         val persistentData = player.persistentData
@@ -221,8 +228,15 @@ object Event {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
+    fun onHurt(event: LivingHurtEvent) {
+        (event.entity as? Player)?.ifPlayerTransfurred {
+            if (it.changedEntity is AEntity) {
+                (event.entity as? Player)?.wuDiTime?.let { it1 -> event.amount = event.amount.coerceAtMost(20f) * (it1 <= 0.0).toInt() }
+                (event.entity as? Player)?.wuDiTime+=20
+            }
+        }
+    }
+
     fun onLivingAttack(event: LivingAttackEvent) {
         val livingEntity = event.entity ?: return
         val attacker = event.source.entity
@@ -231,9 +245,20 @@ object Event {
             // 检测玩家所代表的实体存在FanJi接口
             val changedEntity = it.changedEntity
             if (changedEntity is IFanJi) {
-                attacker?.let {
-                    it1 ->
-                    changedEntity.onAttackedBy(it1)
+                if (attacker != null) when (attacker) {
+                    is Player -> {
+                        attacker.ifPlayerTransfurred { variant ->
+                            if (variant.changedEntity !is IFanJi) {
+                                changedEntity.onAttackedBy(attacker)
+                            }
+                        }
+                        attacker.ifPlayerNotTransfurred {
+                            changedEntity.onAttackedBy(attacker)
+                        }
+                    }
+                    else -> {
+                        changedEntity.onAttackedBy(attacker)
+                    }
                 }
             }
         }
@@ -249,6 +274,7 @@ object Event {
             lingHunFuShen(event, it, livingEntity, attacker)
         }
     }
+
     private fun lingHunFuShen(
         event: LivingAttackEvent,
         instance: TransfurVariantInstance<*>,
@@ -317,17 +343,15 @@ object Event {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onLivingKnockBack(event: LivingKnockBackEvent) {
-        if (event.entity.entityVariant is IFanJi) {
-            event.ratioX *= -1.0f
-            event.ratioZ *= -1.0f
+        (event.entity as? Player)?.ifPlayerTransfurred {
+            if (it.changedEntity is IFanJi) {
+                event.ratioX *= -1.0f
+                event.ratioZ *= -1.0f
+            }
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onEntityPickup(event: EntityItemPickupEvent) {
         event.entity?.ifPlayerTransfurred {
             if (it.`is`(ModTransfurVariant.SOUL_TRANSFUR_VARIANT)) {
@@ -336,8 +360,6 @@ object Event {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onBlockBreak(event: BlockEvent.BreakEvent) {
         val level = event.level ?: return
         if (!level.isClientSide) {
@@ -354,7 +376,7 @@ object Event {
                             if (newNotCanDismountBoat != null) {
                                 newNotCanDismountBoat.setPos(event.pos.x + 0.5, event.pos.y + 0.5, event.pos.z + 0.5)
                                 level.addFreshEntity(newNotCanDismountBoat)
-                                if (level.random.nextBoolean() == true) {
+                                if (level.random.nextBoolean()) {
                                     event.player?.startRiding(newNotCanDismountBoat)
                                 }
                             }
@@ -389,8 +411,6 @@ object Event {
 //        }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onPlayerCloned(event: PlayerEvent.Clone) {
 //        if (event.isWasDeath) {
 //            event.original.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).ifPresent {
@@ -409,16 +429,15 @@ object Event {
             }
         }
     }
-
-    @JvmStatic
-    @SubscribeEvent
     fun onPlayerRespawn(event: PlayerEvent.PlayerRespawnEvent) {
         val player = event.entity
         if (player is ServerPlayer && player is IPlayerExtendedData) {
-            if (!player.level().gameRules.getBoolean(ChangedGameRules.RULE_KEEP_FORM)) {
-                player.haArmorItems = initHaArmorItems()
+            if (!player.level().gameRules.getBoolean(ModGameRule.KeepHA)) {
                 player.haItem = ItemStack.EMPTY
                 player.hasHA = false
+            }
+            if (!player.level().gameRules.getBoolean(ModGameRule.KeepArmorHA)) {
+                player.haArmorItems = initHaArmorItems()
                 player.hasArmorHA = false
             }
             if (player.transfurData?.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT) == true) {
@@ -428,14 +447,10 @@ object Event {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onDimensionChange(event: PlayerEvent.PlayerChangedDimensionEvent) {
         HaStateNetworkHandler.sendToClient(event.entity as? ServerPlayer ?: return)
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onPlayerLogin(event: PlayerEvent.PlayerLoggedInEvent) {
         // 玩家登录时同步数据
         if (!event.entity.level().isClientSide) {
@@ -443,12 +458,10 @@ object Event {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
     fun onAccessoryDrop(event: AccessorySlots.DropItemEvent) {
         val player = event.entity as? ServerPlayer ?: return
         if (player is IPlayerExtendedData) {
-            if (player.hasArmorHA && player.level().gameRules.getBoolean(ChangedGameRules.RULE_KEEP_FORM)) event.keepItem()
+            if (player.hasArmorHA && player.level().gameRules.getBoolean(ModGameRule.KeepArmorHA)) event.keepItem()
         }
     }
 //    @JvmStatic
@@ -458,8 +471,6 @@ object Event {
 //    }
 
     // 核心摔伤处理逻辑
-    @JvmStatic
-    @SubscribeEvent
     fun onLivingFall(event: LivingFallEvent) {
         val entity = event.entity
         if (entity !is Player) return
@@ -472,6 +483,13 @@ object Event {
             // 应用摔伤免疫规则
             handleFallImmunity(event)
         }
+    }
+
+    @JvmStatic
+    @SubscribeEvent
+    fun toCForgeEvent(event: Event) {
+        val forgeEvent = ByForgeEvent(event)
+        forgeEvent.post()
     }
 
     private fun isPureWhiteWolf(variant: TransfurVariantInstance<*>): Boolean {
@@ -495,6 +513,8 @@ object Event {
         // 原版摔伤计算公式 (Minecraft 1.20.1)
         return Mth.clamp(distance - 3.0f, 0.0f, 40.0f) * multiplier
     }
+
+
 }
 
 fun initHaArmorItems(): MutableMap<EquipmentSlot, ItemStack> = mutableMapOf(
@@ -543,6 +563,8 @@ fun Player.moveItemToTarget(sourceEntity: Player) {
     for (i in 0 until sourceEntity.inventory.armor.size) {
         sourceEntity.inventory.armor[i] = ItemStack.EMPTY
     }
+
+    inventory.armor = inventory.armor
 }
 fun Player.forceInventory(f: (ItemStack) -> Unit) {
     for (itemStack in Iterables.concat(

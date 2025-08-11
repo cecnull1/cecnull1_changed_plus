@@ -54,7 +54,7 @@ object HaStateNetworkHandler {
     private var messageId = 0
 
     fun register() {
-        CHANNEL.registerMessage(
+         CHANNEL.registerMessage(
             messageId++,
             SyncHaStateMessage::class.java,
             SyncHaStateMessage::encode,

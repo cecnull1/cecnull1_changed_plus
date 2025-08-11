@@ -119,5 +119,22 @@ data class MPlayerExtendedData(
                     }
                 }
             }
+
+        var Player.wuDiTime: Int
+            get() {
+                if (this is IPlayerExtendedData) {
+                    return this.getMPlayerExtendedData().haState.wuDiTime
+                }
+                return 0
+            }
+            set(value) {
+                if (this is IPlayerExtendedData) {
+                    val data = this.getMPlayerExtendedData()
+                    val old = data.haState.wuDiTime
+                    if (old != value) {
+                        data.haState.wuDiTime = value
+                    }
+                }
+            }
     }
 }

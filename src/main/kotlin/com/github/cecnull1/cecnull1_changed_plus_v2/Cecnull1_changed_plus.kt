@@ -2,6 +2,7 @@ package com.github.cecnull1.cecnull1_changed_plus_v2
 
 //import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.C_PLAYER
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
+import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY
@@ -14,6 +15,11 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHIT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.ByForgeEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.onForgeEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.onTakeOff
+import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.ZombieModel
@@ -57,17 +63,23 @@ import vazkii.psi.api.PsiAPI
 @Mod(MODID)
 class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
     init {
+        CForgeEvent.init()
+
         val modEventBus = context.modEventBus
         // 其他初始化代码...
         ModEntities.REGISTER.register(modEventBus)
         ModTransfurVariant.REGISTRY.register(modEventBus)
         ModBlocks.REGISTER.register(modEventBus)
         ModItems.REGISTER.register(modEventBus)
+        ModGameRule.register()
 
         if (ModList.get().isLoaded("psi")) {
             PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
             PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
         }
+
+        CForgeEvent.registerEvents<TakeOffEvent>(::onTakeOff)
+        CForgeEvent.registerEvents<ByForgeEvent<*>>(::onForgeEvent)
     }
 }
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD)
@@ -133,6 +145,7 @@ object Events {
             PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get(),
             ChangedEntity.createLatexAttributes().build()
         )
+
     }
 }
 

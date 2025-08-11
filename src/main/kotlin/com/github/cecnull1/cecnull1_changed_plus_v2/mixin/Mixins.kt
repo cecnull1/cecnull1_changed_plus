@@ -1,8 +1,10 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.mixin
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
+import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEvent.post
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.ByForgeEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.ICanTakeOff
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IPlayerExtendedData
@@ -15,11 +17,12 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toImmutableSafeList
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
 import com.github.cecnull1.cecnull1lib.utils.changed.isPlayerTransfurred
 import com.github.cecnull1.cecnull1lib.utils.changed.transfur
-import com.github.cecnull1.cecnull1lib.utils.nbt.*
+import com.github.cecnull1.cecnull1lib.utils.nbt.asCompoundTag
+import com.github.cecnull1.cecnull1lib.utils.nbt.buildNBT
+import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.core.NonNullList
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket.Action
 import net.minecraft.server.level.ServerPlayer
@@ -31,10 +34,13 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.vehicle.Boat
+import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.material.Fluid
+import net.minecraftforge.common.MinecraftForge
+import net.minecraftforge.eventbus.api.IEventBusInvokeDispatcher
 import net.minecraftforge.fluids.FluidType
 import org.spongepowered.asm.mixin.Mixin
 import org.spongepowered.asm.mixin.Unique
@@ -66,7 +72,7 @@ abstract class LivingEntityMixin {
         }
     }
 
-    @Inject(method = ["m_21211_"], at = [At("RETURN")], cancellable = true)
+    @Inject(method = ["m_21211_"], at = [At("RETURN")], cancellable = true, remap = false)
     private fun getUseItem(cir: CallbackInfoReturnable<ItemStack>) {
         if (this is Player && this.isAlive) {
             if (this.hasHA) returnItemStack(this.haItem, cir)
@@ -137,7 +143,7 @@ open class PlayerMixin: IPlayerExtendedData {
     private fun getArmorSlots(cir: CallbackInfoReturnable<NonNullList<ItemStack>>) {
         if (this is Player) {
             if (this.hasArmorHA) {
-                cir.returnValue = NonNullList.of<ItemStack>(
+                cir.returnValue = NonNullList.of(
                     this.haArmorItems[EquipmentSlot.HEAD]?:ItemStack.EMPTY,
                     this.haArmorItems[EquipmentSlot.CHEST]?:ItemStack.EMPTY,
                     this.haArmorItems[EquipmentSlot.LEGS]?:ItemStack.EMPTY,
@@ -154,15 +160,9 @@ open class PlayerMixin: IPlayerExtendedData {
             for (itemStack in ItemUtil.getWearingItems(this).toImmutableSafeList()) {
                 if (itemStack.itemStack.item is NotCanTakeOffWetsuit) {
                     if (!this.isPlayerTransfurred) {
-                        if (this is ServerPlayer && !this.getModData(MODID)[Constant.NBTKeys.BODY_WARNING + "1"].asBoolean(false)) {
-                            this.displayClientMessage(Component.literal(Constant.NI_BU_YING_GAI_CHUAN_DAI_ZHE_GE_WU_PIN_DE), true)
-                            this.persistentData[MODID] = this.getModData(MODID).apply {
-                                putBoolean(Constant.NBTKeys.BODY_WARNING + "1", true)
-                            }
-                        }
                         transfur(
                             transfurData = TransfurData(
-                                variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get(),
+                                variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT.get(),
                                 keepConscious = false
                             )
                         )
@@ -206,26 +206,34 @@ open class InventoryMixin {
     }
 }
 
-@Mixin(targets = ["net/minecraft/world/inventory/InventoryMenu$1"])
+@Mixin(targets = ["net/minecraft/world/inventory/InventoryMenu$1"], remap = false)
 abstract class `InventoryMenu$1Mixin` {
     /**
      * 在装备槽位的mayPickup方法头部注入
      * 方法签名：m_8010_(Lnet/minecraft/world/entity/player/Player;)Z
      */
-    @Inject(method = ["m_8010_(Lnet/minecraft/world/entity/player/Player;)Z"], at = [At("RETURN")], cancellable = true, remap = false)
-    private fun mayPickup(player: Player, cir: CallbackInfoReturnable<Boolean>) {
+    @Inject(method = ["m_8010_(Lnet/minecraft/world/entity/player/Player;)Z"], at = [At("HEAD")], cancellable = true, remap = false)
+    open fun mayPickup(player: Player, cir: CallbackInfoReturnable<Boolean>) {
         if (this is Slot) {
-            if ((this.item.item as? ICanTakeOff)?.canTakeOff(this, this.item) == false) cir.returnValue = false
+            val event = TakeOffEvent(player, this, this.item)
+            event.post()
+            if ((this.item.item as? ICanTakeOff)?.canTakeOff(player, this, this.item) == false || event.isCanceled) {
+                cir.returnValue = false
+            }
         }
     }
 }
 
-@Mixin(targets = ["net/ltxprogrammer/changed/world/inventory/AccessoryAccessMenu$1"])
+@Mixin(targets = ["net/ltxprogrammer/changed/world/inventory/AccessoryAccessMenu$1"], remap = false)
 abstract class `AccessoryAccessMenu$1Mixin` {
     @Inject(method = ["m_8010_(Lnet/minecraft/world/entity/player/Player;)Z"], at = [At("HEAD")], cancellable = true, remap = false)
-    private fun mayPickup(player: Player, cir: CallbackInfoReturnable<Boolean>) {
+    open fun mayPickup(player: Player, cir: CallbackInfoReturnable<Boolean>) {
         if (this is Slot) {
-            if ((this.item.item as? ICanTakeOff)?.canTakeOff(this, this.item) == false) cir.returnValue = false
+            val event = TakeOffEvent(player, this, this.item)
+            event.post()
+            if ((this.item.item as? ICanTakeOff)?.canTakeOff(player, this, this.item) == false || event.isCanceled) {
+                cir.returnValue = false
+            }
         }
     }
 }
