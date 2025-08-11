@@ -16,6 +16,10 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHIT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.ByForgeEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.CPlayerTickEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerTick
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.onForgeEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.onTakeOff
@@ -78,8 +82,10 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
             PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
         }
 
-        CForgeEvent.registerEvents<TakeOffEvent>(::onTakeOff)
+        //CForgeEvent.registerEvents<TakeOffEvent>(::onTakeOff)
         CForgeEvent.registerEvents<ByForgeEvent<*>>(::onForgeEvent)
+        CForgeEvent.registerEvents<CPlayerTickEvent>(::onPlayerTick)
+        CForgeEvent.registerEvents<CLivingTickEvent>(::onLivingTick)
     }
 }
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD)

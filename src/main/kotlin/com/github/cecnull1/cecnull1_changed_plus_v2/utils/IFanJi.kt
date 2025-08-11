@@ -23,7 +23,7 @@ interface IFanJi {
 //            player.displayClientMessage(Component.literal("$livingEntity->$attacker"), false)
 //        }
 //        getLogger().info("$livingEntity->$attacker")
-        livingEntity.lookAt(EntityAnchorArgument.Anchor.EYES, attacker.position() ?: Vec3.ZERO)
+        livingEntity.lookAt(EntityAnchorArgument.Anchor.EYES, attacker.eyePosition ?: Vec3.ZERO)
         if (livingEntity is Player) {
             attacker.persistentData["NoStackOverflowError"] = attacker.persistentData["NoStackOverflowError"].asInt() + 1
             if (attacker.persistentData["NoStackOverflowError"].asInt() > 5) {

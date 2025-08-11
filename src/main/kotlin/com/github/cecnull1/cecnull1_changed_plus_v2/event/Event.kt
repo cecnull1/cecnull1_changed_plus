@@ -73,107 +73,105 @@ import kotlin.math.sqrt
 
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.FORGE)
 object Event {
-    fun onPlayerTick(event: PlayerTickEvent) {
+    fun onPlayerTick(event: CPlayerTickEvent) {
         val player = event.player
-        if (player is Player) {
-            if (player.getModData(MODID).getBoolean(Constant.NBTKeys.BODY_WARNING)) {
-                player.ifPlayerNotTransfurred {
-                    player.progressTransfur(1f, TransfurData(
-                        ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT.get(),
-                        context = TransfurCause.ATTACK_REPLICATE_LEFT.toTransfurContext()
-                    )
-                    )
-                }
+        if (player.getModData(MODID).getBoolean(Constant.NBTKeys.BODY_WARNING)) {
+            player.ifPlayerNotTransfurred {
+                player.progressTransfur(1f, TransfurData(
+                    ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT.get(),
+                    context = TransfurCause.ATTACK_REPLICATE_LEFT.toTransfurContext()
+                )
+                )
             }
-            if (player.getModData(MODID).getBoolean(Constant.NBTKeys.FLYING)) {
-                if (!player.abilities.flying) {
-                    val abilities = player.abilities
-                    abilities.flying = true
-                    if (player is ServerPlayer) player.sendAbilitiesUpdate()
-                }
-            }
-
-            player.ifPlayerTransfurred {
-                val changedEntity = it.changedEntity
-                when {
-                    changedEntity is VariantTickPlusAble -> changedEntity.playerVariantTick(player, event.player.level())
-                }
-            }
-            if (player.health.isNaN()) {
-                player.health = 0.0f
-                if (player is ServerPlayer) player.sendHealthUpdate()
-            }
-
-            for (itemStack in ItemUtil.getWearingItems(player).toImmutableSafeList()) {
-                if (itemStack.itemStack.item is NotCanTakeOffWetsuit && player.isInWater) {
-                    val fixSpeed = 20.0
-                    val delta = player.deltaMovement
-                    val rotation = player.lookAngle
-                    if (!player.isFallFlying) {
-                        player.deltaMovement = Vec3(
-                            delta.x + rotation.x / fixSpeed,
-                            delta.y + rotation.x / fixSpeed,
-                            delta.z + rotation.z / fixSpeed
-                        )
-                    }
-                    if (!player.isUnderWater) {
-                        player.deltaMovement = Vec3(
-                            delta.x,
-                            delta.y.coerceAtMost(0.0),
-                            delta.z
-                        )
-                    }
-                }
-            }
-
-            // 检查是否在劫持状态
-            if (player.hasHA) {
-                // 检查劫持物品是否意外丢失
-                if (player.haItem.isEmpty) {
-                    // 获取当前选中的快捷栏槽位
-                    val selectedSlot = player.inventory.selected
-
-                    // 直接访问底层物品栏（避免通过属性访问器）
-                    val slotItem = player.inventory.items[selectedSlot]
-
-                    // 确保槽位有可劫持物品
-                    if (!slotItem.isEmpty) {
-                        // 执行真正的物品转移
-                        player.haItem = slotItem.copy()
-
-                        // 清空原始槽位（关键操作）
-                        slotItem.count = 0
-
-                        // 不添加额外日志 - setter 会处理变更记录
-                    }
-                }
-            }
-            if (player.hasArmorHA) {
-                player.haArmorItems = player.haArmorItems.mapValues<EquipmentSlot, ItemStack, ItemStack> {
-                    if (it.value.isEmpty) {
-                        val itemStack = player.inventory.armor[it.key.index]
-                        val itemStack2 = itemStack.copy()
-                        itemStack.count = 0
-                        itemStack2
-                    } else it.value
-                }.toMutableMap()
-            }
-
-            if (player.wuDiTime > 0) {
-                player.wuDiTime--
-            }
-
-            fun sync() {
-                if (event.phase != TickEvent.Phase.END) return
-                if (event.side.isClient && event.player == Minecraft.getInstance().player) {
-                    HaStateNetworkHandler.sendToServer()
-                }
-            }
-            sync()
         }
+        if (player.getModData(MODID).getBoolean(Constant.NBTKeys.FLYING)) {
+            if (!player.abilities.flying) {
+                val abilities = player.abilities
+                abilities.flying = true
+                if (player is ServerPlayer) player.sendAbilitiesUpdate()
+            }
+        }
+
+        player.ifPlayerTransfurred {
+            val changedEntity = it.changedEntity
+            when {
+                changedEntity is VariantTickPlusAble -> changedEntity.playerVariantTick(player, event.player.level())
+            }
+        }
+        if (player.health.isNaN()) {
+            player.health = 0.0f
+            if (player is ServerPlayer) player.sendHealthUpdate()
+        }
+
+        for (itemStack in ItemUtil.getWearingItems(player).toImmutableSafeList()) {
+            if (itemStack.itemStack.item is NotCanTakeOffWetsuit && player.isInWater) {
+                val fixSpeed = 20.0
+                val delta = player.deltaMovement
+                val rotation = player.lookAngle
+                if (!player.isFallFlying) {
+                    player.deltaMovement = Vec3(
+                        delta.x + rotation.x / fixSpeed,
+                        delta.y + rotation.x / fixSpeed,
+                        delta.z + rotation.z / fixSpeed
+                    )
+                }
+                if (!player.isUnderWater) {
+                    player.deltaMovement = Vec3(
+                        delta.x,
+                        delta.y.coerceAtMost(0.0),
+                        delta.z
+                    )
+                }
+            }
+        }
+
+        // 检查是否在劫持状态
+        if (player.hasHA) {
+            // 检查劫持物品是否意外丢失
+            if (player.haItem.isEmpty) {
+                // 获取当前选中的快捷栏槽位
+                val selectedSlot = player.inventory.selected
+
+                // 直接访问底层物品栏（避免通过属性访问器）
+                val slotItem = player.inventory.items[selectedSlot]
+
+                // 确保槽位有可劫持物品
+                if (!slotItem.isEmpty) {
+                    // 执行真正的物品转移
+                    player.haItem = slotItem.copy()
+
+                    // 清空原始槽位（关键操作）
+                    slotItem.count = 0
+
+                    // 不添加额外日志 - setter 会处理变更记录
+                }
+            }
+        }
+        if (player.hasArmorHA) {
+            player.haArmorItems = player.haArmorItems.mapValues<EquipmentSlot, ItemStack, ItemStack> {
+                if (it.value.isEmpty) {
+                    val itemStack = player.inventory.armor[it.key.index]
+                    val itemStack2 = itemStack.copy()
+                    itemStack.count = 0
+                    itemStack2
+                } else it.value
+            }.toMutableMap()
+        }
+
+        if (player.wuDiTime > 0) {
+            player.wuDiTime--
+        }
+
+        fun sync() {
+            if (event.phase != TickEvent.Phase.END) return
+            if (player.level().isClientSide && event.player == Minecraft.getInstance().player) {
+                HaStateNetworkHandler.sendToServer()
+            }
+        }
+        sync()
     }
 
-    fun onLivingTick(event: LivingEvent.LivingTickEvent) {
+    fun onLivingTick(event: CLivingTickEvent) {
         (event.entity as? PureWhiteLatexWolf)?.let {
             entity ->
             when (entity.random.nextInt(20*60)) {

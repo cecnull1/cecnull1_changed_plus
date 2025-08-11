@@ -182,10 +182,6 @@ dependencies {
 }
 
 kapt {
-    arguments {
-        arg("mixin.targetMap", "${mod_id}.refmap.json")
-        arg("mixin.remapRefMap", "true")
-    }
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

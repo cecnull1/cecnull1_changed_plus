@@ -14,18 +14,14 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onInteract
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingAttack
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingFall
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingKnockBack
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onMount
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerCloned
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerLogin
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerRespawn
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerTick
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.process.ProcessTransfur
-import net.minecraftforge.event.TickEvent.PlayerTickEvent
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.LivingAttackEvent
-import net.minecraftforge.event.entity.living.LivingEvent
 import net.minecraftforge.event.entity.living.LivingFallEvent
 import net.minecraftforge.event.entity.living.LivingHurtEvent
 import net.minecraftforge.event.entity.living.LivingKnockBackEvent
@@ -55,7 +51,5 @@ fun onForgeEvent(event: ByForgeEvent<*>) {
         is ProcessTransfur.EntityVariantAssigned.ChangedVariant -> onEntityVariantAssigned(e)
         is PlayerInteractEvent.EntityInteract -> onInteract(e)
         is EntityMountEvent -> onMount(e)
-        is LivingEvent.LivingTickEvent -> onLivingTick(e)
-        is PlayerTickEvent -> onPlayerTick(e)
     }
 }

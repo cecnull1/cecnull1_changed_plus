@@ -3,7 +3,8 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.mixin
 import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEvent.post
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.ByForgeEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.CPlayerTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.ICanTakeOff
@@ -34,13 +35,11 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.vehicle.Boat
-import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.material.Fluid
-import net.minecraftforge.common.MinecraftForge
-import net.minecraftforge.eventbus.api.IEventBusInvokeDispatcher
+import net.minecraftforge.event.TickEvent
 import net.minecraftforge.fluids.FluidType
 import org.spongepowered.asm.mixin.Mixin
 import org.spongepowered.asm.mixin.Unique
@@ -51,6 +50,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
 
 @Mixin(LivingEntity::class)
 abstract class LivingEntityMixin {
+    @Inject(method = ["m_8119_"], at = [At("HEAD")], cancellable = true, remap = false)
+    fun tickStart(ci: CallbackInfo) {
+        val entity = this as LivingEntity
+        CLivingTickEvent(entity, TickEvent.Phase.START).post()
+    }
+
+    @Inject(method = ["m_8119_"], at = [At("TAIL")], cancellable = true, remap = false)
+    fun tickEnd(ci: CallbackInfo) {
+        val entity = this as LivingEntity
+        CLivingTickEvent(entity, TickEvent.Phase.END).post()
+    }
+
     @Inject(method = ["m_21205_"], at = [At("RETURN")], cancellable = true, remap = false)
     private fun getMainHandItem(cir: CallbackInfoReturnable<ItemStack>) {
         if (this is Player && this.isAlive) {
@@ -175,6 +186,18 @@ open class PlayerMixin: IPlayerExtendedData {
                 }
             }
         }
+    }
+
+    @Inject(method = ["m_8119_"], at = [At("HEAD")], cancellable = true, remap = false)
+    fun tickStart(ci: CallbackInfo) {
+        val entity = this as Player
+        CPlayerTickEvent(entity, TickEvent.Phase.START).post()
+    }
+
+    @Inject(method = ["m_8119_"], at = [At("TAIL")], cancellable = true, remap = false)
+    fun tickEnd(ci: CallbackInfo) {
+        val entity = this as Player
+        CPlayerTickEvent(entity, TickEvent.Phase.END).post()
     }
 }
 
