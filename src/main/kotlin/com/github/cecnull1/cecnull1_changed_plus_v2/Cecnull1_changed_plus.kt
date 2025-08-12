@@ -84,8 +84,8 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
 
         //CForgeEvent.registerEvents<TakeOffEvent>(::onTakeOff)
         CForgeEvent.registerEvents<ByForgeEvent<*>>(::onForgeEvent)
-        CForgeEvent.registerEvents<CPlayerTickEvent>(::onPlayerTick)
-        CForgeEvent.registerEvents<CLivingTickEvent>(::onLivingTick)
+        CForgeEvent.registerFastEvents<CPlayerTickEvent>(::onPlayerTick)
+        CForgeEvent.registerFastEvents<CLivingTickEvent>(::onLivingTick)
     }
 }
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD)

@@ -9,18 +9,18 @@ interface IEvent {
 }
 
 object CForgeEvent {
-    inline fun <reified T: IEvent> registerEvents(noinline block: (T) -> Unit) {
-        // 创建安全的适配器函数
-        val adapter: (IEvent) -> Unit = { event ->
+    inline fun <reified T: IEvent> registerEvents(crossinline block: (T) -> Unit) {
+        cForgeEventMap.getOrPut(T::class) { mutableListOf() } .add {
+            event ->
             // 安全检查：仅当事件类型匹配时才调用原函数
             if (event is T) {
                 block(event)
             }
         }
-        // 获取或创建事件类型对应的处理器列表
-        val handlerList = cForgeEventMap.getOrPut(T::class) { mutableListOf() }
-        // 添加处理器（现在类型已匹配）
-        handlerList.add(adapter)
+    }
+
+    inline fun <reified T: IEvent> registerFastEvents(noinline block: (T) -> Unit) {
+        cForgeEventMap.getOrPut(T::class) { mutableListOf() }.add(block as (IEvent) -> Unit)
     }
 
     fun IEvent.post() {
