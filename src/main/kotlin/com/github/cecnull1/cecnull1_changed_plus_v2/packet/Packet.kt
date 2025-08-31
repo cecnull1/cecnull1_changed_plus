@@ -13,7 +13,6 @@ import net.minecraftforge.network.NetworkDirection
 import net.minecraftforge.network.NetworkEvent
 import net.minecraftforge.network.NetworkRegistry
 import net.minecraftforge.network.simple.SimpleChannel
-import net.minecraftforge.network.simple.registerMessageFix
 import java.util.function.Supplier
 
 class SyncHaStateMessage(
@@ -55,9 +54,9 @@ object HaStateNetworkHandler {
     private var messageId = 0
 
     fun register() {
-         CHANNEL.registerMessageFix(
+         CHANNEL.registerMessage(
             messageId++,
-             SyncHaStateMessage::class,
+             SyncHaStateMessage::class.java,
             SyncHaStateMessage::encode,
             ::SyncHaStateMessage,
             SyncHaStateMessage::handle
