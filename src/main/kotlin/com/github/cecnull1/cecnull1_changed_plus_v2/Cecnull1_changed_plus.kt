@@ -2,7 +2,7 @@ package com.github.cecnull1.cecnull1_changed_plus_v2
 
 //import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.C_PLAYER
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
-import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEventBus
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY
@@ -15,14 +15,14 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHIT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.SWEMEntities
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.SWEMEntities.O_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.ByForgeEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CPlayerTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerTick
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.onForgeEvent
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.onTakeOff
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel
@@ -54,6 +54,7 @@ import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinit
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers
 import net.minecraftforge.common.ForgeMod
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent
+import net.minecraftforge.eventbus.EventBus
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.ModList
 import net.minecraftforge.fml.common.Mod
@@ -67,10 +68,7 @@ import vazkii.psi.api.PsiAPI
 @Mod(MODID)
 class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
     init {
-        CForgeEvent.init()
-
         val modEventBus = context.modEventBus
-        // 其他初始化代码...
         ModEntities.REGISTER.register(modEventBus)
         ModTransfurVariant.REGISTRY.register(modEventBus)
         ModBlocks.REGISTER.register(modEventBus)
@@ -81,17 +79,18 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
             PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
             PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
         }
+        if (ModList.get().isLoaded("swem")) {
+            SWEMEntities.REGISTER.register(modEventBus)
+        }
 
         //CForgeEvent.registerEvents<TakeOffEvent>(::onTakeOff)
-        CForgeEvent.registerEvents<ByForgeEvent<*>>(::onForgeEvent)
-        CForgeEvent.registerFastEvents<CPlayerTickEvent>(::onPlayerTick)
-        CForgeEvent.registerFastEvents<CLivingTickEvent>(::onLivingTick)
+        CForgeEventBus.registerEvents<ByForgeEvent<*>>(::onForgeEvent)
+        CForgeEventBus.registerFastEvents<CPlayerTickEvent>(::onPlayerTick)
+        CForgeEventBus.registerFastEvents<CLivingTickEvent>(::onLivingTick)
     }
 }
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD)
 object Events {
-    @JvmStatic
-    @SubscribeEvent
     fun onCommonSetup(event: FMLCommonSetupEvent) {
         event.enqueueWork {
             HaStateNetworkHandler.register()
@@ -151,7 +150,12 @@ object Events {
             PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get(),
             ChangedEntity.createLatexAttributes().build()
         )
-
+        if (ModList.get().isLoaded("swem")) {
+            event.put(
+                O_ENTITY.get(),
+                com.alaharranhonor.swem.entities.horse.SWEMHorseEntity.createBaseHorseAttributes().build()
+            )
+        }
     }
 }
 
@@ -162,7 +166,7 @@ object ClientEvents {
     fun registerAccessoryRenderers(event: FMLClientSetupEvent) {
         AccessoryLayer.registerRenderer(
             ModItems.NOT_CAN_TAKE_OFF_WETSUIT.get(), SimpleClothingRenderer.of(
-                ArmorModel.CLOTHING_INNER, setOf<ModelComponent>(
+                ArmorModel.CLOTHING_INNER, setOf(
                     ModelComponent(ArmorModel.CLOTHING_INNER, EquipmentSlot.CHEST),
                     ModelComponent(ArmorModel.CLOTHING_INNER, EquipmentSlot.LEGS)
                 )
@@ -170,7 +174,7 @@ object ClientEvents {
         )
         AccessoryLayer.registerRenderer(
             ModItems.NOT_CAN_TAKE_OFF_LAB_COAT.get(), SimpleClothingRenderer.of(
-                ArmorModel.CLOTHING_OUTER, setOf<ModelComponent>(
+                ArmorModel.CLOTHING_OUTER, setOf(
                     ModelComponent(ArmorModel.CLOTHING_OUTER, EquipmentSlot.CHEST),
                     ModelComponent(ArmorModel.CLOTHING_MIDDLE, EquipmentSlot.LEGS)
                 )
@@ -238,6 +242,13 @@ object ClientEvents {
         ) { context: EntityRendererProvider.Context ->
             DarkLatexYufengRenderer(context)
         }
+        if (ModList.get().isLoaded("swem")) {
+            event.registerEntityRenderer(
+                O_ENTITY.get()
+            ) { context: EntityRendererProvider.Context ->
+                com.alaharranhonor.swem.client.render.SWEMHorseRenderer(context)
+            }
+        }
     }
 }
 
@@ -255,4 +266,10 @@ private fun registerUseItemMode(
     )
 }
 
-val SOUL_USE_ITEM_MODE = registerUseItemMode("SOUL_USE_ITEM_MODE", false, true, false, false, false)
+val SOUL_USE_ITEM_MODE = registerUseItemMode("SOUL_USE_ITEM_MODE",
+    showHotbar = false,
+    holdMainHand = true,
+    holdOffHand = false,
+    interact = false,
+    breakBlocks = false
+)

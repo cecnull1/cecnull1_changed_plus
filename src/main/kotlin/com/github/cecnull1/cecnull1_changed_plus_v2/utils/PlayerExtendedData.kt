@@ -11,8 +11,7 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 
 interface IPlayerExtendedData {
-    fun getMPlayerExtendedData(): MPlayerExtendedData
-    fun setMPlayerExtendedData(data: MPlayerExtendedData)
+    var mPlayerExtendedData: MPlayerExtendedData
     fun save(tag: CompoundTag)
     fun load(tag: CompoundTag)
 }
@@ -24,13 +23,13 @@ data class MPlayerExtendedData(
         var Player.hasHA: Boolean
             get() {
                 if (this is IPlayerExtendedData) {
-                    return this.getMPlayerExtendedData().haState.hasHA
+                    return this.mPlayerExtendedData.haState.hasHA
                 }
                 return false
             }
             set(value) {
                 if (this is IPlayerExtendedData) {
-                    val data = this.getMPlayerExtendedData()
+                    val data = this.mPlayerExtendedData
                     val old = data.haState.hasHA
                     if (value != old) {
                         data.haState.hasHA = value
@@ -43,13 +42,13 @@ data class MPlayerExtendedData(
         var Player.hasArmorHA: Boolean
             get() {
                 if (this is IPlayerExtendedData) {
-                    return this.getMPlayerExtendedData().haState.hasArmorHA
+                    return this.mPlayerExtendedData.haState.hasArmorHA
                 }
                 return false
             }
             set(value) {
                 if (this is IPlayerExtendedData) {
-                    val data = this.getMPlayerExtendedData()
+                    val data = this.mPlayerExtendedData
                     val old = data.haState.hasArmorHA
                     if (old != value) {
                         data.haState.hasArmorHA = value
@@ -62,13 +61,13 @@ data class MPlayerExtendedData(
         var Player.haItem: ItemStack
             get() {
                 if (this is IPlayerExtendedData) {
-                    return this.getMPlayerExtendedData().haState.haItem
+                    return this.mPlayerExtendedData.haState.haItem
                 }
                 return ItemStack.EMPTY
             }
             set(value) {
                 if (this is IPlayerExtendedData) {
-                    val data = this.getMPlayerExtendedData()
+                    val data = this.mPlayerExtendedData
                     val old = data.haState.haItem
                     if (old !== value && !ItemStack.matches(old, value)) {
                         data.haState.haItem = value
@@ -81,7 +80,7 @@ data class MPlayerExtendedData(
         var Player.haArmorItems: MutableMap<EquipmentSlot, ItemStack>
             get() {
                 if (this is IPlayerExtendedData) {
-                    return this.getMPlayerExtendedData().haState.haArmorItems
+                    return this.mPlayerExtendedData.haState.haArmorItems
                 }
                 return mutableMapOf<EquipmentSlot, ItemStack>(
                     EquipmentSlot.HEAD to ItemStack.EMPTY,
@@ -92,9 +91,9 @@ data class MPlayerExtendedData(
             }
             set(value) {
                 if (this is IPlayerExtendedData) {
-                    val data = this.getMPlayerExtendedData()
+                    val data = this.mPlayerExtendedData
                     val old = data.haState.haArmorItems
-                    if (old !== value && old != value) {
+                    if (old != value) {
                         data.haState.haArmorItems = value
                         getLogger().info("${this.level()}: HA Armor Items changed from $old to $value")
                         if (this is ServerPlayer) HaStateNetworkHandler.sendToClient(this)
@@ -105,15 +104,15 @@ data class MPlayerExtendedData(
         var Player.haAccessorySlots: AccessorySlots
             get() {
                 if (this is IPlayerExtendedData) {
-                    this.getMPlayerExtendedData().haState.haAccessorySlots
+                    this.mPlayerExtendedData.haState.haAccessorySlots
                 }
                 return AccessorySlots()
             }
             set(value) {
                 if (this is IPlayerExtendedData) {
-                    val data = this.getMPlayerExtendedData()
+                    val data = this.mPlayerExtendedData
                     val old = data.haState.haAccessorySlots
-                    if (old !== value && old != value) {
+                    if (old != value) {
                         data.haState.haAccessorySlots = value
                         if (this is ServerPlayer) HaStateNetworkHandler.sendToClient(this)
                     }
@@ -123,13 +122,13 @@ data class MPlayerExtendedData(
         var Player.wuDiTime: Int
             get() {
                 if (this is IPlayerExtendedData) {
-                    return this.getMPlayerExtendedData().haState.wuDiTime
+                    return this.mPlayerExtendedData.haState.wuDiTime
                 }
                 return 0
             }
             set(value) {
                 if (this is IPlayerExtendedData) {
-                    val data = this.getMPlayerExtendedData()
+                    val data = this.mPlayerExtendedData
                     val old = data.haState.wuDiTime
                     if (old != value) {
                         data.haState.wuDiTime = value

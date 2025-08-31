@@ -16,10 +16,13 @@ value class ByForgeEvent<T: net.minecraftforge.eventbus.api.Event>(val event: T)
     override inline var isCanceled: Boolean
     inline get() = event.isCanceled
     inline set(value) {
-            if (isCancelable) event.isCanceled = value
+        if (isCancelable) event.isCanceled = value
     }
+
     override inline val isCancelable: Boolean
     inline get() = event.isCancelable
+    override val isInterruptibleWhenCanceled: Boolean
+        get() = true
 }
 
 data class CPlayerTickEvent(val player: Player, val phase: TickEvent.Phase): IEvent {

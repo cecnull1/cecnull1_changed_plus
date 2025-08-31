@@ -13,6 +13,7 @@ import net.minecraftforge.network.NetworkDirection
 import net.minecraftforge.network.NetworkEvent
 import net.minecraftforge.network.NetworkRegistry
 import net.minecraftforge.network.simple.SimpleChannel
+import net.minecraftforge.network.simple.registerMessageFix
 import java.util.function.Supplier
 
 class SyncHaStateMessage(
@@ -34,7 +35,7 @@ class SyncHaStateMessage(
             val player = Minecraft.getInstance().level?.getEntity(playerId) as? Player
             if (player != null && data != null) {
                 if (player is IPlayerExtendedData) {
-                    player.getMPlayerExtendedData().haState.deserialize(data)
+                    player.mPlayerExtendedData.haState.deserialize(data)
                 }
             }
         }
@@ -43,7 +44,7 @@ class SyncHaStateMessage(
 }
 
 object HaStateNetworkHandler {
-    private const val PROTOCOL_VERSION = "1"
+    const val PROTOCOL_VERSION = "1"
     private val CHANNEL: SimpleChannel = NetworkRegistry.newSimpleChannel(
         ResourceLocation(MODID, "sync_ha_state"),
         { PROTOCOL_VERSION },
@@ -54,9 +55,9 @@ object HaStateNetworkHandler {
     private var messageId = 0
 
     fun register() {
-         CHANNEL.registerMessage(
+         CHANNEL.registerMessageFix(
             messageId++,
-            SyncHaStateMessage::class.java,
+             SyncHaStateMessage::class,
             SyncHaStateMessage::encode,
             ::SyncHaStateMessage,
             SyncHaStateMessage::handle

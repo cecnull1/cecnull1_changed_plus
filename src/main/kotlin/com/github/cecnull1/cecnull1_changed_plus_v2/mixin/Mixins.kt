@@ -1,6 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.mixin
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEvent.post
+import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEventBus.post
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent
@@ -109,11 +109,9 @@ open class PlayerMixin: IPlayerExtendedData {
     private val `cecnull1$cecnull1_changed_plus_v2$MPlayerExtendedData`: MPlayerExtendedData = MPlayerExtendedData()
         @Unique get
 
-    override fun getMPlayerExtendedData() = `cecnull1$cecnull1_changed_plus_v2$MPlayerExtendedData`
-
-    override fun setMPlayerExtendedData(data: MPlayerExtendedData) {
-        `cecnull1$cecnull1_changed_plus_v2$MPlayerExtendedData`.haState.copyFrom(data.haState)
-    }
+    override var mPlayerExtendedData: MPlayerExtendedData
+        get() = `cecnull1$cecnull1_changed_plus_v2$MPlayerExtendedData`
+        set(value) = `cecnull1$cecnull1_changed_plus_v2$MPlayerExtendedData`.haState.copyFrom(value.haState)
 
     override fun save(tag: CompoundTag) {
         tag[MODID] = buildNBT {

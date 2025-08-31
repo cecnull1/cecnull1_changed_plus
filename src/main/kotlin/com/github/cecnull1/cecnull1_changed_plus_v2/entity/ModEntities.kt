@@ -3,8 +3,9 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.IS_HA
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PLAYER
-import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.NotCanDismountBoat.Companion.YU_ZHI
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.sendAbilitiesUpdate
+import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IMount
@@ -53,11 +54,13 @@ import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.horse.Horse
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.vehicle.Boat
+import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec3
 import net.minecraftforge.common.ForgeMod
+import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
@@ -120,12 +123,6 @@ object ModEntities {
             .build(PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID)
     }
 
-//    val C_PLAYER : RegistryObject<EntityType<CPlayer>> = REGISTER.register(CPLAYER_ID) {
-//        EntityType.Builder.of(::CPlayer, MobCategory.MISC)
-//            .sized(0.7f, 1.8f)
-//            .build(CPLAYER_ID)
-//    }
-
     val NOT_CAN_DISMOUNT_BOAT : RegistryObject<EntityType<NotCanDismountBoat>> = REGISTER.register(NOT_CAN_DISMOUNT_BOAT_ID) {
         EntityType.Builder.of(::NotCanDismountBoat, MobCategory.MISC)
             .sized(1.375F, 0.5625F)
@@ -135,21 +132,17 @@ object ModEntities {
     val NONE_ENTITY : RegistryObject<EntityType<NoneTransfurVariant>> = REGISTER.register(NONE_ENTITY_ID) {
         EntityType.Builder.of(::NoneTransfurVariant, MobCategory.MISC).build(NONE_ENTITY_ID)
     }
-
-//    val ZOMBIE: RegistryObject<EntityType<Zombie>> = REGISTER.register(ZOMBIE_ID) {
-//        EntityType.Builder.of(::Zombie, ChangedMobCategories.CHANGED)
-//            .sized(0.6f, 1.93f)
-//            .build(ZOMBIE_ID)
-//    }
 }
 
 
-
+/**
+ * 一个强悍的实体
+ * */
 open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkLatexYufeng(type, level),
     DarkLatexEntity,
-    PowderSnowWalkable,
-    AquaticEntity,
-    IFanJi {
+    PowderSnowWalkable, // 雪地行走
+    AquaticEntity, // 水下允许
+    IFanJi { // 会反击
 
     override fun getLatexType(): LatexType = ChangedLatexTypes.DARK_LATEX.get()
     override fun getTransfurMode() = TransfurMode.REPLICATION
@@ -192,9 +185,8 @@ open class Zombie(type: EntityType<out ChangedEntity>, level: Level) : ChangedEn
 
 open class AHorse(p_30689_: EntityType<out Horse>, p_30690_: Level) : Horse(p_30689_, p_30690_), IDismount,
     IMount {
-    init {
-        this.isTamed = true
-        this.inventory.setItem(INV_SLOT_SADDLE, ItemStack(Items.SADDLE))
+    override fun isTamed(): Boolean {
+        return true
     }
 
     override fun isNoAi(): Boolean = true
@@ -216,8 +208,26 @@ open class AHorse(p_30689_: EntityType<out Horse>, p_30690_: Level) : Horse(p_30
                 }
             }
         }
-
+        level().findNearestEntity(x, y, z, 2.0, Player::class.java)?.let {
+                player ->
+            if (player.health >= YU_ZHI) {
+                player.vehicle ?: player.startRiding(this)
+            }
+        }
         super.tick()
+    }
+
+    override fun getRiddenInput(p_278278_: Player, p_275506_: Vec3): Vec3 {
+        return Vec3(p_278278_.xxa.toDouble()*0.5, 0.0, 1.0)
+    }
+
+    override fun isImmobile(): Boolean {
+        return true
+    }
+
+    override fun canMount(entity: Player): Boolean {
+        doPlayerRide(entity)
+        return false
     }
 
     override fun isSaddled(): Boolean = true
@@ -377,7 +387,6 @@ open class NoneTransfurVariant(type: EntityType<out ChangedEntity>, level: Level
     }
     override fun playerVariantTick(player: Player, level: Level?) {
         player.removePlayerTransfurVariant()
-
     }
 }
 
@@ -479,7 +488,7 @@ fun Entity.notCanDismountBoatAddArmor(player: Player) {
 
     fun ItemStack.addArmorAttributeModifiers(): ItemStack {
         val slot = when (val item = this.item) {
-            is net.minecraft.world.item.ArmorItem -> item.type.slot // 通过原版盔甲系统获取槽位
+            is ArmorItem -> item.type.slot // 通过原版盔甲系统获取槽位
             else -> EquipmentSlot.MAINHAND // 默认槽位（主手）
         }
 

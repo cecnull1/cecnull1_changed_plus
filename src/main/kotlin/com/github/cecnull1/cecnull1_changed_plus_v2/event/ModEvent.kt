@@ -3,6 +3,7 @@
 
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
+import com.github.cecnull1.cecnull1_changed_plus_v2.Events.onCommonSetup
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onAccessoryDrop
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onBlockBreak
@@ -30,6 +31,8 @@ import net.minecraftforge.event.entity.player.PlayerEvent
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
 import net.minecraftforge.event.level.BlockEvent
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
+
 
 fun onTakeOff(event: TakeOffEvent) {
     event.isCanceled = true
@@ -37,6 +40,7 @@ fun onTakeOff(event: TakeOffEvent) {
 
 fun onForgeEvent(event: ByForgeEvent<*>) {
     when (val e = event.event) {
+        is FMLCommonSetupEvent -> onCommonSetup(e)
         is LivingFallEvent -> onLivingFall(e)
         is AccessorySlots.DropItemEvent -> onAccessoryDrop(e)
         is PlayerEvent.PlayerLoggedInEvent -> onPlayerLogin(e)

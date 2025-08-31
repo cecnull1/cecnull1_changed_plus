@@ -58,7 +58,7 @@ object ModTransfurVariant {
             breatheMode(TransfurVariant.BreatheMode.ANY)
             glide()
         }.build()
-     }
+    }
 
     val NONE_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<NoneTransfurVariant>> = REGISTRY.register("form_none") {
         TransfurVariant.Builder.of(ModEntities.NONE_ENTITY).build()

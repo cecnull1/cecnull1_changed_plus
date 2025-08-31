@@ -1,15 +1,9 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.google.common.collect.ImmutableList
-import net.minecraft.nbt.CompoundTag
-import net.minecraft.world.entity.Entity
 import java.util.stream.Stream
 
 object CUtils
-
-val Entity.modData: CompoundTag
-    get() = this.persistentData.getCompound(MODID)
 
 // 通用扩展函数
 fun <T : Any> Iterator<T?>.toImmutableSafeList(): List<T> {
@@ -25,3 +19,11 @@ fun <T : Any> Iterable<T?>.toImmutableSafeList(): List<T> {
 fun <T : Any> Stream<T?>.toImmutableSafeList(): List<T> {
     return ImmutableList.copyOf(this.iterator()).filterNotNull()
 }
+
+//inline fun <reified T: Entity, R: Entity> EntityType<T>.copy(new: EntityType.EntityFactory<R>) =
+//    EntityType.Builder.of<R>(new, this.category).apply {
+//        sized(this@copy.width, this@copy.height)
+//        setTrackingRange(this@copy.clientTrackingRange())
+//        setUpdateInterval(this@copy.updateInterval())
+//        setShouldReceiveVelocityUpdates(this@copy.trackDeltas())
+//    }

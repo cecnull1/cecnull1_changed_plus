@@ -10,11 +10,13 @@ import com.mojang.logging.LogUtils.getLogger
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.minecraft.core.Direction
 import net.minecraft.nbt.CompoundTag
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraftforge.common.capabilities.Capability
 import net.minecraftforge.common.capabilities.CapabilityManager
+import net.minecraftforge.common.capabilities.CapabilityProvider
 import net.minecraftforge.common.capabilities.CapabilityToken
 import net.minecraftforge.common.capabilities.ICapabilityProvider
 import net.minecraftforge.common.util.INBTSerializable
@@ -132,7 +134,7 @@ data class HAState(
 
     fun copyFrom(player: Player) {
         if (player is IPlayerExtendedData) {
-            copyFrom(player.getMPlayerExtendedData().haState, false)
+            copyFrom(player.mPlayerExtendedData.haState, false)
         }
     }
 
@@ -177,22 +179,3 @@ data class HAState(
 
     fun deserialize(nbt: CompoundTag): HAState = loadNBTData(nbt)
 }
-
-/*
-
-
-
-*    U   *   P              *        *
-           *    P   P   L   E       O
-          N                    L        O
-                            *   L   *    *
-
-
-J U M P     F A B E
-O   A P P L E   O
-G   N     O L I O
-          A L A K
-              M
-              B
-
-* */

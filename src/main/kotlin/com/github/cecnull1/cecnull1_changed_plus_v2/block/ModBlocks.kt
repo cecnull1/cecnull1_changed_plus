@@ -7,6 +7,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.PureWhiteLatexYufeng
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.PureWhiteLatexYufengByNCDBoat
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
@@ -83,7 +84,7 @@ class ABlock : ChangedBlock(Properties.of().jumpFactor(0f)) {
                 player.displayClientMessage(Component.translatable(MODID + MESSAGE + BODY_WARNING), true)
 
                 player.ifPlayerTransfurred {
-                    if (it.parent.canGlide) {
+                    if (it.parent.canGlide && it.changedEntity !is PureWhiteLatexYufengByNCDBoat) {
                         playerModData[NBTKeys.FLYING] = true
                     } else {
                         player.vehicle ?: run {
@@ -120,7 +121,7 @@ open class WhiteLatexBlockV2(properties: Properties) : WhiteLatexBlock(propertie
         super.fallOn(level, blockState, blockPos, entity, distance)
         ProcessTransfur.ifPlayerTransfurred(entity as? Player ?: return, {}) {
             val pureWhiteLatexYufeng = PureWhiteLatexYufeng(
-                ModEntities.PURE_WHITE_LATEX_YUFENG.get(),
+                ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get(),
                 level
             )
             pureWhiteLatexYufeng.setPos(blockPos.x.toDouble()+0.5, blockPos.y.toDouble()+0.5, blockPos.z.toDouble()+0.5)

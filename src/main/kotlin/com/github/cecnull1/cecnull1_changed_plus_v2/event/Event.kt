@@ -1,15 +1,10 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
-import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEvent.post
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.AEntity
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.notCanDismountBoatAddArmor
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.toInt
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.HaStateNetworkHandler
@@ -19,7 +14,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Co
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.wuDiTime
-import com.github.cecnull1.cecnull1lib.utils.InfixFunction.serverRun
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTransfurDataOrNull
@@ -35,9 +29,12 @@ import net.ltxprogrammer.changed.init.ChangedBlocks
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.client.Minecraft
+import net.minecraft.commands.arguments.EntityAnchorArgument.Anchor
 import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffectInstance
@@ -50,13 +47,10 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
-import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.AttachCapabilitiesEvent
 import net.minecraftforge.event.TickEvent
-import net.minecraftforge.event.TickEvent.PlayerTickEvent
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.LivingAttackEvent
-import net.minecraftforge.event.entity.living.LivingEvent
 import net.minecraftforge.event.entity.living.LivingFallEvent
 import net.minecraftforge.event.entity.living.LivingHurtEvent
 import net.minecraftforge.event.entity.living.LivingKnockBackEvent
@@ -64,8 +58,6 @@ import net.minecraftforge.event.entity.player.EntityItemPickupEvent
 import net.minecraftforge.event.entity.player.PlayerEvent
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
 import net.minecraftforge.event.level.BlockEvent
-import net.minecraftforge.eventbus.api.Event
-import net.minecraftforge.eventbus.api.IEventBus
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber
 import kotlin.jvm.optionals.getOrNull
@@ -204,7 +196,7 @@ object Event {
 
     fun onInteract(event: PlayerInteractEvent.EntityInteract) {
         val target = event.target ?: return
-        if (target is IMount && target.canMount()) {
+        if (target is IMount && target.canMount(event.entity)) {
             event.entity.startRiding(event.target ?: return)
         }
 //        if (!event.world.isClientSide) {
@@ -423,7 +415,7 @@ object Event {
         if (newEntity is IPlayerExtendedData) {
             val oldEntity  = event.original
             if (oldEntity is IPlayerExtendedData) {
-                newEntity.getMPlayerExtendedData().haState.deserialize(oldEntity.getMPlayerExtendedData().haState.serialize())
+                newEntity.mPlayerExtendedData.haState.deserialize(oldEntity.mPlayerExtendedData.haState.serialize())
             }
         }
     }
@@ -483,13 +475,6 @@ object Event {
         }
     }
 
-    @JvmStatic
-    @SubscribeEvent
-    fun toCForgeEvent(event: Event) {
-        val forgeEvent = ByForgeEvent(event)
-        forgeEvent.post()
-    }
-
     private fun isPureWhiteWolf(variant: TransfurVariantInstance<*>): Boolean {
         // 直接比较变体注册对象
         return variant.changedEntity is PureWhiteLatexWolf
@@ -511,8 +496,6 @@ object Event {
         // 原版摔伤计算公式 (Minecraft 1.20.1)
         return Mth.clamp(distance - 3.0f, 0.0f, 40.0f) * multiplier
     }
-
-
 }
 
 fun initHaArmorItems(): MutableMap<EquipmentSlot, ItemStack> = mutableMapOf(
@@ -599,6 +582,42 @@ fun ServerPlayer.sendPositionUpdate() {
     connection.send(clientBoundPlayerPositionPacket)
 }
 
+// 扩展函数：专门发送头部旋转更新
+fun ServerPlayer.sendHeadRotationUpdate(yHeadRot: Float) {
+    // 将yHeadRot转换为包需要的字节（范围：0-256 代表 0-360 度）
+    val byteYHeadRot = (yHeadRot * 256.0f / 360.0f).toInt().toByte()
+    connection.send(ClientboundRotateHeadPacket(this, byteYHeadRot))
+}
+
+// 在需要更新头部旋转的地方使用：
+fun syncHeadLookAt(livingEntity: LivingEntity, attacker: Entity) {
+    if (livingEntity.level().isClientSide) return
+
+    // 计算头部应该转向的位置（使用attacker的眼睛位置）
+    val targetPos = attacker.getEyePosition(1.0f)
+    livingEntity.lookAt(Anchor.EYES, targetPos)
+
+    // 获取计算后的头部旋转（yHeadRot）
+    val headRot = livingEntity.yHeadRot // 注意：这是头部旋转
+
+    when (livingEntity) {
+        is ServerPlayer -> {
+            // 对于玩家，使用我们扩展的同步函数
+            livingEntity.sendHeadRotationUpdate(headRot)
+            // 重置客户端预测
+            livingEntity.connection.resetPosition()
+        }
+        else -> {
+            // 对于非玩家实体，广播给追踪这个实体的所有客户端
+            (livingEntity.level() as? ServerLevel)?.chunkSource?.broadcast(livingEntity,
+                ClientboundRotateHeadPacket(
+                    livingEntity,
+                    (headRot * 256.0f / 360.0f).toInt().toByte()
+                )
+            )
+        }
+    }
+}
 fun ServerPlayer.sendAbilitiesUpdate() {
     val clientBoundPlayerAbilitiesPacket = ClientboundPlayerAbilitiesPacket(abilities)
     connection.send(clientBoundPlayerAbilitiesPacket)

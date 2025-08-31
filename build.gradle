@@ -172,6 +172,17 @@ dependencies {
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     kapt 'org.spongepowered:mixin:0.8.5:processor'
+    // 编译时注解处理
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
+    compileOnly(kapt("io.github.llamalad7:mixinextras-common:0.5.0"))
+
+    // 运行时嵌入（核心！）
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
+        jarJar.ranged(it, "[0.5.0,)")
+    }
+    implementation fg.deobf(files("libs/geckolib-forge-1.20.1-4.7.3.jar"))
+    implementation fg.deobf(files("libs/apoli-forge-1.20.1-2.9.0.8.jar"))
+    implementation fg.deobf(files("libs/origins-forge-1.20.1-1.10.0.9-all.jar"))
     implementation fg.deobf(files("libs/Changed-m1.20.1-v0.15.0-all_.jar"))
     implementation fg.deobf(files("libs/Psi-1.20.1-102.jar"))
     implementation fg.deobf(files("libs/cecnull1lib-2.0.jar"))
