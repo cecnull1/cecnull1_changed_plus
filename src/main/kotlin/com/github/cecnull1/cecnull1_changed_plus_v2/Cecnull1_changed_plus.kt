@@ -1,8 +1,11 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2
 
 //import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.C_PLAYER
+import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus
+import com.github.cecnull1.cecnull1_cforge.core.ComponentMap
+import com.github.cecnull1.cecnull1_cforge.core.PipeCore.calc
+import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
-import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEventBus
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY
@@ -22,7 +25,9 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CPlayerTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerTick
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.onForgeEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.onTakeOff
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel
@@ -54,7 +59,6 @@ import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinit
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers
 import net.minecraftforge.common.ForgeMod
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent
-import net.minecraftforge.eventbus.EventBus
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.ModList
 import net.minecraftforge.fml.common.Mod
@@ -67,6 +71,10 @@ import vazkii.psi.api.PsiAPI
 
 @Mod(MODID)
 class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
+    companion object {
+        val entityComponent: ComponentMap = ComponentMap()
+    }
+
     init {
         val modEventBus = context.modEventBus
         ModEntities.REGISTER.register(modEventBus)
@@ -83,7 +91,7 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
             SWEMEntities.REGISTER.register(modEventBus)
         }
 
-        //CForgeEvent.registerEvents<TakeOffEvent>(::onTakeOff)
+        CForgeEventBus.registerEvents<TakeOffEvent>(::onTakeOff)
         CForgeEventBus.registerEvents<ByForgeEvent<*>>(::onForgeEvent)
         CForgeEventBus.registerFastEvents<CPlayerTickEvent>(::onPlayerTick)
         CForgeEventBus.registerFastEvents<CLivingTickEvent>(::onLivingTick)
@@ -184,69 +192,71 @@ object ClientEvents {
 
     @JvmStatic
     @SubscribeEvent
-    fun registerLayerDefinitions(event: RegisterLayerDefinitions) {
-        event.registerLayerDefinition(AEntityModel.LAYER_LOCATION, AEntityModel::createBodyLayer)
-        event.registerLayerDefinition(ZombieModel.LAYER_LOCATION, ZombieModel::createBodyLayer)
-    }
+    fun registerLayerDefinitions(event: RegisterLayerDefinitions): Unit = event.process {
+        registerLayerDefinition(AEntityModel.LAYER_LOCATION, AEntityModel::createBodyLayer)
+        registerLayerDefinition(ZombieModel.LAYER_LOCATION, ZombieModel::createBodyLayer)
+    } calc {}
 
     @JvmStatic
     @SubscribeEvent
     fun registerEntityRenderers(event: RegisterRenderers) {
-        event.registerEntityRenderer(
-            A_ENTITY.get()
-        ) { context: EntityRendererProvider.Context ->
-            DarkLatexYufengRenderer(context)
-        }
-        event.registerEntityRenderer(
-            CEXOSKELETON.get()
-        ) { context: EntityRendererProvider.Context ->
-            ExoskeletonRenderer(context)
-        }
-        event.registerEntityRenderer(
-            A_HORSE.get()
-        ) { context: EntityRendererProvider.Context ->
-            HorseRenderer(context)
-        }
-        event.registerEntityRenderer(
-            SOUL.get()
-        ) { context: EntityRendererProvider.Context ->
-            SoulRenderer(context)
-        }
-//        event.registerEntityRenderer(
-//            C_PLAYER.get()
-//        ) { context: EntityRendererProvider.Context ->
-//            LatexHumanRenderer(context, true)
-//        }
-        event.registerEntityRenderer(
-            PURE_WHITE_LATEX_YUFENG.get()
-        ) { context: EntityRendererProvider.Context ->
-            DarkLatexYufengRenderer(context)
-        }
-        event.registerEntityRenderer(
-            NONE_ENTITY.get()
-        ) { context: EntityRendererProvider.Context ->
-            NoneTransfurVariantRenderer(context)
-        }
-        event.registerEntityRenderer(
-            NOT_CAN_DISMOUNT_BOAT.get()
-        ) { context: EntityRendererProvider.Context ->
-            BoatRenderer(context, false)
-        }
-        event.registerEntityRenderer(
-            MISC.get()
-        ) { context: EntityRendererProvider.Context ->
-            NoneTransfurVariantRenderer(context)
-        }
-        event.registerEntityRenderer(
-            PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get()
-        ) { context: EntityRendererProvider.Context ->
-            DarkLatexYufengRenderer(context)
-        }
-        if (ModList.get().isLoaded("swem")) {
-            event.registerEntityRenderer(
-                O_ENTITY.get()
+        event.apply {
+            registerEntityRenderer(
+                A_ENTITY.get()
             ) { context: EntityRendererProvider.Context ->
-                com.alaharranhonor.swem.client.render.SWEMHorseRenderer(context)
+                DarkLatexYufengRenderer(context)
+            }
+            registerEntityRenderer(
+                CEXOSKELETON.get()
+            ) { context: EntityRendererProvider.Context ->
+                ExoskeletonRenderer(context)
+            }
+            registerEntityRenderer(
+                A_HORSE.get()
+            ) { context: EntityRendererProvider.Context ->
+                HorseRenderer(context)
+            }
+            registerEntityRenderer(
+                SOUL.get()
+            ) { context: EntityRendererProvider.Context ->
+                SoulRenderer(context)
+            }
+//          registerEntityRenderer(
+//             C_PLAYER.get()
+//           ) { context: EntityRendererProvider.Context ->
+//            LatexHumanRenderer(context, true)
+//          }
+            registerEntityRenderer(
+                PURE_WHITE_LATEX_YUFENG.get()
+            ) { context: EntityRendererProvider.Context ->
+                DarkLatexYufengRenderer(context)
+            }
+            registerEntityRenderer(
+                NONE_ENTITY.get()
+            ) { context: EntityRendererProvider.Context ->
+                NoneTransfurVariantRenderer(context)
+            }
+            registerEntityRenderer(
+                NOT_CAN_DISMOUNT_BOAT.get()
+            ) { context: EntityRendererProvider.Context ->
+                BoatRenderer(context, false)
+            }
+            registerEntityRenderer(
+                MISC.get()
+            ) { context: EntityRendererProvider.Context ->
+                NoneTransfurVariantRenderer(context)
+            }
+            registerEntityRenderer(
+                PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get()
+            ) { context: EntityRendererProvider.Context ->
+                DarkLatexYufengRenderer(context)
+            }
+            if (ModList.get().isLoaded("swem")) {
+                registerEntityRenderer(
+                    O_ENTITY.get()
+                ) { context: EntityRendererProvider.Context ->
+                    com.alaharranhonor.swem.client.render.SWEMHorseRenderer(context)
+                }
             }
         }
     }

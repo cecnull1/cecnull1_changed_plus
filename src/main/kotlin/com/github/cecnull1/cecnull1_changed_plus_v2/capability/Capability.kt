@@ -1,5 +1,10 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.capability
 
+import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.addComponent
+import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.getComponent
+import com.github.cecnull1.cecnull1_cforge.core.ComponentMap
+import com.github.cecnull1.cecnull1_cforge.core.IComponent
+import com.github.cecnull1.cecnull1_cforge.core.ResourceLocation
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.initHaArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IPlayerExtendedData
 import com.github.cecnull1.cecnull1lib.utils.nbt.asCompoundTag
@@ -14,6 +19,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.Vec3
 import net.minecraftforge.common.capabilities.Capability
 import net.minecraftforge.common.capabilities.CapabilityManager
 import net.minecraftforge.common.capabilities.CapabilityProvider

@@ -29,8 +29,3 @@ interface IFanJi {
         livingEntity.swing(InteractionHand.MAIN_HAND, true)
     }
 }
-
-/*
-
-*
-* */

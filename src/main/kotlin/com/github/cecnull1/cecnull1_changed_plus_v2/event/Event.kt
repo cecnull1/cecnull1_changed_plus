@@ -1,5 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
+import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
@@ -20,22 +21,30 @@ import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTr
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.transfurData
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
+import com.github.cecnull1.cecnull1lib.utils.vector.toKVec3
+import com.github.cecnull1.cecnull1lib.utils.vector.toVec3
 import com.google.common.collect.Iterables
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.beast.PureWhiteLatexWolf
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
 import net.ltxprogrammer.changed.init.ChangedBlocks
+import net.ltxprogrammer.changed.init.ChangedSounds
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.client.Minecraft
+import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.commands.arguments.EntityAnchorArgument.Anchor
+import net.minecraft.core.Holder
 import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.Entity
@@ -65,7 +74,7 @@ import kotlin.math.sqrt
 
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.FORGE)
 object Event {
-    fun onPlayerTick(event: CPlayerTickEvent) {
+    fun onPlayerTick(event: CPlayerTickEvent) = event.process {
         val player = event.player
         if (player.getModData(MODID).getBoolean(Constant.NBTKeys.BODY_WARNING)) {
             player.ifPlayerNotTransfurred {
@@ -77,6 +86,8 @@ object Event {
             }
         }
         if (player.getModData(MODID).getBoolean(Constant.NBTKeys.FLYING)) {
+            player.foodData.foodLevel++
+            player.foodData.setSaturation(player.foodData.saturationLevel+1)
             if (!player.abilities.flying) {
                 val abilities = player.abilities
                 abilities.flying = true
@@ -103,7 +114,7 @@ object Event {
                 if (!player.isFallFlying) {
                     player.deltaMovement = Vec3(
                         delta.x + rotation.x / fixSpeed,
-                        delta.y + rotation.x / fixSpeed,
+                        delta.y + rotation.y / fixSpeed,
                         delta.z + rotation.z / fixSpeed
                     )
                 }
@@ -145,6 +156,18 @@ object Event {
                     val itemStack = player.inventory.armor[it.key.index]
                     val itemStack2 = itemStack.copy()
                     itemStack.count = 0
+                    if (player is ServerPlayer && itemStack2.isEmpty && !itemStack.isEmpty) {
+                        player.connection.send(
+                            ClientboundSoundEntityPacket(
+                                Holder.direct(ChangedSounds.POISON.get()),
+                                SoundSource.PLAYERS,
+                                player,
+                                1.0f,
+                                1.0f,
+                                0
+                            )
+                        )
+                    }
                     itemStack2
                 } else it.value
             }.toMutableMap()
@@ -420,8 +443,8 @@ object Event {
         }
     }
     fun onPlayerRespawn(event: PlayerEvent.PlayerRespawnEvent) {
-        val player = event.entity
-        if (player is ServerPlayer && player is IPlayerExtendedData) {
+        val player = event.entity as? ServerPlayer ?: return
+        if (player is IPlayerExtendedData) {
             if (!player.level().gameRules.getBoolean(ModGameRule.KeepHA)) {
                 player.haItem = ItemStack.EMPTY
                 player.hasHA = false
@@ -434,6 +457,17 @@ object Event {
                 player.notCanDismountBoatAddArmor(player)
             }
             HaStateNetworkHandler.sendToClient(event.entity)
+        }
+        player.ifPlayerNotTransfurred {
+            player.setPlayerTransfurVariant(
+                transfurData = TransfurData(
+                    variant = ModTransfurVariant.SOUL_TRANSFUR_VARIANT.get(),
+                    keepConscious = true
+                ),
+                progress = 1f
+            )
+            player.playerTransfurVariantSafe?.willSurviveTransfur = true
+            player.setPos(player.lastDeathLocation.getOrNull()?.pos()?.toKVec3()?.toVec3()?:player.position())
         }
     }
 

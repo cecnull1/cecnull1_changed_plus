@@ -60,7 +60,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.Vec3
 import net.minecraftforge.common.ForgeMod
-import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
@@ -168,6 +167,10 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
         attributes[ForgeMod.SWIM_SPEED.get()] = 2.0
         attributes[Attributes.ATTACK_DAMAGE] = 40.0
         attributes[ChangedAttributes.TRANSFUR_DAMAGE.get()] = 40.0
+    }
+
+    override fun registerGoals() {
+        super.registerGoals()
     }
 }
 
@@ -430,6 +433,7 @@ fun ChangedEntity.aEntityTick() {
             entity.autoMove(32)
             entity.startFallFlying()
         }
+        entity.hasArmorHA = true
     }
     applyTerminalVelocity(entity)
 }

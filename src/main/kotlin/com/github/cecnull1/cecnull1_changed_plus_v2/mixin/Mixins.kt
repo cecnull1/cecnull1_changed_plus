@@ -1,6 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.mixin
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEventBus.post
+import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus.post
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent

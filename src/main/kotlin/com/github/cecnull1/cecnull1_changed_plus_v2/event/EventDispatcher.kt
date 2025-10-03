@@ -1,7 +1,7 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
 // EventDispatcher.kt
-import com.github.cecnull1.cecnull1_changed_plus_v2.cforge.event.CForgeEventBus.post
+import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus.post
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import net.minecraftforge.eventbus.api.EventPriority
 import net.minecraftforge.eventbus.api.SubscribeEvent
