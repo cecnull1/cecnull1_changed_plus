@@ -1,10 +1,5 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.capability
 
-import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.addComponent
-import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.getComponent
-import com.github.cecnull1.cecnull1_cforge.core.ComponentMap
-import com.github.cecnull1.cecnull1_cforge.core.IComponent
-import com.github.cecnull1.cecnull1_cforge.core.ResourceLocation
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.initHaArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IPlayerExtendedData
 import com.github.cecnull1.cecnull1lib.utils.nbt.asCompoundTag
@@ -13,100 +8,11 @@ import com.github.cecnull1.cecnull1lib.utils.nbt.entries
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.mojang.logging.LogUtils.getLogger
 import net.ltxprogrammer.changed.data.AccessorySlots
-import net.minecraft.core.Direction
 import net.minecraft.nbt.CompoundTag
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.phys.Vec3
-import net.minecraftforge.common.capabilities.Capability
-import net.minecraftforge.common.capabilities.CapabilityManager
-import net.minecraftforge.common.capabilities.CapabilityProvider
-import net.minecraftforge.common.capabilities.CapabilityToken
-import net.minecraftforge.common.capabilities.ICapabilityProvider
-import net.minecraftforge.common.util.INBTSerializable
-import net.minecraftforge.common.util.LazyOptional
 import java.util.*
-
-@Deprecated("")
-data class ExtendedPlayerData(
-    val haState: HAState = HAState(),
-) {
-    fun saveNBTData(nbt: CompoundTag) {
-        haState.saveNBTData(nbt)
-    }
-
-    fun loadNBTData(nbt: CompoundTag) {
-        haState.loadNBTData(nbt)
-    }
-
-    fun copyFrom(other: ExtendedPlayerData) {
-        haState.copyFrom(other.haState)
-    }
-}
-
-@Deprecated("")
-class ExtendedPlayerDataProvider : ICapabilityProvider, INBTSerializable<CompoundTag> {
-    companion object {
-        @JvmField
-        val EXTENDED_PLAYER_DATA: Capability<ExtendedPlayerData> =
-            CapabilityManager.get<ExtendedPlayerData>(object : CapabilityToken<ExtendedPlayerData>() {})
-    }
-
-    private var extendedPlayerData: ExtendedPlayerData? = null
-
-    private val optional: LazyOptional<ExtendedPlayerData> = LazyOptional.of(this::createExtendedPlayerData)
-
-    private fun createExtendedPlayerData(): ExtendedPlayerData {
-        val naStateL = extendedPlayerData ?: ExtendedPlayerData()
-        extendedPlayerData = ExtendedPlayerData()
-        return naStateL
-    }
-
-    override fun <T : Any?> getCapability(cap: Capability<T>, side: Direction?): LazyOptional<T> {
-        return if (cap == EXTENDED_PLAYER_DATA) {
-            optional.cast()
-        } else {
-            LazyOptional.empty()
-        }
-    }
-
-    override fun serializeNBT(): CompoundTag {
-        val nbt = CompoundTag()
-        createExtendedPlayerData().saveNBTData(nbt)
-        return nbt
-    }
-
-    override fun deserializeNBT(nbt: CompoundTag) {
-        createExtendedPlayerData().loadNBTData(nbt)
-    }
-}
-
-@Deprecated("")
-var Player.haEnabledOld
-    get(): Boolean {
-        return this.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).orElse(ExtendedPlayerData()).haState.hasHA
-    }
-    set(value) {
-        val old = this.haEnabledOld
-        if (old != value) {
-            this.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).orElse(ExtendedPlayerData()).haState.hasHA = value
-        }
-    }
-
-@Deprecated("")
-var Player.haItemOld
-    get(): ItemStack {
-        return this.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).orElse(ExtendedPlayerData()).haState.haItem
-    }
-    set(value) {
-        val old = this.haItemOld
-        if (old !== value && !ItemStack.matches(old, value)) {
-            this.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA)
-                .orElse(ExtendedPlayerData()).haState.haItem = value
-        }
-    }
 
 data class HAState(
     var hasHA: Boolean = false,

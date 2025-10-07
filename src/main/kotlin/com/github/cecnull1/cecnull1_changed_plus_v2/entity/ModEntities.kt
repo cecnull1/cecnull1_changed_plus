@@ -32,9 +32,7 @@ import net.ltxprogrammer.changed.entity.TransfurMode
 import net.ltxprogrammer.changed.entity.beast.AquaticEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexYufeng
-import net.ltxprogrammer.changed.entity.beast.LatexHuman
 import net.ltxprogrammer.changed.entity.latex.LatexType
-import net.ltxprogrammer.changed.entity.robot.Exoskeleton
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedAccessorySlots
 import net.ltxprogrammer.changed.init.ChangedAttributes
@@ -68,11 +66,9 @@ import kotlin.math.abs
 
 object ModEntities {
     const val A_ENTITY_ID = "a_entity"
-    const val CEXOSKELETON_ID = "cexoskeleton"
     const val ZOMBIE_ID = "zombie"
     const val A_HORSE_ID = "a_horse"
     const val SOUL_ID  = "soul"
-    const val CPLAYER_ID = "cplayer"
     const val PURE_WHITE_LATEX_YUFENG_ID = "pure_white_latex_yufeng"
     const val NOT_CAN_DISMOUNT_BOAT_ID = "not_can_dismount_boat"
     const val NONE_ENTITY_ID = "none_entity"
@@ -91,12 +87,6 @@ object ModEntities {
         EntityType.Builder.of(::PureWhiteLatexYufeng, ChangedMobCategories.CHANGED)
             .sized(0.7f, 1.93f)
             .build(PURE_WHITE_LATEX_YUFENG_ID)
-    }
-
-    val CEXOSKELETON: RegistryObject<EntityType<CExoskeleton>> = REGISTER.register(CEXOSKELETON_ID) {
-        EntityType.Builder.of(::CExoskeleton, MobCategory.MISC)
-            .sized(0.7f, 1.93f)
-            .build(CEXOSKELETON_ID)
     }
 
     val A_HORSE: RegistryObject<EntityType<AHorse>> = REGISTER.register(A_HORSE_ID) {
@@ -174,8 +164,6 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
     }
 }
 
-open class CExoskeleton(p_21368_: EntityType<out Exoskeleton>?, p_21369_: Level?) : Exoskeleton(p_21368_, p_21369_)
-
 open class Zombie(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level) {
     override fun getLatexType(): LatexType {
         return ChangedLatexTypes.NONE.get()
@@ -186,7 +174,7 @@ open class Zombie(type: EntityType<out ChangedEntity>, level: Level) : ChangedEn
     }
 }
 
-open class AHorse(p_30689_: EntityType<out Horse>, p_30690_: Level) : Horse(p_30689_, p_30690_), IDismount,
+open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entityType, level), IDismount,
     IMount {
     override fun isTamed(): Boolean {
         return true
@@ -220,8 +208,8 @@ open class AHorse(p_30689_: EntityType<out Horse>, p_30690_: Level) : Horse(p_30
         super.tick()
     }
 
-    override fun getRiddenInput(p_278278_: Player, p_275506_: Vec3): Vec3 {
-        return Vec3(p_278278_.xxa.toDouble()*0.5, 0.0, 1.0)
+    override fun getRiddenInput(player: Player, vec3: Vec3): Vec3 {
+        return Vec3(player.xxa.toDouble()*0.5, 0.0, 1.0)
     }
 
     override fun isImmobile(): Boolean {
@@ -239,9 +227,9 @@ open class AHorse(p_30689_: EntityType<out Horse>, p_30690_: Level) : Horse(p_30
 }
 
 open class Soul(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level), VariantTickPlusAble {
-    init {
-        noPhysics = true
-    }
+//    init {
+//        noPhysics = true
+//    }
 
     override fun getLatexType(): LatexType {
         return ChangedLatexTypes.NONE.get()
@@ -284,16 +272,6 @@ open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : 
     override fun isNoAi(): Boolean = false
     override fun variantTick(level: Level?) {
         super.variantTick(level)
-    }
-}
-
-open class CPlayer(p_19870_: EntityType<out LatexHuman>, p_19871_: Level) : LatexHuman(p_19870_, p_19871_) {
-    override fun getTransfurMode(): TransfurMode? {
-        return TransfurMode.NONE
-    }
-
-    override fun getLatexType(): LatexType {
-        return ChangedLatexTypes.NONE.get()
     }
 }
 
@@ -418,24 +396,20 @@ fun ChangedEntity.aEntityTick() {
             entity.autoMove(40)
         }
     }
-    if (entity.isOnFire || entity.isInLava || entity.activeEffects.any {
-            it.effect.let { mobEffect ->
-                mobEffect == MobEffects.WITHER || mobEffect == MobEffects.POISON || mobEffect == MobEffects.HUNGER || mobEffect == MobEffects.WEAKNESS
-            }
-        }) {
-        if (entity is Player) {
-            entity.startFallFlying()
-        }
+
+    if (entity.meiyun()) {
         entity.autoMove(12)
     }
     if (entity is Player) {
-        if (entity.foodData.foodLevel <= 6) {
-            entity.autoMove(32)
-            entity.startFallFlying()
-        }
         entity.hasArmorHA = true
     }
     applyTerminalVelocity(entity)
+}
+
+fun LivingEntity.meiyun(): Boolean = this.isOnFire || this.isInLava || this.activeEffects.any {
+    it.effect.let { mobEffect ->
+        mobEffect == MobEffects.WITHER || mobEffect == MobEffects.POISON || mobEffect == MobEffects.HUNGER || mobEffect == MobEffects.WEAKNESS
+    } || (this is Player && this.foodData.foodLevel <= 6)
 }
 
 fun Entity.notCanDismountBoatAddArmor(player: Player) {

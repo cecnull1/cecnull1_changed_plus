@@ -1,6 +1,8 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 
+import com.github.cecnull1.cecnull1_changed_plus_v2.mixin.LivingEntityAccessor
 import com.google.common.collect.ImmutableList
+import net.minecraft.world.entity.LivingEntity
 import java.util.stream.Stream
 
 object CUtils
@@ -27,3 +29,8 @@ fun <T : Any> Stream<T?>.toImmutableSafeList(): List<T> {
 //        setUpdateInterval(this@copy.updateInterval())
 //        setShouldReceiveVelocityUpdates(this@copy.trackDeltas())
 //    }
+
+val LivingEntity.fieldIsJumping: Boolean
+    get() {
+        return (this as LivingEntityAccessor).isJumping
+    }

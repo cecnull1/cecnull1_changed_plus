@@ -45,11 +45,11 @@ open class O(type: EntityType<out O>,
 ) : SWEMHorseEntity(type, worldIn), IDismount {
     var owner2: LivingEntity? = null
 
-    override fun addAdditionalSaveData(p_30589_: CompoundTag) {
-        super.addAdditionalSaveData(p_30589_)
-        p_30589_["BridleItem"] = ItemStack.EMPTY.serializeNBT()
-        p_30589_["SWEMArmorItem"] = ItemStack.EMPTY.serializeNBT()
-        p_30589_["SaddleItem"] = ItemStack.EMPTY.serializeNBT()
+    override fun addAdditionalSaveData(tag: CompoundTag) {
+        super.addAdditionalSaveData(tag)
+        tag["BridleItem"] = ItemStack.EMPTY.serializeNBT()
+        tag["SWEMArmorItem"] = ItemStack.EMPTY.serializeNBT()
+        tag["SaddleItem"] = ItemStack.EMPTY.serializeNBT()
     }
 
     override fun getTack(type: TackType?): ItemStack? {
@@ -161,9 +161,9 @@ open class O(type: EntityType<out O>,
         return true
     }
 
-    override fun getRiddenInput(p_278278_: Player, p_275506_: Vec3): Vec3 {
+    override fun getRiddenInput(player: Player, vec3: Vec3): Vec3 {
         return (
-                super.getRiddenInput(p_278278_, p_275506_).toKVec3() + KVec3(0.0, 0.0, 1.0-p_278278_.zza)
+                super.getRiddenInput(player, vec3).toKVec3() + KVec3(0.0, 0.0, 1.0-player.zza)
                 ).toVec3()
     }
 

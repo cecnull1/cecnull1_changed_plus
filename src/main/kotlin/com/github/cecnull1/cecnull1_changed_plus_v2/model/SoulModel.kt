@@ -53,7 +53,7 @@ class SoulModel(root: ModelPart) : AdvancedHumanoidModel<Soul>(root), AdvancedHu
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch)
     }
 
-    override fun m_102851_(humanoidArm: HumanoidArm): ModelPart {
+    override fun getArm(humanoidArm: HumanoidArm): ModelPart {
         return if (humanoidArm == HumanoidArm.RIGHT) RightArm else LeftArm
     }
 

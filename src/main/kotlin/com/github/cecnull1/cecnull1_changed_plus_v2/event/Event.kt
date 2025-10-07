@@ -1,6 +1,8 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
+import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
+import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
@@ -25,6 +27,7 @@ import com.github.cecnull1.cecnull1lib.utils.vector.toKVec3
 import com.github.cecnull1.cecnull1lib.utils.vector.toVec3
 import com.google.common.collect.Iterables
 import net.ltxprogrammer.changed.data.AccessorySlots
+import net.ltxprogrammer.changed.entity.SeatEntity
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.beast.PureWhiteLatexWolf
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
@@ -33,19 +36,14 @@ import net.ltxprogrammer.changed.init.ChangedSounds
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.client.Minecraft
-import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.commands.arguments.EntityAnchorArgument.Anchor
 import net.minecraft.core.Holder
-import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket
-import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
-import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket
+import net.minecraft.network.protocol.game.*
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
+import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
@@ -56,7 +54,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
-import net.minecraftforge.event.AttachCapabilitiesEvent
 import net.minecraftforge.event.TickEvent
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.LivingAttackEvent
@@ -173,8 +170,21 @@ object Event {
             }.toMutableMap()
         }
 
-        if (player.wuDiTime > 0) {
+        if (event.phase == TickEvent.Phase.START && player.wuDiTime > 0) {
             player.wuDiTime--
+        }
+
+        if (player.persistentData.getBoolean(Constant.NBTKeys.BetterNeon.NORIDE2_BN_C_JH_TF)) {
+            player.ifPlayerNotTransfurred {
+                player.transfur(
+                    TransfurData(
+                        ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get(),
+                        keepConscious = true,
+                        context = TransfurCause.WHITE_LATEX.toTransfurContext()
+                    )
+                )
+            }
+            player.persistentData.remove(Constant.NBTKeys.BetterNeon.NORIDE2_BN_C_JH_TF)
         }
 
         fun sync() {
@@ -222,9 +232,6 @@ object Event {
         if (target is IMount && target.canMount(event.entity)) {
             event.entity.startRiding(event.target ?: return)
         }
-//        if (!event.world.isClientSide) {
-//            event.player.startRiding(event.target ?: return)
-//        }
     }
 
     fun onEntityVariantAssigned(event: ProcessTransfur.EntityVariantAssigned.ChangedVariant) {
@@ -285,6 +292,15 @@ object Event {
         (attacker as? Player)?.ifPlayerTransfurred {
             // 调用灵魂附身
             lingHunFuShen(event, it, livingEntity, attacker)
+        }
+
+        event.entity as? Player then player@ {
+            if (this.level().isClientSide) return@player
+            (this.vehicle as? SeatEntity) then {
+                (this.level().getBlockEntity(this@then.attachedBlockPos) as? BBlockEntity) then {
+                    if (seatedEntity?.id == this@player.id && !this@player.isCreative && event.source.type() != DamageTypes.FELL_OUT_OF_WORLD) event.isCanceled = true
+                }
+            }
         }
     }
 
@@ -373,8 +389,8 @@ object Event {
         }
     }
 
-    fun onBlockBreak(event: BlockEvent.BreakEvent) {
-        val level = event.level ?: return
+    fun onBlockBreak(event: BlockEvent.BreakEvent) = event process {
+        val level = event.level ?: return@process
         if (!level.isClientSide) {
             when (event.state.block) {
                 ChangedBlocks.WHITE_LATEX_BLOCK.get() -> {
@@ -413,27 +429,18 @@ object Event {
 
     @JvmStatic
     @SubscribeEvent
-    fun onAttachCapabilities(event: AttachCapabilitiesEvent<Entity>) {
-//        if (event.`object` is Player) {
-//            if (!event.`object`.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).isPresent) {
-//                event.addCapability(
-//                    ResourceLocation(MODID, "ha_state"),
-//                    ExtendedPlayerDataProvider()
-//                )
-//            }
-//        }
+    fun onLeftClickBlock(event: PlayerInteractEvent.LeftClickBlock) {
+        val level = event.level
+        if (level.isClientSide) return
+        (level.getBlockEntity(event.pos) as? BBlockEntity) then {
+            if (seatedEntity?.id != event.entity.id) {
+                Block.dropResources(level.getBlockState(event.pos), level, event.pos, null)
+                level.destroyBlock(event.pos, false, event.entity)
+            }
+        }
     }
 
     fun onPlayerCloned(event: PlayerEvent.Clone) {
-//        if (event.isWasDeath) {
-//            event.original.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).ifPresent {
-//                oldState ->
-//                event.entity.getCapability(ExtendedPlayerDataProvider.EXTENDED_PLAYER_DATA).ifPresent {
-//                    newState ->
-//                    newState.copyFrom(oldState)
-//                }
-//            }
-//        }
         val newEntity = event.entity
         if (newEntity is IPlayerExtendedData) {
             val oldEntity  = event.original
@@ -488,11 +495,6 @@ object Event {
             if (player.hasArmorHA && player.level().gameRules.getBoolean(ModGameRule.KeepArmorHA)) event.keepItem()
         }
     }
-//    @JvmStatic
-//    @SubscribeEvent
-//    fun onRegisterCapabilities(event: RegisterCapabilitiesEvent) {
-//        event.register(HAState::class.java)
-//    }
 
     // 核心摔伤处理逻辑
     fun onLivingFall(event: LivingFallEvent) {

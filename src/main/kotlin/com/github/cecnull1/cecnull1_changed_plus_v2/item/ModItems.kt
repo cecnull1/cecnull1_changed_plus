@@ -33,6 +33,9 @@ object ModItems {
     val ABLOCK: RegistryObject<ABlock> = REGISTER.register(ModBlocks.A_BLOCK_ID) {
         ABlock()
     }
+    val BBLOCK_ITME: RegistryObject<BBlockItem> = REGISTER.register("b_block") {
+        BBlockItem()
+    }
     val A_ARMOR: RegistryObject<AArmorItem> = REGISTER.register(A_ARMOR_ID) {
         AArmorItem()
     }
@@ -54,6 +57,8 @@ object ModItems {
 }
 
 class ABlock : ItemNameBlockItem(ModBlocks.A_BLOCK.get(), Properties())
+
+class BBlockItem : ItemNameBlockItem(ModBlocks.BBLOCK.get(), Properties())
 
 class AArmorItem : ArmorItem(ArmorMaterials.IRON, Type.CHESTPLATE, Properties()) {
     override fun canElytraFly(stack: ItemStack?, entity: LivingEntity?): Boolean {
@@ -133,11 +138,11 @@ class NotCanTakeOffLabCoat(): LabCoatItem(), ICanTakeOff {
     override fun canTakeOff(player: Player, slot: Slot, item: ItemStack) = this.getClothingState(item)?.getValue(CLOSED) != true
 }
 
-class UnTransfurSyringe(p_41383_: Properties) : BloodSyringe(p_41383_) {
-    override fun m_5922_(stack: ItemStack, level: Level, entity: LivingEntity): ItemStack {
+class UnTransfurSyringe(properties: Properties) : BloodSyringe(properties) {
+    override fun finishUsingItem(stack: ItemStack, level: Level, entity: LivingEntity): ItemStack {
         if (entity is Player) {
             entity.removePlayerTransfurVariant()
         }
-        return super.m_5922_(stack, level, entity)
+        return super.finishUsingItem(stack, level, entity)
     }
 }

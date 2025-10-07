@@ -104,7 +104,7 @@ class AEntityModel(root: ModelPart) : AdvancedHumanoidModel<AEntity>(root),
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch)
     }
 
-    override fun m_102851_(humanoidArm: HumanoidArm): ModelPart {
+    override fun getArm(humanoidArm: HumanoidArm): ModelPart {
         return if (humanoidArm == HumanoidArm.LEFT) this.LeftArm else this.RightArm
     }
 

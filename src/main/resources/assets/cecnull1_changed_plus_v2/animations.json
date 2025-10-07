@@ -1,0 +1,11 @@
+{
+  "cecnull1_changed_plus_v2:cp_stasis_idle": {
+    "category": "idle",
+    "animations": [
+      {
+        "name": "cecnull1_changed_plus_v2:cp_stasis_idle",
+        "criteria": {}
+      }
+    ]
+  }
+}

@@ -1,27 +1,29 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.mixin
 
 import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus.post
+import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.AEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.Soul
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.meiyun
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CPlayerTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.ICanTakeOff
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IPlayerExtendedData
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toImmutableSafeList
-import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
-import com.github.cecnull1.cecnull1lib.utils.changed.isPlayerTransfurred
-import com.github.cecnull1.cecnull1lib.utils.changed.transfur
+import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.nbt.asCompoundTag
 import com.github.cecnull1.cecnull1lib.utils.nbt.buildNBT
+import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
-import net.ltxprogrammer.changed.util.ItemUtil
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue
+import net.ltxprogrammer.changed.data.AccessorySlotType
+import net.ltxprogrammer.changed.data.AccessorySlots
 import net.minecraft.core.NonNullList
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
@@ -42,11 +44,33 @@ import net.minecraft.world.level.material.Fluid
 import net.minecraftforge.event.TickEvent
 import net.minecraftforge.fluids.FluidType
 import org.spongepowered.asm.mixin.Mixin
+import org.spongepowered.asm.mixin.Pseudo
 import org.spongepowered.asm.mixin.Unique
+import org.spongepowered.asm.mixin.gen.Accessor
 import org.spongepowered.asm.mixin.injection.At
 import org.spongepowered.asm.mixin.injection.Inject
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
+
+@Mixin(Entity::class)
+abstract class EntityMixin {
+    @ModifyExpressionValue(
+        method = ["*"],
+        at = [At(
+            value = "FIELD",
+            target = "Lnet/minecraft/world/entity/Entity;f_19794_:Z",
+            remap = false
+        )],
+        remap = false
+    )
+    fun isNoPhysics(original: Boolean): Boolean {
+        return (this is Player && (
+                when(this.playerTransfurVariant?.changedEntity) {
+                    is Soul -> true
+                    else -> false
+                })) || original
+    }
+}
 
 @Mixin(LivingEntity::class)
 abstract class LivingEntityMixin {
@@ -65,7 +89,7 @@ abstract class LivingEntityMixin {
     @Inject(method = ["m_21205_"], at = [At("RETURN")], cancellable = true, remap = false)
     private fun getMainHandItem(cir: CallbackInfoReturnable<ItemStack>) {
         if (this is Player && this.isAlive) {
-            if (this.hasHA) returnItemStack(this.haItem, cir)
+            if (this.hasHA) cir.mreturn(this.haItem)
         }
     }
 
@@ -78,7 +102,7 @@ abstract class LivingEntityMixin {
     private fun getItemInHand(hand: InteractionHand, cir: CallbackInfoReturnable<ItemStack>) {
         if (hand == InteractionHand.MAIN_HAND) {
             if (this is Player && this.isAlive) {
-                if (this.hasHA) returnItemStack(this.haItem, cir)
+                if (this.hasHA) cir.mreturn(this.haItem)
             }
         }
     }
@@ -86,7 +110,7 @@ abstract class LivingEntityMixin {
     @Inject(method = ["m_21211_"], at = [At("RETURN")], cancellable = true, remap = false)
     private fun getUseItem(cir: CallbackInfoReturnable<ItemStack>) {
         if (this is Player && this.isAlive) {
-            if (this.hasHA) returnItemStack(this.haItem, cir)
+            if (this.hasHA) cir.mreturn(this.haItem)
 
         }
     }
@@ -97,9 +121,21 @@ abstract class LivingEntityMixin {
             if (this.hasHA && !this.haItem.isEmpty) ci.cancel()
         }
     }
+
+    @Inject(method = ["m_21255_"], at = [At("HEAD")], cancellable = true, remap = false)
+    fun isFallFlying(cir: CallbackInfoReturnable<Boolean>) {
+        if (this is Player) {
+            this.ifPlayerTransfurred {
+                if (it.changedEntity is AEntity && this.meiyun()) {
+                    cir.mreturn(true)
+                }
+            }
+        }
+    }
 }
 
 @Mixin(Player::class)
+@Pseudo
 open class PlayerMixin: IPlayerExtendedData {
 //    @Unique private var `cecnull1$cecnull1_changed_plus_v2$canDismount`: Boolean = false
 //        @Unique get
@@ -140,10 +176,10 @@ open class PlayerMixin: IPlayerExtendedData {
         if (this is Player && this.isAlive) {
 
             if (this.hasHA) {
-                if (slot.index == EquipmentSlot.MAINHAND.index) returnItemStack(this.haItem, cir)
+                if (slot.index == EquipmentSlot.MAINHAND.index) cir.mreturn(this.haItem)
             }
             if (this.hasArmorHA) {
-                if (slot.type != EquipmentSlot.Type.HAND) returnItemStack(this.haArmorItems[slot], cir)
+                if (slot.type != EquipmentSlot.Type.HAND) cir.mreturn(this.haArmorItems[slot])
             }
         }
     }
@@ -166,21 +202,19 @@ open class PlayerMixin: IPlayerExtendedData {
     @Inject(method = ["m_6069_"], at = [At("HEAD")], cancellable = true, remap = false)
     private fun isSwimming(cir: CallbackInfoReturnable<Boolean>) {
         if (this is Player) {
-            for (itemStack in ItemUtil.getWearingItems(this).toImmutableSafeList()) {
-                if (itemStack.itemStack.item is NotCanTakeOffWetsuit) {
-                    if (!this.isPlayerTransfurred) {
-                        transfur(
-                            transfurData = TransfurData(
-                                variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT.get(),
-                                keepConscious = false
-                            )
+            if (this.accessorySlotsFast()?.fieldItems?.values?.any {
+                it.item is NotCanTakeOffWetsuit
+            }?: false) {
+                if (!this.isPlayerTransfurred) {
+                    transfur(
+                        transfurData = TransfurData(
+                            variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT.get(),
+                            keepConscious = false
                         )
-                    }
-                    if (this.isInWater) {
-                        cir.returnValue = true
-                        cir.cancel()
-                    }
-                    break
+                    )
+                }
+                if (this.isInWater) {
+                    cir.mreturn(true)
                 }
             }
         }
@@ -197,9 +231,24 @@ open class PlayerMixin: IPlayerExtendedData {
         val entity = this as Player
         CPlayerTickEvent(entity, TickEvent.Phase.END).post()
     }
+
+    @ModifyExpressionValue(
+        method = ["*"],
+        at = [At(
+            value = "FIELD",
+            target = "Lnet/minecraft/world/entity/player/Abilities;f_35935_:Z",
+            remap = false
+        )],
+        remap = false
+    )
+    fun isFlying(original: Boolean): Boolean {
+        return (this is Player && (
+                when(this.playerTransfurVariant?.changedEntity) {
+                    is Soul -> true
+                    else -> false
+                } || this.getModData(MODID).getBoolean(Constant.NBTKeys.FLYING))) || original
+    }
 }
-
-
 
 @Mixin(Inventory::class)
 open class InventoryMixin {
@@ -207,7 +256,7 @@ open class InventoryMixin {
     fun getCarried(cir: CallbackInfoReturnable<ItemStack>) {
         if (this is Inventory) {
             val player = this.player
-            if (player.isAlive && player.hasHA) returnItemStack(player.haItem, cir)
+            if (player.isAlive && player.hasHA) cir.mreturn(player.haItem)
         }
     }
 
@@ -218,7 +267,7 @@ open class InventoryMixin {
             if (player.isAlive && player.hasArmorHA) {
                 try {
                     player.haArmorItems[EquipmentSlot.byTypeAndIndex(EquipmentSlot.Type.ARMOR, index)]?.let {
-                        returnItemStack(it, cir)
+                        cir.mreturn(it)
                     }
                 } catch (_: IllegalArgumentException) {
                 }
@@ -320,8 +369,7 @@ abstract class FluidTypeMixin {
         cancellable = true
     )
     private fun canSwim(entity: Entity, cir: CallbackInfoReturnable<Boolean>) {
-        cir.returnValue = true
-        cir.cancel()
+        cir.mreturn(true)
     }
 
     @Inject(
@@ -331,14 +379,25 @@ abstract class FluidTypeMixin {
         cancellable = true
     )
     private fun canDrownIn(entity: LivingEntity, cir: CallbackInfoReturnable<Boolean>) {
-        cir.returnValue = false
-        cir.cancel()
+        cir.mreturn(false)
     }
 }
 
-private inline fun returnItemStack(returnValue: ItemStack?, cir: CallbackInfoReturnable<ItemStack>) {
+@Mixin(AccessorySlots::class, remap = false)
+interface AccessorySlotsAccessor {
+    @Accessor("items")
+    fun getItems(): Map<AccessorySlotType, ItemStack>
+}
+
+@Mixin(LivingEntity::class, remap = false)
+interface LivingEntityAccessor {
+    @get:Accessor("f_20899_", remap = false)
+    val isJumping: Boolean
+}
+
+private inline fun <reified T> CallbackInfoReturnable<T>.mreturn(returnValue: T?) {
     if (returnValue != null) {
-        cir.returnValue = returnValue
-        cir.cancel()
+        this.returnValue = returnValue
+        cancel()
     }
 }

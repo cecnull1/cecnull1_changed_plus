@@ -20,19 +20,12 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onMount
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerCloned
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerLogin
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerRespawn
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
 import com.github.cecnull1.cecnull1lib.utils.changed.entityVariant
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.process.ProcessTransfur
-import net.minecraft.resources.ResourceLocation
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraftforge.event.entity.EntityMountEvent
-import net.minecraftforge.event.entity.living.LivingAttackEvent
-import net.minecraftforge.event.entity.living.LivingChangeTargetEvent
-import net.minecraftforge.event.entity.living.LivingFallEvent
-import net.minecraftforge.event.entity.living.LivingHurtEvent
-import net.minecraftforge.event.entity.living.LivingKnockBackEvent
+import net.minecraftforge.event.entity.living.*
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent
 import net.minecraftforge.event.entity.player.PlayerEvent
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
@@ -66,6 +59,7 @@ private val EVENT_HANDLERS: Map<KClass<*>, (Any) -> Unit> = buildMap {
     put(ProcessTransfur.EntityVariantAssigned.ChangedVariant::class) { onEntityVariantAssigned(it as ProcessTransfur.EntityVariantAssigned.ChangedVariant) }
     put(ProcessTransfur.KeepConsciousEvent::class) { onKeepConscious(it as ProcessTransfur.KeepConsciousEvent) }
     put(FMLCommonSetupEvent::class) { onCommonSetup(it as FMLCommonSetupEvent) }
+
 }
 
 /**
@@ -89,8 +83,8 @@ fun onLivingChangeTarget(event: LivingChangeTargetEvent) {
 }
 
 fun onKeepConscious(event: ProcessTransfur.KeepConsciousEvent) {
-    if (event.variant?.`is`(ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT) == true &&
-        event.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT) == true &&
+    if (event.variant?.`is`(ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT) == true ||
+        event.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT) == true ||
         event.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT) == true) {
             event.shouldKeepConscious = true
     }

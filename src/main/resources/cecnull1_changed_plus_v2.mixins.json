@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.github.cecnull1.cecnull1_changed_plus_v2.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_17",
   "refmap": "cecnull1_changed_plus_v2.refmap.json",
   "mixins": [
     "LivingEntityMixin",
@@ -14,7 +14,10 @@
     "FluidMixin",
     "FluidTypeMixin",
     "InventoryMenu$1Mixin",
-    "AccessoryAccessMenu$1Mixin"
+    "AccessoryAccessMenu$1Mixin",
+    "AccessorySlotsAccessor",
+    "EntityMixin",
+    "LivingEntityAccessor"
   ],
   "client": [
   ],

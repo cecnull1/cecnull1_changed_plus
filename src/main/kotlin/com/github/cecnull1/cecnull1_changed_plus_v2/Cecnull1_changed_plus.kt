@@ -5,29 +5,26 @@ import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus
 import com.github.cecnull1.cecnull1_cforge.core.ComponentMap
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.calc
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
+import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_HORSE
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.CEXOSKELETON
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.MISC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NONE_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NOT_CAN_DISMOUNT_BOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MOVE_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.SWEMEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.SWEMEntities.O_ENTITY
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.ByForgeEvent
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.CPlayerTickEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerTick
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.onForgeEvent
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.onTakeOff
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel
@@ -38,14 +35,13 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceTrickTransfurLiving
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.NoneTransfurVariantRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.SoulRenderer
 import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
-import net.ltxprogrammer.changed.client.renderer.ExoskeletonRenderer
+import net.ltxprogrammer.changed.client.renderer.SeatEntityRenderer
 import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer
 import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer.ModelComponent
 import net.ltxprogrammer.changed.client.renderer.layers.AccessoryLayer
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.UseItemMode
-import net.ltxprogrammer.changed.entity.robot.Exoskeleton
 import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.minecraft.client.renderer.entity.BoatRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
@@ -77,9 +73,12 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
 
     init {
         val modEventBus = context.modEventBus
+        Animations.REGISTRY.register(modEventBus)
         ModEntities.REGISTER.register(modEventBus)
+        ModEntities2.REGISTER.register(modEventBus)
         ModTransfurVariant.REGISTRY.register(modEventBus)
-        ModBlocks.REGISTER.register(modEventBus)
+        ModBlocks.REGISTRY_BLOCKENTITY.register(modEventBus)
+        ModBlocks.REGISTRY_BLOCK.register(modEventBus)
         ModItems.REGISTER.register(modEventBus)
         ModGameRule.register()
 
@@ -111,10 +110,6 @@ object Events {
         event.put(
             A_ENTITY.get(),
             ChangedEntity.createLatexAttributes().build()
-        )
-        event.put(
-            CEXOSKELETON.get(),
-            Exoskeleton.createAttributes().build()
         )
         event.put(
             A_HORSE.get(),
@@ -207,11 +202,6 @@ object ClientEvents {
                 DarkLatexYufengRenderer(context)
             }
             registerEntityRenderer(
-                CEXOSKELETON.get()
-            ) { context: EntityRendererProvider.Context ->
-                ExoskeletonRenderer(context)
-            }
-            registerEntityRenderer(
                 A_HORSE.get()
             ) { context: EntityRendererProvider.Context ->
                 HorseRenderer(context)
@@ -250,6 +240,11 @@ object ClientEvents {
                 PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get()
             ) { context: EntityRendererProvider.Context ->
                 DarkLatexYufengRenderer(context)
+            }
+            registerEntityRenderer(
+                MOVE_ENTITY.get()
+            ) { context: EntityRendererProvider.Context ->
+                SeatEntityRenderer(context)
             }
             if (ModList.get().isLoaded("swem")) {
                 registerEntityRenderer(

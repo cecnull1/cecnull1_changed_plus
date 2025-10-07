@@ -35,7 +35,7 @@ class ZombieModel(root: ModelPart) : AdvancedHumanoidModel<Zombie>(root), Advanc
             AnimatorPresets.humanLike(Head, Torso, LeftArm, RightArm, LeftLeg, RightLeg)
         )
 
-    override fun m_102851_(humanoidArm: HumanoidArm?): ModelPart? {
+    override fun getArm(humanoidArm: HumanoidArm): ModelPart {
         return if (humanoidArm == HumanoidArm.LEFT) this.LeftArm else this.RightArm
     }
 
