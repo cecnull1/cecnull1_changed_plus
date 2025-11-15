@@ -17,7 +17,8 @@
     "AccessoryAccessMenu$1Mixin",
     "AccessorySlotsAccessor",
     "EntityMixin",
-    "LivingEntityAccessor"
+    "LivingEntityAccessor",
+    "RegistryObjectAccessor"
   ],
   "client": [
   ],

@@ -2,11 +2,13 @@ package com.github.cecnull1.cecnull1_changed_plus_v2
 
 //import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.C_PLAYER
 import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus
+import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus.post
 import com.github.cecnull1.cecnull1_cforge.core.ComponentMap
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.calc
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY
@@ -15,9 +17,11 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.MISC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NONE_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NOT_CAN_DISMOUNT_BOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.B_HORSE
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MEI_XI_YUAN
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MOVE_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.SWEMEntities
@@ -29,12 +33,15 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.ZombieModel
-import com.github.cecnull1.cecnull1_changed_plus_v2.packet.HaStateNetworkHandler
+import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceOperatorEntityGetTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceTrickTransfurLivingEntity
-import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.NoneTransfurVariantRenderer
+import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.NoneEntityRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.SoulRenderer
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.CodecRegistry
+import io.github.apace100.apoli.mixin.PlayerEntityRendererMixin
 import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
+import net.ltxprogrammer.changed.client.renderer.LatexOrcaRenderer
 import net.ltxprogrammer.changed.client.renderer.SeatEntityRenderer
 import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer
 import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer.ModelComponent
@@ -43,6 +50,7 @@ import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.UseItemMode
 import net.ltxprogrammer.changed.init.ChangedAttributes
+import net.minecraft.client.model.HumanoidModel
 import net.minecraft.client.renderer.entity.BoatRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.client.renderer.entity.HorseRenderer
@@ -64,14 +72,15 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 import vazkii.psi.api.PsiAPI
 
+fun String.toRL() = com.github.cecnull1.cecnull1_cforge.core.ResourceLocation(MODID, this)
+
+fun String.toComponentRL() = com.github.cecnull1.cecnull1_cforge.core.ResourceLocation("cforge", this)
 
 @Mod(MODID)
 class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
-    companion object {
-        val entityComponent: ComponentMap = ComponentMap()
-    }
-
     init {
+        CodecRegistry.registerCodec<Flying>(Flying.codec)
+
         val modEventBus = context.modEventBus
         Animations.REGISTRY.register(modEventBus)
         ModEntities.REGISTER.register(modEventBus)
@@ -94,71 +103,87 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
         CForgeEventBus.registerEvents<ByForgeEvent<*>>(::onForgeEvent)
         CForgeEventBus.registerFastEvents<CPlayerTickEvent>(::onPlayerTick)
         CForgeEventBus.registerFastEvents<CLivingTickEvent>(::onLivingTick)
+        CForgeEventBus.registerFastEvents<NullSafeAttributeCreationEvent> { event ->
+            event.put(
+                A_ENTITY.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
+            event.put(
+                A_HORSE.get(),
+                Horse.createBaseHorseAttributes()
+                    .add(Attributes.MAX_HEALTH, 20.0)
+                    .add(Attributes.MOVEMENT_SPEED, 3.0)
+                    .add(ForgeMod.SWIM_SPEED.get(), 2.0)
+                    .add(Attributes.ATTACK_DAMAGE, 0.0)
+                    .build()
+            )
+            event.put(
+                SOUL.get(),
+                ChangedEntity.createLatexAttributes()
+                    .add(Attributes.MAX_HEALTH, 1.0)
+                    .add(Attributes.MOVEMENT_SPEED, 0.0)
+                    .add(ForgeMod.SWIM_SPEED.get(), 0.0)
+                    .add(Attributes.ATTACK_DAMAGE, 0.01)
+                    .add(Attributes.JUMP_STRENGTH, 0.0)
+                    .add(Attributes.FLYING_SPEED)
+                    .build()
+            )
+            event.put(
+                PURE_WHITE_LATEX_YUFENG.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
+            event.put(
+                NONE_ENTITY.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
+            event.put(
+                MISC.get(),
+                ChangedEntity.createLatexAttributes()
+                    .add(Attributes.MAX_HEALTH, 24.0)
+                    .add(Attributes.MOVEMENT_SPEED, 4.0)
+                    .add(ForgeMod.SWIM_SPEED.get(), 2.0)
+                    .add(Attributes.ATTACK_DAMAGE, 20.0)
+                    .add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
+                    .build()
+            )
+            event.put(
+                PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
+            event.put(
+                MEI_XI_YUAN.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
+            event.put(
+                B_HORSE.get(),
+                Horse.createBaseHorseAttributes().build()
+            )
+            HumanoidModel
+            if (ModList.get().isLoaded("swem")) {
+                event.put(
+                    O_ENTITY.get(),
+                    com.alaharranhonor.swem.entities.horse.SWEMHorseEntity.createBaseHorseAttributes().build()
+                )
+            }
+        }
+    }
+
+    companion object {
+        val entityComponentMap = ComponentMap()
     }
 }
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD)
 object Events {
     fun onCommonSetup(event: FMLCommonSetupEvent) {
         event.enqueueWork {
-            HaStateNetworkHandler.register()
+            NetworkHandler.register()
         }
     }
 
     @JvmStatic
     @SubscribeEvent
     fun registerEntityAttributes(event: EntityAttributeCreationEvent) {
-        event.put(
-            A_ENTITY.get(),
-            ChangedEntity.createLatexAttributes().build()
-        )
-        event.put(
-            A_HORSE.get(),
-            Horse.createBaseHorseAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0)
-                .add(Attributes.MOVEMENT_SPEED, 3.0)
-                .add(ForgeMod.SWIM_SPEED.get(), 2.0)
-                .add(Attributes.ATTACK_DAMAGE, 0.0)
-                .build()
-        )
-        event.put(
-            SOUL.get(),
-            ChangedEntity.createLatexAttributes()
-                .add(Attributes.MAX_HEALTH, 1.0)
-                .add(Attributes.MOVEMENT_SPEED, 0.0)
-                .add(ForgeMod.SWIM_SPEED.get(), 0.0)
-                .add(Attributes.ATTACK_DAMAGE, 0.01)
-                .add(Attributes.JUMP_STRENGTH, 0.0)
-                .add(Attributes.FLYING_SPEED)
-                .build()
-        )
-        event.put(
-            PURE_WHITE_LATEX_YUFENG.get(),
-            ChangedEntity.createLatexAttributes().build()
-        )
-        event.put(
-            NONE_ENTITY.get(),
-            ChangedEntity.createLatexAttributes().build()
-        )
-        event.put(
-            MISC.get(),
-            ChangedEntity.createLatexAttributes()
-                .add(Attributes.MAX_HEALTH, 24.0)
-                .add(Attributes.MOVEMENT_SPEED, 4.0)
-                .add(ForgeMod.SWIM_SPEED.get(), 2.0)
-                .add(Attributes.ATTACK_DAMAGE, 20.0)
-                .add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
-                .build()
-        )
-        event.put(
-            PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get(),
-            ChangedEntity.createLatexAttributes().build()
-        )
-        if (ModList.get().isLoaded("swem")) {
-            event.put(
-                O_ENTITY.get(),
-                com.alaharranhonor.swem.entities.horse.SWEMHorseEntity.createBaseHorseAttributes().build()
-            )
-        }
+        NullSafeAttributeCreationEvent(event).post()
     }
 }
 
@@ -224,7 +249,7 @@ object ClientEvents {
             registerEntityRenderer(
                 NONE_ENTITY.get()
             ) { context: EntityRendererProvider.Context ->
-                NoneTransfurVariantRenderer(context)
+                NoneEntityRenderer(context)
             }
             registerEntityRenderer(
                 NOT_CAN_DISMOUNT_BOAT.get()
@@ -234,10 +259,10 @@ object ClientEvents {
             registerEntityRenderer(
                 MISC.get()
             ) { context: EntityRendererProvider.Context ->
-                NoneTransfurVariantRenderer(context)
+                NoneEntityRenderer(context)
             }
             registerEntityRenderer(
-                PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get()
+                PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get()
             ) { context: EntityRendererProvider.Context ->
                 DarkLatexYufengRenderer(context)
             }
@@ -245,6 +270,16 @@ object ClientEvents {
                 MOVE_ENTITY.get()
             ) { context: EntityRendererProvider.Context ->
                 SeatEntityRenderer(context)
+            }
+            registerEntityRenderer(
+                MEI_XI_YUAN.get()
+            ) { context: EntityRendererProvider.Context ->
+                LatexOrcaRenderer(context)
+            }
+            registerEntityRenderer(
+                B_HORSE.get()
+            ) { context: EntityRendererProvider.Context ->
+                HorseRenderer(context)
             }
             if (ModList.get().isLoaded("swem")) {
                 registerEntityRenderer(

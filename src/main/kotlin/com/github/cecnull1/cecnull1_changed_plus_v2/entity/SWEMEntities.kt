@@ -9,6 +9,7 @@ import com.alaharranhonor.swem.items.TackType.*
 import com.alaharranhonor.swem.registry.EntitySetup
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MountType
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.github.cecnull1.cecnull1lib.utils.vector.KVec3
@@ -61,7 +62,7 @@ open class O(type: EntityType<out O>,
         }
     }
 
-    override fun canDismount(): Boolean {
+    override fun canDismount(mountType: MountType): Boolean {
         return false
     }
 

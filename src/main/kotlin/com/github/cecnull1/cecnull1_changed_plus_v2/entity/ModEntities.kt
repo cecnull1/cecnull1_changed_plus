@@ -1,5 +1,8 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 
+import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
+import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations.CP_STASIS_IDLE
+import com.github.cecnull1.cecnull1_changed_plus_v2.animation.StasisAnimationParameters
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.IS_HA
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PLAYER
@@ -13,7 +16,11 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Co
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MountType
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.VariantTickPlusAble
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.fieldIsJumping
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.lerpedTowards
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toHorizontalViewVec
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
@@ -29,18 +36,23 @@ import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.PowderSnowWalkable
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.TransfurMode
+import net.ltxprogrammer.changed.entity.animation.AnimationCategory
 import net.ltxprogrammer.changed.entity.beast.AquaticEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexYufeng
 import net.ltxprogrammer.changed.entity.latex.LatexType
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedAccessorySlots
+import net.ltxprogrammer.changed.init.ChangedAnimationEvents
 import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.ltxprogrammer.changed.init.ChangedLatexTypes
 import net.ltxprogrammer.changed.init.ChangedMobCategories
 import net.ltxprogrammer.changed.item.ClothingItem.CLOSED
 import net.ltxprogrammer.changed.util.Color3
 import net.ltxprogrammer.changed.util.ItemUtil
+import net.minecraft.core.BlockPos
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffects
@@ -56,13 +68,14 @@ import net.minecraft.world.item.ArmorItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
 import net.minecraftforge.common.ForgeMod
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
 import java.util.*
-import kotlin.math.abs
+import kotlin.sequences.forEach
 
 object ModEntities {
     const val A_ENTITY_ID = "a_entity"
@@ -73,9 +86,11 @@ object ModEntities {
     const val NOT_CAN_DISMOUNT_BOAT_ID = "not_can_dismount_boat"
     const val NONE_ENTITY_ID = "none_entity"
     const val MISC_ID = "misc"
-    const val PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID = "pure_white_latex_yufeng_by_ncdboat"
+    const val PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID = "pure_white_latex_yufeng_by_ncdboat"
 
-    val REGISTER: DeferredRegister<EntityType<*>> = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID)
+    val REGISTER: DeferredRegister<EntityType<*>> by lazy {
+        DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID)
+    }
 
     val A_ENTITY: RegistryObject<EntityType<AEntity>> = REGISTER.register(A_ENTITY_ID) {
         EntityType.Builder.of(::AEntity, ChangedMobCategories.CHANGED)
@@ -106,10 +121,10 @@ object ModEntities {
             .build(MISC_ID)
     }
 
-    val PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT: RegistryObject<EntityType<PureWhiteLatexYufengByNCDBoat>> = REGISTER.register(PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID) {
-        EntityType.Builder.of(::PureWhiteLatexYufengByNCDBoat, ChangedMobCategories.CHANGED)
+    val PURE_WHITE_LATEX_YUFENG_AND_ARMOR: RegistryObject<EntityType<PureWhiteLatexYufengAndArmor>> = REGISTER.register(PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID) {
+        EntityType.Builder.of(::PureWhiteLatexYufengAndArmor, ChangedMobCategories.CHANGED)
             .sized(0.7f, 1.93f)
-            .build(PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID)
+            .build(PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID)
     }
 
     val NOT_CAN_DISMOUNT_BOAT : RegistryObject<EntityType<NotCanDismountBoat>> = REGISTER.register(NOT_CAN_DISMOUNT_BOAT_ID) {
@@ -223,7 +238,7 @@ open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entit
 
     override fun isSaddled(): Boolean = true
     override fun isSaddleable(): Boolean = true
-    override fun canDismount(): Boolean = false
+    override fun canDismount(mountType: MountType): Boolean = false
 }
 
 open class Soul(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level), VariantTickPlusAble {
@@ -275,13 +290,17 @@ open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : 
     }
 }
 
-open class PureWhiteLatexYufengByNCDBoat(type: EntityType<out AEntity>, level: Level?) : PureWhiteLatexYufeng(type,
+open class PureWhiteLatexYufengAndArmor(type: EntityType<out AEntity>, level: Level?) : PureWhiteLatexYufeng(type,
     level
 )
 
 open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(type, level), IDismount {
     companion object {
         const val YU_ZHI = 10f
+    }
+
+    override fun isNoGravity(): Boolean {
+        return true
     }
 
     override fun isOnFire(): Boolean {
@@ -292,35 +311,25 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
         return false
     }
 
-    override fun isInWater(): Boolean {
-        return true
-    }
-
-    override fun isUnderWater(): Boolean {
-        return false
-    }
-
     override fun getGroundFriction(): Float {
         return 0.8f
     }
 
-    override fun canDismount(): Boolean {
-        val passengers = this.passengers.asSequence()
-        return passengers.filterIsInstance<Player>().let {
-            it.forEach { player ->
-                player.ifPlayerNotTransfurred {
-                    player.transfur(
-                        transfurData = TransfurData(
-                            variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT.get(),
-                            keepConscious = true
-                        )
-                    )
-                    notCanDismountBoatAddArmor(player)
-                }
+    override fun checkFallDamage(v1: Double, b1: Boolean, blockState: BlockState, blockPos: BlockPos) {
+    }
+
+    override fun canDismount(mountType: MountType): Boolean {
+        return when (mountType) {
+            is MountType.Dismount -> {
+                return !mountType.entity.isAlive && !this.isAlive
             }
-            it.any { player ->
-                player.health <= YU_ZHI
+            is MountType.PlayerSelfDismount -> {
+                if (mountType.player.isShiftKeyDown) {
+                    canDismount(MountType.Dismount(mountType.player))
+                } else false
             }
+            is MountType.Move -> false
+            else -> true
         }
     }
 
@@ -328,12 +337,18 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
         level().findNearestEntity(x, y, z, 2.0, Player::class.java)?.let {
                 player ->
             if (player.health >= YU_ZHI) {
-                player.vehicle ?: player.startRiding(this)
-
-                this.deltaMovement = Vec3(
-                    this.deltaMovement.x +  this.lookAngle.x/3/(abs(this.deltaMovement.x*8)+1),
-                    this.deltaMovement.y.coerceAtLeast(0.0)+0.04,
-                    this.deltaMovement.z + this.lookAngle.z/3/(abs(this.deltaMovement.z*8)+1)
+                player.vehicle ?: run {
+                    (player as? ServerPlayer)?.sendSystemMessage(Component.nullToEmpty("你被一股神秘的力量拉上去了，但你再也无法自己下来了"), true)
+                    player.startRiding(this)
+                }
+                this.addDeltaMovement(Vec3(
+                    yRot.toHorizontalViewVec().x*player.zza/8, player.fieldIsJumping.toInt()/8.0-player.isShiftKeyDown.toInt()/8.0, yRot.toHorizontalViewVec().z*player.zza/8
+                ))
+                this.yRot = player.yRot
+                this.addDeltaMovement(Vec3(0.0, -deltaMovement.y/8, 0.0))
+                deltaMovement = deltaMovement.lerpedTowards(
+                    direction = yRot.toHorizontalViewVec(),
+                    applyToY = false
                 )
             } else {
                 player.hasHA = false
@@ -412,7 +427,7 @@ fun LivingEntity.meiyun(): Boolean = this.isOnFire || this.isInLava || this.acti
     } || (this is Player && this.foodData.foodLevel <= 6)
 }
 
-fun Entity.notCanDismountBoatAddArmor(player: Player) {
+fun Entity.shaWanYiDeAddArmor(player: Player) {
     ItemUtil.tryEquipAccessory(
         player,
         run {
@@ -470,7 +485,7 @@ fun Entity.notCanDismountBoatAddArmor(player: Player) {
             else -> EquipmentSlot.MAINHAND // 默认槽位（主手）
         }
 
-        val modifierIdString = "${MODID}:${player.uuid}.riderIn(${this@notCanDismountBoatAddArmor.uuid}) item=$item slot=$slot"
+        val modifierIdString = "${MODID}:${player.uuid}.riderIn(${this@shaWanYiDeAddArmor.uuid}) item=$item slot=$slot"
         val uuid = UUID.nameUUIDFromBytes(modifierIdString.toByteArray(Charsets.US_ASCII))
 
         this.addAttributeModifier(

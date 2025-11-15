@@ -1,10 +1,15 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
 import com.github.cecnull1.cecnull1_cforge.core.IEvent
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier
+import net.minecraft.world.entity.ai.attributes.DefaultAttributes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
 import net.minecraftforge.event.TickEvent
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent
 
 data class TakeOffEvent(val player: Player, val slot: Slot, val itemStack: ItemStack): IEvent {
     override var isCanceled: Boolean = false
@@ -19,7 +24,7 @@ value class ByForgeEvent<T: net.minecraftforge.eventbus.api.Event>(val event: T)
         if (isCancelable) event.isCanceled = value
     }
 
-    override inline val isCancelable: Boolean
+    override val isCancelable: Boolean
     inline get() = event.isCancelable
     override val isInterruptibleWhenCanceled: Boolean
         get() = true
@@ -33,4 +38,22 @@ data class CPlayerTickEvent(val player: Player, val phase: TickEvent.Phase): IEv
 data class CLivingTickEvent(val entity: net.minecraft.world.entity.LivingEntity, val phase: TickEvent.Phase): IEvent {
     override var isCanceled: Boolean = false
     override val isCancelable: Boolean = false
+}
+
+@JvmInline
+value class NullSafeAttributeCreationEvent(val event: EntityAttributeCreationEvent): IEvent {
+    override inline var isCanceled: Boolean
+        inline get() = event.isCanceled
+        inline set(value) {
+            if (isCancelable) event.isCanceled = value
+        }
+
+    override val isCancelable: Boolean
+        inline get() = event.isCancelable
+    override val isInterruptibleWhenCanceled: Boolean
+        get() = false
+
+    fun put(entity: EntityType<out LivingEntity>, map: AttributeSupplier) {
+        event.put(entity, map)
+    }
 }

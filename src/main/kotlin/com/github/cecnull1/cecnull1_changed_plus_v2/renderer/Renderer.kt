@@ -83,7 +83,7 @@ class SoulRenderer(context:  EntityRendererProvider.Context): AdvancedHumanoidRe
     }
 }
 
-class NoneTransfurVariantRenderer<T: Entity>(context: EntityRendererProvider.Context)
+class NoneEntityRenderer<T: Entity>(context: EntityRendererProvider.Context)
     : EntityRenderer<T>(context) {
 
     // 不渲染任何内容

@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '2.2.20'
+    ext.kotlin_version = '2.2.21'
     repositories {
         // These repositories are only for Gradle plugins, put any other repositories in the repository block further below
         maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
@@ -183,7 +183,7 @@ dependencies {
     implementation fg.deobf(files("libs/geckolib-forge-1.20.1-4.7.3.jar"))
     implementation fg.deobf(files("libs/apoli-forge-1.20.1-2.9.0.8.jar"))
     implementation fg.deobf(files("libs/origins-forge-1.20.1-1.10.0.9-all.jar"))
-    implementation fg.deobf(files("libs/Changed-m1.20.1-v0.15.0-dev2.jar"))
+    implementation fg.deobf(files("libs/Changed-m1.20.1-v0.15.0-dev.jar"))
     implementation fg.deobf(files("libs/Psi-1.20.1-102.jar"))
     implementation fg.deobf(files("libs/cecnull1lib-2.0.jar"))
     implementation fg.deobf(files("libs/swemlite-1.20.1-1.0.0.jar"))

@@ -1,7 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.capability.HAState
-import com.github.cecnull1.cecnull1_changed_plus_v2.packet.HaStateNetworkHandler
+import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.mojang.logging.LogUtils.getLogger
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.minecraft.nbt.CompoundTag
@@ -12,8 +11,8 @@ import net.minecraft.world.item.ItemStack
 
 interface IPlayerExtendedData {
     var mPlayerExtendedData: MPlayerExtendedData
-    fun save(tag: CompoundTag)
-    fun load(tag: CompoundTag)
+    fun cecnull1PlayerExtendedSave(tag: CompoundTag)
+    fun cecnull1PlayerExtendedLoad(tag: CompoundTag)
 }
 
 data class MPlayerExtendedData(
@@ -34,7 +33,7 @@ data class MPlayerExtendedData(
                     if (value != old) {
                         data.haState.hasHA = value
                         getLogger().info("${this.level()}: Has HA changed from $old to $value")
-                        if (this is ServerPlayer) HaStateNetworkHandler.sendToClient(this)
+                        if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
                     }
                 }
             }
@@ -53,7 +52,7 @@ data class MPlayerExtendedData(
                     if (old != value) {
                         data.haState.hasArmorHA = value
                         getLogger().info("${this.level()}: Has Armor HA changed from $old to $value")
-                        if (this is ServerPlayer) HaStateNetworkHandler.sendToClient(this)
+                        if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
                     }
                 }
             }
@@ -72,7 +71,7 @@ data class MPlayerExtendedData(
                     if (old !== value && !ItemStack.matches(old, value)) {
                         data.haState.haItem = value
                         getLogger().info("${this.level()}: HA Item changed from $old to $value")
-                        if (this is ServerPlayer) HaStateNetworkHandler.sendToClient(this)
+                        if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
                     }
                 }
             }
@@ -96,7 +95,7 @@ data class MPlayerExtendedData(
                     if (old != value) {
                         data.haState.haArmorItems = value
                         getLogger().info("${this.level()}: HA Armor Items changed from $old to $value")
-                        if (this is ServerPlayer) HaStateNetworkHandler.sendToClient(this)
+                        if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
                     }
                 }
             }
@@ -114,7 +113,7 @@ data class MPlayerExtendedData(
                     val old = data.haState.haAccessorySlots
                     if (old != value) {
                         data.haState.haAccessorySlots = value
-                        if (this is ServerPlayer) HaStateNetworkHandler.sendToClient(this)
+                        if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
                     }
                 }
             }

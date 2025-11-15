@@ -5,13 +5,14 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL_ID
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID
 import net.ltxprogrammer.changed.entity.MiningStrength
 import net.ltxprogrammer.changed.entity.TransfurMode
 import net.ltxprogrammer.changed.entity.VisionType
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedAbilities
 import net.ltxprogrammer.changed.init.ChangedRegistry
+import net.minecraft.sounds.SoundEvents
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.RegistryObject
 
@@ -52,8 +53,8 @@ object ModTransfurVariant {
         }.build()
     }
 
-    val PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<PureWhiteLatexYufengByNCDBoat>> = REGISTRY.register("form_$PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_ID") {
-        TransfurVariant.Builder.of(ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT).apply {
+    val PURE_WHITE_LATEX_YUFENG_AND_ARMOR_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<PureWhiteLatexYufengAndArmor>> = REGISTRY.register("form_$PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID") {
+        TransfurVariant.Builder.of(ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR).apply {
             visionType(VisionType.NIGHT_VISION)
             breatheMode(TransfurVariant.BreatheMode.ANY)
             glide()
@@ -62,6 +63,14 @@ object ModTransfurVariant {
 
     val NONE_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<NoneTransfurVariant>> = REGISTRY.register("form_none") {
         TransfurVariant.Builder.of(ModEntities.NONE_ENTITY).build()
+    }
+
+    val MEI_XI_YUAN_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<MeiXiYuan>> = REGISTRY.register("form_mei_xi_yuan") {
+        TransfurVariant.Builder.of(ModEntities2.MEI_XI_YUAN).apply {
+            breatheMode(TransfurVariant.BreatheMode.ANY)
+            miningStrength(MiningStrength.STRONG)
+            sound(SoundEvents.AXOLOTL_IDLE_WATER.location)
+        }.build()
     }
 
 //    val ZOMBIE_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Zombie>> = REGISTRY.register("form_$ZOMBIE_ID") {

@@ -1,12 +1,16 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.block
 
+import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.addComponent
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
+import com.github.cecnull1.cecnull1_changed_plus_v2.Cecnull1_changed_plus
 import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.Lang.BODY_WARNING
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.Lang.MESSAGE
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
+import com.github.cecnull1.cecnull1_changed_plus_v2.toRL
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
@@ -107,15 +111,15 @@ class ABlock : ChangedBlock(Properties.of().jumpFactor(0f)) {
         willHarvest: Boolean,
         fluid: FluidState?
     ): Boolean {
-        if (player != null) {
+        if (player is Player) {
             val persistentData = player.persistentData
             val playerModData = player.getModData(MODID)
             if (!playerModData.getBoolean(NBTKeys.BODY_WARNING)) {
                 player.displayClientMessage(Component.translatable(MODID + MESSAGE + BODY_WARNING), true)
 
                 player.ifPlayerTransfurred {
-                    if (it.parent.canGlide && it.changedEntity !is PureWhiteLatexYufengByNCDBoat) {
-                        playerModData[NBTKeys.FLYING] = true
+                    if (it.parent.canGlide && it.changedEntity !is PureWhiteLatexYufengAndArmor) {
+                        player.addComponent(Cecnull1_changed_plus.entityComponentMap, NBTKeys.FLYING.toRL(), Flying)
                     } else {
                         player.vehicle ?: run {
                             ModEntities.A_HORSE.get().create(player.level())?.apply {
@@ -151,7 +155,7 @@ open class WhiteLatexBlockV2(properties: Properties) : WhiteLatexBlock(propertie
         super.fallOn(level, blockState, blockPos, entity, distance)
         ProcessTransfur.ifPlayerTransfurred(entity as? Player ?: return, {}) {
             val pureWhiteLatexYufeng = PureWhiteLatexYufeng(
-                ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get(),
+                ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get(),
                 level
             )
             pureWhiteLatexYufeng.setPos(blockPos.x.toDouble()+0.5, blockPos.y.toDouble()+0.5, blockPos.z.toDouble()+0.5)
@@ -198,7 +202,7 @@ open class BBlockEntity(type: BlockEntityType<*>, pos: BlockPos, state: BlockSta
     }
 
     override fun setEntityHolder(p0: SeatEntity?) {
-        entityHolder = p0 as? MoveEntity ?: p0?.toMoveEntity() ?: p0
+        entityHolder = p0 as? BBlockMoveEntity ?: p0?.toBBlockMoveEntity() ?: p0
     }
 
     fun startRiding(
@@ -207,8 +211,8 @@ open class BBlockEntity(type: BlockEntityType<*>, pos: BlockPos, state: BlockSta
         pos: BlockPos,
         entity: LivingEntity
     ) {
-        if (entityHolder == null || entityHolder!!.isRemoved) entityHolder = SeatEntity.createFor(level, state, pos, false, false, false).toMoveEntity()
-        if (entity.vehicle != entityHolder && entityHolder is MoveEntity && !level.isClientSide && !entityHolder!!.isRemoved) {
+        if (entityHolder == null || entityHolder!!.isRemoved) entityHolder = SeatEntity.createFor(level, state, pos, false, false, false).toBBlockMoveEntity()
+        if (entity.vehicle != entityHolder && entityHolder is BBlockMoveEntity && !level.isClientSide && !entityHolder!!.isRemoved) {
             if (entity.startRiding(entityHolder!!)) {
                 entityHolder!!.setPos(pos.toKVec3().toVec3())
                 entityHolder!!.hasImpulse = true
@@ -238,9 +242,9 @@ open class BBlockEntity(type: BlockEntityType<*>, pos: BlockPos, state: BlockSta
     }
 }
 
-open class BBlock(): Block(Properties.of().destroyTime(-1.0f)), EntityBlock, SeatableBlock {
+open class BBlock(): Block(Properties.of().destroyTime(-1.0f).explosionResistance(Float.MAX_VALUE)), EntityBlock, SeatableBlock {
     override fun getSitOffset(p0: BlockGetter, p1: BlockState, p2: BlockPos): Vec3 {
-        return Vec3(0.0, 1.0, 0.0)
+        return Vec3(0.0, 0.0, 0.0)
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity {

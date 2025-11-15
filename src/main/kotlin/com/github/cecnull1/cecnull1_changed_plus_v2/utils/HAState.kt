@@ -1,18 +1,18 @@
-package com.github.cecnull1.cecnull1_changed_plus_v2.capability
+package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.initHaArmorItems
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IPlayerExtendedData
 import com.github.cecnull1.cecnull1lib.utils.nbt.asCompoundTag
 import com.github.cecnull1.cecnull1lib.utils.nbt.buildNBT
 import com.github.cecnull1.cecnull1lib.utils.nbt.entries
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
-import com.mojang.logging.LogUtils.getLogger
+import com.mojang.logging.LogUtils
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
-import java.util.*
+import java.util.Locale
+import kotlin.collections.iterator
 
 data class HAState(
     var hasHA: Boolean = false,
@@ -59,7 +59,7 @@ data class HAState(
                 try {
                     put(EquipmentSlot.byName(slot), ItemStack.of(itemStack.asCompoundTag()))
                 } catch (_: IllegalArgumentException) {
-                    getLogger().warn("Invalid slot name: $slot")
+                    LogUtils.getLogger().warn("Invalid slot name: $slot")
                 }
             }
         }.toMutableMap()

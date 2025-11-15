@@ -1,16 +1,20 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
+import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.hasComponent
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
+import com.github.cecnull1.cecnull1_changed_plus_v2.Cecnull1_changed_plus
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
-import com.github.cecnull1.cecnull1_changed_plus_v2.packet.HaStateNetworkHandler
+import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
+import com.github.cecnull1.cecnull1_changed_plus_v2.toRL
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
@@ -23,8 +27,6 @@ import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTr
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.transfurData
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
-import com.github.cecnull1.cecnull1lib.utils.vector.toKVec3
-import com.github.cecnull1.cecnull1lib.utils.vector.toVec3
 import com.google.common.collect.Iterables
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.entity.SeatEntity
@@ -54,6 +56,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
+import net.minecraftforge.common.capabilities.CapabilityProvider
 import net.minecraftforge.event.TickEvent
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.LivingAttackEvent
@@ -82,7 +85,7 @@ object Event {
                 )
             }
         }
-        if (player.getModData(MODID).getBoolean(Constant.NBTKeys.FLYING)) {
+        if (player.hasComponent<Flying>(Cecnull1_changed_plus.entityComponentMap, Constant.NBTKeys.FLYING.toRL())) {
             player.foodData.foodLevel++
             player.foodData.setSaturation(player.foodData.saturationLevel+1)
             if (!player.abilities.flying) {
@@ -156,7 +159,7 @@ object Event {
                     if (player is ServerPlayer && itemStack2.isEmpty && !itemStack.isEmpty) {
                         player.connection.send(
                             ClientboundSoundEntityPacket(
-                                Holder.direct(ChangedSounds.POISON.get()),
+                                Holder.direct(ChangedSounds.TRANSFUR_BY_LATEX.get()),
                                 SoundSource.PLAYERS,
                                 player,
                                 1.0f,
@@ -170,7 +173,7 @@ object Event {
             }.toMutableMap()
         }
 
-        if (event.phase == TickEvent.Phase.START && player.wuDiTime > 0) {
+        if (event.phase == TickEvent.Phase.START && player.wuDiTime --> 0) {
             player.wuDiTime--
         }
 
@@ -190,7 +193,8 @@ object Event {
         fun sync() {
             if (event.phase != TickEvent.Phase.END) return
             if (player.level().isClientSide && event.player == Minecraft.getInstance().player) {
-                HaStateNetworkHandler.sendToServer()
+                NetworkHandler.haStateSendToServer()
+                NetworkHandler.componentsSendToServer()
             }
         }
         sync()
@@ -206,7 +210,7 @@ object Event {
                     entity.level().addFreshEntity(newEntity)
                 }
                 199 -> {
-                    val newEntity = ModEntities.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT.get().create(entity.level())?: return
+                    val newEntity = ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get().create(entity.level())?: return
                     newEntity.setPos(entity.position())
                     entity.level().addFreshEntity(newEntity)
                 }
@@ -220,7 +224,6 @@ object Event {
         val entityBeingMounted: Entity = event.entityBeingMounted ?: return
         if (entityMounting.isAlive && entityBeingMounted.isAlive && event.isDismounting) {
             when {
-                entityBeingMounted is IDismount && !entityBeingMounted.canDismount() -> event.isCanceled = true
                 entityBeingMounted.persistentData.getBoolean(WFXC) -> event.isCanceled = true
                 entityMounting.getModData(MODID).getBoolean(Constant.NBTKeys.NO_DISMOUNTING) -> event.isCanceled = true
             }
@@ -243,8 +246,8 @@ object Event {
         }
         persistentData[MODID] = playerModData
 
-        if (event.newVariant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT) == true) {
-            player.notCanDismountBoatAddArmor(player)
+        if (event.newVariant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_AND_ARMOR_TRANSFUR_VARIANT) == true) {
+            player.shaWanYiDeAddArmor(player)
         }
     }
 
@@ -258,6 +261,7 @@ object Event {
     }
 
     fun onLivingAttack(event: LivingAttackEvent) {
+        ModEntities.PURE_WHITE_LATEX_YUFENG.get()
         val livingEntity = event.entity ?: return
         val attacker = event.source.entity
 
@@ -460,32 +464,32 @@ object Event {
                 player.haArmorItems = initHaArmorItems()
                 player.hasArmorHA = false
             }
-            if (player.transfurData?.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT) == true) {
-                player.notCanDismountBoatAddArmor(player)
+            if (player.transfurData?.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_AND_ARMOR_TRANSFUR_VARIANT) == true) {
+                player.shaWanYiDeAddArmor(player)
             }
-            HaStateNetworkHandler.sendToClient(event.entity)
+            NetworkHandler.haStateSendToClient(event.entity)
         }
-        player.ifPlayerNotTransfurred {
-            player.setPlayerTransfurVariant(
-                transfurData = TransfurData(
-                    variant = ModTransfurVariant.SOUL_TRANSFUR_VARIANT.get(),
-                    keepConscious = true
-                ),
-                progress = 1f
-            )
-            player.playerTransfurVariantSafe?.willSurviveTransfur = true
-            player.setPos(player.lastDeathLocation.getOrNull()?.pos()?.toKVec3()?.toVec3()?:player.position())
-        }
+//        player.ifPlayerNotTransfurred {
+//            player.setPlayerTransfurVariant(
+//                transfurData = TransfurData(
+//                    variant = ModTransfurVariant.SOUL_TRANSFUR_VARIANT.get(),
+//                    keepConscious = true
+//                ),
+//                progress = 1f
+//            )
+//            player.playerTransfurVariantSafe?.willSurviveTransfur = true
+//            player.setPos(player.lastDeathLocation.getOrNull()?.pos()?.toKVec3()?.toVec3()?:player.position())
+//        }
     }
 
     fun onDimensionChange(event: PlayerEvent.PlayerChangedDimensionEvent) {
-        HaStateNetworkHandler.sendToClient(event.entity as? ServerPlayer ?: return)
+        NetworkHandler.haStateSendToClient(event.entity as? ServerPlayer ?: return)
     }
 
     fun onPlayerLogin(event: PlayerEvent.PlayerLoggedInEvent) {
         // 玩家登录时同步数据
         if (!event.entity.level().isClientSide) {
-            HaStateNetworkHandler.sendToClient(event.entity)
+            NetworkHandler.haStateSendToClient(event.entity)
         }
     }
 

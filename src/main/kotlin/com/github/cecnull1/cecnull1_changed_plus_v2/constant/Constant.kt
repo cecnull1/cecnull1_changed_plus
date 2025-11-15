@@ -16,7 +16,7 @@ object Constant {
 
         const val NO_DISMOUNTING = "DismountingAble"
 
-        const val FLYING = "FLYING"
+        const val FLYING = "Flying"
         const val BODY_WARNING = "BODY_WARNING"
         const val SOUL_SP_ATTACK_VALUE = "soul_sp_attack_value"
         const val CAN_CONSCIOUS_CONTROL = "can_conscious_control"

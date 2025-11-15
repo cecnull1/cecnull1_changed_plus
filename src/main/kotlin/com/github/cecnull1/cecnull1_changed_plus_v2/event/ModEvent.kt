@@ -85,7 +85,7 @@ fun onLivingChangeTarget(event: LivingChangeTargetEvent) {
 fun onKeepConscious(event: ProcessTransfur.KeepConsciousEvent) {
     if (event.variant?.`is`(ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT) == true ||
         event.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT) == true ||
-        event.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_BY_NCDBOAT_TRANSFUR_VARIANT) == true) {
+        event.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_AND_ARMOR_TRANSFUR_VARIANT) == true) {
             event.shouldKeepConscious = true
     }
 }
