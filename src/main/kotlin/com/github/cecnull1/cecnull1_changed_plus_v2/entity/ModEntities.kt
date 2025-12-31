@@ -1,26 +1,16 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
-import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations.CP_STASIS_IDLE
-import com.github.cecnull1.cecnull1_changed_plus_v2.animation.StasisAnimationParameters
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.IS_HA
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PLAYER
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.NotCanDismountBoat.Companion.YU_ZHI
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.sendAbilitiesUpdate
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IMount
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MountType
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.VariantTickPlusAble
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.fieldIsJumping
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.lerpedTowards
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toHorizontalViewVec
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
@@ -36,14 +26,12 @@ import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.PowderSnowWalkable
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.TransfurMode
-import net.ltxprogrammer.changed.entity.animation.AnimationCategory
 import net.ltxprogrammer.changed.entity.beast.AquaticEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexYufeng
 import net.ltxprogrammer.changed.entity.latex.LatexType
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedAccessorySlots
-import net.ltxprogrammer.changed.init.ChangedAnimationEvents
 import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.ltxprogrammer.changed.init.ChangedLatexTypes
 import net.ltxprogrammer.changed.init.ChangedMobCategories
@@ -52,7 +40,6 @@ import net.ltxprogrammer.changed.util.Color3
 import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffects
@@ -75,7 +62,6 @@ import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
 import java.util.*
-import kotlin.sequences.forEach
 
 object ModEntities {
     const val A_ENTITY_ID = "a_entity"
@@ -146,7 +132,8 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
     DarkLatexEntity,
     PowderSnowWalkable, // 雪地行走
     AquaticEntity, // 水下允许
-    IFanJi { // 会反击
+    IFanJi,
+    IKeepConscious { // 会反击
 
     override fun getLatexType(): LatexType = ChangedLatexTypes.DARK_LATEX.get()
     override fun getTransfurMode() = TransfurMode.REPLICATION
@@ -160,7 +147,7 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
     }
 
     override fun getOwnerUUID(): UUID? {
-        return entityData.get(DATA_OWNERUUID_ID).orElse(null)
+        return entityData[DATA_OWNERUUID_ID].orElse(null)
     }
 
     protected override fun setAttributes(attributes: AttributeMap) {
@@ -189,7 +176,7 @@ open class Zombie(type: EntityType<out ChangedEntity>, level: Level) : ChangedEn
     }
 }
 
-open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entityType, level), IDismount,
+open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entityType, level), IOnMount,
     IMount {
     override fun isTamed(): Boolean {
         return true
@@ -214,7 +201,7 @@ open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entit
                 }
             }
         }
-        level().findNearestEntity(x, y, z, 2.0, Player::class.java)?.let {
+        level.findNearestEntity(x, y, z, 2.0, Player::class.java)?.let {
                 player ->
             if (player.health >= YU_ZHI) {
                 player.vehicle ?: player.startRiding(this)
@@ -238,7 +225,7 @@ open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entit
 
     override fun isSaddled(): Boolean = true
     override fun isSaddleable(): Boolean = true
-    override fun canDismount(mountType: MountType): Boolean = false
+    override fun onMount(mountType: MountType): Boolean = mountType !is MountType.Dismount
 }
 
 open class Soul(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level), VariantTickPlusAble {
@@ -294,7 +281,7 @@ open class PureWhiteLatexYufengAndArmor(type: EntityType<out AEntity>, level: Le
     level
 )
 
-open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(type, level), IDismount {
+open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(type, level), IOnMount {
     companion object {
         const val YU_ZHI = 10f
     }
@@ -318,14 +305,14 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
     override fun checkFallDamage(v1: Double, b1: Boolean, blockState: BlockState, blockPos: BlockPos) {
     }
 
-    override fun canDismount(mountType: MountType): Boolean {
+    override fun onMount(mountType: MountType): Boolean {
         return when (mountType) {
             is MountType.Dismount -> {
                 return !mountType.entity.isAlive && !this.isAlive
             }
             is MountType.PlayerSelfDismount -> {
                 if (mountType.player.isShiftKeyDown) {
-                    canDismount(MountType.Dismount(mountType.player))
+                    onMount(MountType.Dismount(mountType.player))
                 } else false
             }
             is MountType.Move -> false
@@ -334,7 +321,7 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
     }
 
     override fun tick() {
-        level().findNearestEntity(x, y, z, 2.0, Player::class.java)?.let {
+        level.findNearestEntity(x, y, z, 2.0, Player::class.java)?.let {
                 player ->
             if (player.health >= YU_ZHI) {
                 player.vehicle ?: run {
@@ -346,7 +333,7 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
                 ))
                 this.yRot = player.yRot
                 this.addDeltaMovement(Vec3(0.0, -deltaMovement.y/8, 0.0))
-                deltaMovement = deltaMovement.lerpedTowards(
+                deltaMovement = deltaMovement.calcl(
                     direction = yRot.toHorizontalViewVec(),
                     applyToY = false
                 )
@@ -359,7 +346,7 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
             }
         }
         if (this.getModData(MODID).contains(PLAYER)) {
-            val player = level().getPlayerByUUID(this.getModData(MODID).getUUID(PLAYER))
+            val player = level.getPlayerByUUID(this.getModData(MODID).getUUID(PLAYER))
             if (player != null) {
                 if (player.health >= YU_ZHI) {
                     player.startRiding(this)

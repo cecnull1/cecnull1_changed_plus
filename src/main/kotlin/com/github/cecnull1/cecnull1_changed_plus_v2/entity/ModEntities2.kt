@@ -1,3 +1,4 @@
+@file:OptIn(ExperimentalSerializationApi::class)
 package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.mutate
@@ -6,25 +7,34 @@ import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.orElseProcess
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.pipeIf
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.pipeUnless
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
+import com.github.cecnull1.cecnull1_cforge.core.ResourceLocation
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
+import com.github.cecnull1.cecnull1_changed_plus_v2.cbor.format
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MountType
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.fieldIsJumping
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.lerpedTowards
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toHorizontalViewVec
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
+import com.github.cecnull1.cecnull1lib.utils.changed.entityVariant
+import com.github.cecnull1.cecnull1lib.utils.changed.ifPlayerNotTransfurred
 import com.github.cecnull1.cecnull1lib.utils.changed.transfur
 import com.github.cecnull1.cecnull1lib.utils.vector.getKVec3
 import com.github.cecnull1.cecnull1lib.utils.vector.putKVec3
 import com.github.cecnull1.cecnull1lib.utils.vector.toKVec3
 import com.github.cecnull1.cecnull1lib.utils.vector.toVec3
+import com.mojang.logging.LogUtils.getLogger
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.Serializable
+import net.ltxprogrammer.changed.block.entity.StasisChamberBlockEntity
 import net.ltxprogrammer.changed.entity.PowderSnowWalkable
 import net.ltxprogrammer.changed.entity.SeatEntity
 import net.ltxprogrammer.changed.entity.beast.AquaticEntity
+import net.ltxprogrammer.changed.entity.beast.LatexHuman
 import net.ltxprogrammer.changed.entity.beast.LatexOrca
+import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.ltxprogrammer.changed.init.ChangedMobCategories
+import net.ltxprogrammer.changed.init.ChangedRegistry
+import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
@@ -32,7 +42,6 @@ import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.MobCategory
 import net.minecraft.world.entity.MoverType
@@ -41,9 +50,9 @@ import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.horse.Horse
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
 import net.minecraftforge.common.ForgeMod
-import net.minecraftforge.common.capabilities.CapabilityProvider
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
@@ -54,7 +63,7 @@ import kotlin.jvm.optionals.getOrNull
 object ModEntities2 {
     val REGISTER: DeferredRegister<EntityType<*>> = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID)
     val MOVE_ENTITY: RegistryObject<EntityType<BBlockMoveEntity>> = REGISTER.register("move_entity") {
-        EntityType.Builder.of(::BBlockMoveEntity, MobCategory.MISC).sized(0f, 0.5f).build("move_entity")
+        EntityType.Builder.of(::BBlockMoveEntity, MobCategory.MISC).sized(0f, 0.0f).build("move_entity")
     }
     val MEI_XI_YUAN: RegistryObject<EntityType<MeiXiYuan>> = REGISTER.register("mei_xi_yuan") {
         EntityType.Builder.of(::MeiXiYuan, ChangedMobCategories.CHANGED).sized(.7f, 1.73f).build("mei_xi_yuan")
@@ -67,7 +76,7 @@ object ModEntities2 {
     }
 }
 
-class BBlockMoveEntity(entityType: EntityType<out SeatEntity>, level: Level) : SeatEntity(entityType, level), IDismount {
+class BBlockMoveEntity(entityType: EntityType<out SeatEntity>, level: Level) : SeatEntity(entityType, level), IOnMount {
     var offsetP: Vector3f
         get() = this.entityData[OFFSET_P]
         set(value) {
@@ -83,7 +92,7 @@ class BBlockMoveEntity(entityType: EntityType<out SeatEntity>, level: Level) : S
 
     override fun tick() {
         super.tick()
-        level().getBlockEntity(attachedBlockPos) as? BBlockEntity then {
+        level.getBlockEntity(attachedBlockPos) as? BBlockEntity then {
             this.entityHolder as? BBlockMoveEntity then moveEntity@ {
                 this@then.seatedEntity then {
                     val yyaPlayer = if (this is Player) {
@@ -153,7 +162,7 @@ class BBlockMoveEntity(entityType: EntityType<out SeatEntity>, level: Level) : S
 
     override fun remove(reason: RemovalReason) = Unit process {
         val blockPos = attachedBlockPos
-        pipeIf(!level().isLoaded(blockPos) && reason == RemovalReason.DISCARDED) then {
+        pipeIf(!level.isLoaded(blockPos) && reason == RemovalReason.DISCARDED) then {
             // 区块未加载，阻止移除
             return
         }
@@ -162,7 +171,7 @@ class BBlockMoveEntity(entityType: EntityType<out SeatEntity>, level: Level) : S
 
     override fun onBelowWorld() {
         setPos(x, y+320, z)
-        level().getBlockEntity(attachedBlockPos) as? BBlockEntity then {
+        level.getBlockEntity(attachedBlockPos) as? BBlockEntity then {
             seatedEntity then {
                 this.transfur(
                     TransfurData(
@@ -194,9 +203,12 @@ class BBlockMoveEntity(entityType: EntityType<out SeatEntity>, level: Level) : S
         hasImpulse = true
     }
 
-    override fun canDismount(mountType: MountType): Boolean {
+    override fun onMount(mountType: MountType): Boolean {
         return when (mountType) {
             is MountType.Dismount -> {
+                entityData[SEATED_CAN_DISMOUNT]
+            }
+            is MountType.PlayerSelfDismount -> {
                 entityData[SEATED_CAN_DISMOUNT]
             }
             is MountType.Mount -> true
@@ -219,7 +231,7 @@ fun SeatEntity.toBBlockMoveEntity(): BBlockMoveEntity? {
     val moveEntity = ModEntities2.MOVE_ENTITY.get().create(level())
     moveEntity?.deserializeNBT(this.serializeNBT())
     if (moveEntity != null) {
-        level().addFreshEntity(moveEntity)
+        level.addFreshEntity(moveEntity)
     }
     this.discard()
     return moveEntity
@@ -238,6 +250,26 @@ open class MeiXiYuan(entityType: EntityType<out LatexOrca>, level: Level) : Late
 
     override fun variantTick(level: Level) = super.variantTick(level) process {
         maybeGetUnderlying() then self@ {
+            pipeIf(!hasEffect(MobEffects.DOLPHINS_GRACE)) then {
+                addEffect(MobEffects.DOLPHINS_GRACE.new(
+                    duration = MobEffectInstance.INFINITE_DURATION,
+                    ambient = true,
+                    visible = false
+                ))
+            }
+
+            val ve = this.vehicle
+            if (ve is SeatEntity) {
+                when (level.getBlockEntity(ve.attachedBlockPos)) {
+                    is StasisChamberBlockEntity -> {
+                        return@self
+                    }
+                    is BBlockEntity -> {
+                        return@self
+                    }
+                }
+            }
+
             pipeIf (this.isInWaterOrBubble && this.random.nextInt(50) == 0) then {
                 this.heal(1f)
                 if (this is Player) {
@@ -246,54 +278,114 @@ open class MeiXiYuan(entityType: EntityType<out LatexOrca>, level: Level) : Late
                     foodData.setSaturation(foodData.saturationLevel+1)
                 }
             }
+
             val v = 0.5
-            pipeUnless (this.isInWaterOrBubble) then {
+            pipeUnless (this.isInWaterOrBubble || this.isFallFlying && isInWaterRainOrBubble) then {
                 if (this.health.toInt() > 15) {
-                    this.hurt(this.level().damageSources().drown(), health-15)
+                    this.hurt(this.level.damageSources().drown(), health-15)
                 }
-                deltaMovement = deltaMovement.lerpedTowards(
+                deltaMovement = deltaMovement.calcl(
                     direction = yRot.toHorizontalViewVec(),
                     influence = v,
                     applyToY = false  // 关键：不改变 Y 分量
                 )
             } orElseProcess {
-                deltaMovement = deltaMovement.lerpedTowards(
+                deltaMovement = deltaMovement.calcl(
                     direction = lookAngle,
                     influence = v,
                     applyToY = true
                 )
             }
-            pipeIf(!hasEffect(MobEffects.DOLPHINS_GRACE)) then {
-                addEffect(MobEffects.DOLPHINS_GRACE.new(
-                    duration = MobEffectInstance.INFINITE_DURATION,
-                    ambient = true,
-                    visible = false
-                ))
-            }
         }
     }
 }
 
-open class BHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entityType, level), IDismount {
-    override fun isTamed(): Boolean {
-        return true
+open class BHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entityType, level), IOnMount {
+    var transfurVariant: TransfurVariant<*>? = null
+    var id: UUID = UUID(0, 0)
+
+    override fun isTamed(): Boolean = true
+    override fun isSaddleable(): Boolean = true
+    override fun isSaddled(): Boolean = true
+    override fun canFreeze(): Boolean = false
+    override fun canJump(): Boolean = true
+    override fun checkFallDamage(p_20990_: Double, p_20991_: Boolean, p_20992_: BlockState, p_20993_: BlockPos) {}
+
+    override fun tick() {
+        firstPassenger as? Player then {
+            ifPlayerNotTransfurred {
+                transfur(TransfurData(
+                    transfurVariant?:return@ifPlayerNotTransfurred,
+                    true
+                ))
+            }
+            this@BHorse.addDeltaMovement(Vec3(
+                0.0,
+                this.fieldIsJumping.toInt().toDouble()*.25,
+                0.0
+            ))
+            this@BHorse.deltaMovement = this@BHorse.deltaMovement.calcl(
+                direction = this.lookAngle,
+                influence = 1.0
+            )
+        } orElseProcess {
+            val p = level.getPlayerByUUID(id)
+            p?.startRiding(this@BHorse)
+        }
+        super.tick()
     }
 
-    override fun isSaddleable(): Boolean {
-        return true
-    }
-
-    override fun isSaddled(): Boolean {
-        return true
-    }
-
-    override fun canDismount(mountType: MountType): Boolean {
+    override fun onMount(mountType: MountType): Boolean {
         return when(mountType) {
             is MountType.PlayerSelfDismount -> {
                 false
             }
+            is MountType.Mount -> {
+                if (mountType.entity is Player) {
+                    transfurVariant = mountType.entity.entityVariant ?: transfurVariant
+                    id = mountType.entity.uuid
+                }
+                return transfurVariant != null
+            } // 仅当是玩家且玩家已被兽化时能被骑乘
             else -> true
         }
+    }
+
+
+    /* 写 */
+    override fun addAdditionalSaveData(compoundTag: CompoundTag) {
+        super.addAdditionalSaveData(compoundTag)
+        val bs = format.encodeToByteArray(BHorseSaveData.serializer(), BHorseSaveData(
+            ResourceLocation.fromStringSafe(transfurVariant?.formId.toString()), id
+        ))
+//        getLogger().info("[SAVE] ${bs.toList()}")
+        compoundTag.putByteArray("cborSer", bs)
+    }
+
+    override fun readAdditionalSaveData(tag: CompoundTag) {
+        super.readAdditionalSaveData(tag)
+        val raw = tag.getByteArray("cborSer")
+        if (raw.isEmpty()) {
+            // 第一次生成 / 无数据，给默认值
+            id = UUID(0, 0)
+            transfurVariant = null
+            return
+        }
+        runCatching {
+            val data = format.decodeFromByteArray(BHorseSaveData.serializer(), raw)
+            transfurVariant = ChangedRegistry.TRANSFUR_VARIANT
+                .getValue(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(data.rl.modId, data.rl.path))
+            id = data.player
+        }.onFailure { e ->
+            getLogger().warn("Broken CBOR tag, skipping", e)
+            id = UUID(0, 0)
+            transfurVariant = null
+        }
+    }
+
+    companion object {
+        @Serializable
+        data class BHorseSaveData(val rl: @Contextual ResourceLocation, val player: @Contextual UUID)
     }
 }
 

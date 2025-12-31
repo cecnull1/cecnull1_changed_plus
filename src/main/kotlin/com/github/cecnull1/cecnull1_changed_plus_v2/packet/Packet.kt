@@ -1,11 +1,9 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.packet
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.Cecnull1_changed_plus
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.HAState
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
+import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.newrl
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.HAState
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IPlayerExtendedData
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.deserializerEntityComponent
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.serializerEntityComponent
 import net.minecraft.client.Minecraft
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.FriendlyByteBuf
@@ -13,7 +11,6 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
-import net.minecraftforge.common.capabilities.CapabilityToken
 import net.minecraftforge.network.NetworkDirection
 import net.minecraftforge.network.NetworkEvent
 import net.minecraftforge.network.NetworkRegistry
@@ -50,7 +47,7 @@ class SyncHaStateMessage(
 object NetworkHandler {
     const val PROTOCOL_VERSION = "1"
     private val CHANNEL: SimpleChannel = NetworkRegistry.newSimpleChannel(
-        ResourceLocation(MODID, "sync_ha_state"),
+        newrl(MODID, "sync_ha_state"),
         { PROTOCOL_VERSION },
         { it == PROTOCOL_VERSION },
         { it == PROTOCOL_VERSION }
@@ -93,16 +90,16 @@ object NetworkHandler {
     }
 
     fun componentsSendToClient(entity: Entity) {
-        CHANNEL.sendTo(
-            SyncComponentsMessage(
-                entityId = entity.id,
-                data = CompoundTag().apply {
-                    serializerEntityComponent(entity, Cecnull1_changed_plus.entityComponentMap, this)
-                }
-            ),
-            (entity as? ServerPlayer)?.connection?.connection?:return,
-            NetworkDirection.PLAY_TO_CLIENT
-        )
+//        CHANNEL.sendTo(
+//            SyncComponentsMessage(
+//                entityId = entity.id,
+//                data = CompoundTag().apply {
+//                    serializerEntityComponent(entity, Cecnull1_changed_plus.entityComponentMap, this)
+//                }
+//            ),
+//            (entity as? ServerPlayer)?.connection?.connection?:return,
+//            NetworkDirection.PLAY_TO_CLIENT
+//        )
     }
 
     fun componentsSendToServer() {
@@ -127,9 +124,9 @@ class SyncComponentsMessage(
     fun handle(context: Supplier<NetworkEvent.Context>) {
         context.get().enqueueWork {
             val player = Minecraft.getInstance().level?.getEntity(entityId) as? Player
-            if (player != null && data != null) {
-                deserializerEntityComponent(player, Cecnull1_changed_plus.entityComponentMap, data)
-            }
+//            if (player != null && data != null) {
+//                deserializerEntityComponent(player, Cecnull1_changed_plus.entityComponentMap, data)
+//            }
         }
         context.get().packetHandled = true
     }

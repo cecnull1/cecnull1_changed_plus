@@ -1,85 +1,41 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.renderer
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.AEntity
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.FrezoMS
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.Soul
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.Zombie
-import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel
-import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel.Companion.LAYER_LOCATION
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.Special
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.TianLing
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.SoulModel
-import com.github.cecnull1.cecnull1_changed_plus_v2.model.ZombieModel
+import com.github.cecnull1.cecnull1_changed_plus_v2.model.UserHumanModel
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ltxprogrammer.changed.client.renderer.AdvancedHumanoidRenderer
-import net.ltxprogrammer.changed.client.renderer.layers.CustomEyesLayer
+import net.ltxprogrammer.changed.client.renderer.layers.DarkLatexMaskLayer
+import net.ltxprogrammer.changed.client.renderer.layers.GasMaskLayer
 import net.ltxprogrammer.changed.client.renderer.layers.LatexParticlesLayer
 import net.ltxprogrammer.changed.client.renderer.layers.TransfurCapeLayer
+import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorHumanModel
-import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorLatexMaleWolfModel
-import net.ltxprogrammer.changed.util.Color3
-import net.minecraft.client.model.geom.ModelPart
+import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModelSet
+import net.ltxprogrammer.changed.client.renderer.model.armor.LatexHumanoidArmorModel
+import net.ltxprogrammer.changed.entity.BasicPlayerInfo
+import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.entity.EntityRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.Entity
 
-class AEntityRenderer(context: EntityRendererProvider.Context) :
-    AdvancedHumanoidRenderer<AEntity, AEntityModel, ArmorLatexMaleWolfModel<AEntity>>(
-        context, AEntityModel(
-            context.bakeLayer(
-                LAYER_LOCATION
-            )
-        ), ArmorLatexMaleWolfModel.MODEL_SET, 0.5f
-    ) {
-    init {
-        this.addLayer(
-            LatexParticlesLayer(
-                this, getModel()
-            ) { part: ModelPart? -> part != null && model.isPartNotMask(part) }
-        )
-        this.addLayer(TransfurCapeLayer.normalCape(this, context.modelSet))
-        this.addLayer(
-            CustomEyesLayer.builder(this, context.modelSet)
-                .withSclera(Color3.fromInt(0x242424))
-                .withIris(
-                    CustomEyesLayer.fixedIfNotDarkLatexOverrideLeft(Color3.WHITE),
-                    CustomEyesLayer.fixedIfNotDarkLatexOverrideRight(Color3.WHITE)
-                )
-                .build()
-        )
-    }
-
-    override fun getTextureLocation(entity: AEntity): ResourceLocation {
-        return TEXTURE
-    }
-
-    companion object {
-        private val TEXTURE = ResourceLocation(MODID, "textures/entities/a_entity.png")
-    }
-}
-
-class ZombieRenderer(context: EntityRendererProvider.Context) :
-    AdvancedHumanoidRenderer<Zombie, ZombieModel, ArmorHumanModel<Zombie>>(
-        context, ZombieModel(context.bakeLayer(LAYER_LOCATION)), ArmorHumanModel.MODEL_SET, 0.5f
-    ) {
-    override fun getTextureLocation(entity: Zombie): ResourceLocation {
-        return TEXTURE
-    }
-
-    companion object {
-        private val TEXTURE = ResourceLocation(MODID, "textures/entities/zombie.png")
-    }
-    }
-
-class SoulRenderer(context:  EntityRendererProvider.Context): AdvancedHumanoidRenderer<Soul, SoulModel, ArmorHumanModel<Soul>>(
-    context, SoulModel(context.bakeLayer(LAYER_LOCATION)), ArmorHumanModel.MODEL_SET, 0.5f
+class SoulRenderer(context: EntityRendererProvider.Context): AdvancedHumanoidRenderer<Soul, SoulModel, ArmorHumanModel<Soul>>(
+    context,
+    SoulModel(context.bakeLayer(SoulModel.LAYER_LOCATION)),
+    ArmorHumanModel.MODEL_SET, 0.5f
 ) {
     override fun getTextureLocation(entity: Soul): ResourceLocation {
         return TEXTURE
     }
 
     companion object {
-        private val TEXTURE = ResourceLocation(MODID, "textures/entities/soul.png")
+        private val TEXTURE = newrl(MODID, "textures/entities/soul.png")
     }
 }
 
@@ -100,6 +56,105 @@ class NoneEntityRenderer<T: Entity>(context: EntityRendererProvider.Context)
 
     // 返回null避免默认名称渲染
     override fun getTextureLocation(entity: T): ResourceLocation {
-        return ResourceLocation("")
+        return newrl(MODID, "")
     }
 }
+
+abstract class UserEntityRenderer<
+        T : ChangedEntity,
+        R : AdvancedHumanoidModel<T>,
+        S : LatexHumanoidArmorModel<T, S>
+        >(
+    context: EntityRendererProvider.Context,
+    main: R,
+    modelSet: ArmorModelSet<in T, *>,
+    open val location: ResourceLocation,
+    val f: Float = 0.9375f,
+) : AdvancedHumanoidRenderer<T, R, S>(
+    context,
+    main,
+    modelSet,
+    .5f
+) {
+    init {
+        this.addLayer(LatexParticlesLayer(this, getModel()))
+        this.addLayer(TransfurCapeLayer.normalCape(this, context.modelSet))
+        this.addLayer(DarkLatexMaskLayer(this, context.modelSet))
+        this.addLayer(GasMaskLayer(this, context.modelSet))
+    }
+
+    override fun scale(entity: T, pose: PoseStack, partialTick: Float) {
+        pose.scale(f, f, f)
+    }
+
+    override fun scaleForBPI(entity: T, bpi: BasicPlayerInfo?, poseStack: PoseStack?) {
+    }
+
+    override fun getTextureLocation(t: T): ResourceLocation {
+        return location
+    }
+
+    override fun getModel(): R {
+        return super.getModel()
+    }
+}
+
+abstract class UserSAHumanEntityRenderer<T : ChangedEntity>(
+    context: EntityRendererProvider.Context,
+    location: ResourceLocation,
+    isAlex: Boolean
+) : UserEntityRenderer<T, UserHumanModel<T>, UserHumanModel.ArmorModel<T>>(
+    context,
+    UserHumanModel<T>(context.bakeLayer(
+        if (isAlex) UserHumanModel.LAYER_LOCATION_ALEX else UserHumanModel.LAYER_LOCATION_STEVE
+    )),
+    UserHumanModel.ArmorModel.MODEL_SET, location
+)
+
+class FrezoMSRenderer(context: EntityRendererProvider.Context): UserSAHumanEntityRenderer<FrezoMS>(
+    context,
+    location = newrl(MODID, "textures/entities/frezo_ms.png"),
+    isAlex = false
+)
+
+class TianLingRenderer(context: EntityRendererProvider.Context): UserSAHumanEntityRenderer<TianLing>(
+    context,
+    location = newrl(MODID, "textures/entities/tian_ling.png"),
+    isAlex = true
+)
+
+class SpecialRenderer(
+    context: EntityRendererProvider.Context,
+    location: ResourceLocation = newrl("minecraft", ""),
+    isAlex: Boolean = false
+): UserSAHumanEntityRenderer<Special>(context, location, isAlex) {
+
+    val modelO: UserHumanModel<Special> = model
+    private val alex = UserHumanModel<Special>(context.bakeLayer(UserHumanModel.LAYER_LOCATION_ALEX))
+    private val steve = UserHumanModel<Special>(context.bakeLayer(UserHumanModel.LAYER_LOCATION_STEVE))
+
+    override fun getTextureLocation(t: Special): ResourceLocation {
+        return (if (t.isPlayerSkin) t.getSkinTextureLocation() else ResourceLocation.tryParse(t.location)) ?: location
+    }
+
+    override fun render(
+        latex: Special,
+        yRot: Float,
+        p_115457_: Float,
+        p_115458_: PoseStack,
+        bufferSource: MultiBufferSource,
+        p_115460_: Int
+    ) {
+        if (!latex.isPlayerSkin) this.model = if (latex.isAlex) alex else steve
+        else this.model = this.modelO
+        super.render(latex, yRot, p_115457_, p_115458_, bufferSource, p_115460_)
+    }
+
+    companion object {
+        fun forModelSize(slim: Boolean): EntityRendererProvider<Special> {
+            return EntityRendererProvider { context: EntityRendererProvider.Context -> SpecialRenderer(context, isAlex = slim) }
+        }
+    }
+}
+
+fun newrl(namespace: String, path: String): ResourceLocation = ResourceLocation.fromNamespaceAndPath(namespace, path)

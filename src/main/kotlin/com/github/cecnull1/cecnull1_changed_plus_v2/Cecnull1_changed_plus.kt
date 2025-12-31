@@ -1,6 +1,5 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2
 
-//import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.C_PLAYER
 import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus
 import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus.post
 import com.github.cecnull1.cecnull1_cforge.core.ComponentMap
@@ -8,9 +7,11 @@ import com.github.cecnull1.cecnull1_cforge.core.PipeCore.calc
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.LicensedCharacters.FREZO_MS
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.LicensedCharacters.SPECIAL
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.LicensedCharacters.TIAN_LING
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_HORSE
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.MISC
@@ -19,12 +20,9 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NOT_CAN_D
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.B_HORSE
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MEI_XI_YUAN
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MOVE_ENTITY
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.SWEMEntities
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.SWEMEntities.O_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
@@ -32,14 +30,14 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerTick
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel
+import com.github.cecnull1.cecnull1_changed_plus_v2.model.SoulModel
+import com.github.cecnull1.cecnull1_changed_plus_v2.model.UserHumanModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.ZombieModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceOperatorEntityGetTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceTrickTransfurLivingEntity
-import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.NoneEntityRenderer
-import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.SoulRenderer
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.CodecRegistry
-import io.github.apace100.apoli.mixin.PlayerEntityRendererMixin
+import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.*
+import net.ltxprogrammer.changed.client.RegisterComplexRenderersEvent
 import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
 import net.ltxprogrammer.changed.client.renderer.LatexOrcaRenderer
 import net.ltxprogrammer.changed.client.renderer.SeatEntityRenderer
@@ -50,11 +48,9 @@ import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.UseItemMode
 import net.ltxprogrammer.changed.init.ChangedAttributes
-import net.minecraft.client.model.HumanoidModel
 import net.minecraft.client.renderer.entity.BoatRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.client.renderer.entity.HorseRenderer
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.horse.Horse
@@ -72,19 +68,14 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 import vazkii.psi.api.PsiAPI
 
-fun String.toRL() = com.github.cecnull1.cecnull1_cforge.core.ResourceLocation(MODID, this)
-
-fun String.toComponentRL() = com.github.cecnull1.cecnull1_cforge.core.ResourceLocation("cforge", this)
-
 @Mod(MODID)
 class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
     init {
-        CodecRegistry.registerCodec<Flying>(Flying.codec)
-
         val modEventBus = context.modEventBus
         Animations.REGISTRY.register(modEventBus)
         ModEntities.REGISTER.register(modEventBus)
         ModEntities2.REGISTER.register(modEventBus)
+        LicensedCharacters.REGISTER.register(modEventBus)
         ModTransfurVariant.REGISTRY.register(modEventBus)
         ModBlocks.REGISTRY_BLOCKENTITY.register(modEventBus)
         ModBlocks.REGISTRY_BLOCK.register(modEventBus)
@@ -92,8 +83,8 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
         ModGameRule.register()
 
         if (ModList.get().isLoaded("psi")) {
-            PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
-            PsiAPI.registerSpellPieceAndTexture(ResourceLocation(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
+            PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
+            PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
         }
         if (ModList.get().isLoaded("swem")) {
             SWEMEntities.REGISTER.register(modEventBus)
@@ -158,7 +149,18 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
                 B_HORSE.get(),
                 Horse.createBaseHorseAttributes().build()
             )
-            HumanoidModel
+            event.put(
+                FREZO_MS.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
+            event.put(
+                TIAN_LING.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
+            event.put(
+                SPECIAL.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
             if (ModList.get().isLoaded("swem")) {
                 event.put(
                     O_ENTITY.get(),
@@ -189,6 +191,14 @@ object Events {
 
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = [Dist.CLIENT])
 object ClientEvents {
+
+    @JvmStatic
+    @SubscribeEvent
+    fun registerComplexEntityRenderers(event: RegisterComplexRenderersEvent) {
+        event.registerEntityRenderer(SPECIAL.get(), "default", SpecialRenderer.forModelSize(false))
+        event.registerEntityRenderer(SPECIAL.get(), "slim", SpecialRenderer.forModelSize(true))
+    }
+
     @JvmStatic
     @SubscribeEvent
     fun registerAccessoryRenderers(event: FMLClientSetupEvent) {
@@ -214,72 +224,35 @@ object ClientEvents {
     @SubscribeEvent
     fun registerLayerDefinitions(event: RegisterLayerDefinitions): Unit = event.process {
         registerLayerDefinition(AEntityModel.LAYER_LOCATION, AEntityModel::createBodyLayer)
+        registerLayerDefinition(SoulModel.LAYER_LOCATION, AEntityModel::createBodyLayer)
         registerLayerDefinition(ZombieModel.LAYER_LOCATION, ZombieModel::createBodyLayer)
+        registerLayerDefinition(UserHumanModel.LAYER_LOCATION_STEVE, UserHumanModel.func::createSteveLayer)
+        registerLayerDefinition(UserHumanModel.LAYER_LOCATION_ALEX, UserHumanModel.func::createAlexLayer)
+        UserHumanModel.ArmorModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition)
     } calc {}
 
     @JvmStatic
     @SubscribeEvent
     fun registerEntityRenderers(event: RegisterRenderers) {
         event.apply {
-            registerEntityRenderer(
-                A_ENTITY.get()
-            ) { context: EntityRendererProvider.Context ->
-                DarkLatexYufengRenderer(context)
-            }
-            registerEntityRenderer(
-                A_HORSE.get()
-            ) { context: EntityRendererProvider.Context ->
-                HorseRenderer(context)
-            }
-            registerEntityRenderer(
-                SOUL.get()
-            ) { context: EntityRendererProvider.Context ->
-                SoulRenderer(context)
-            }
-//          registerEntityRenderer(
-//             C_PLAYER.get()
-//           ) { context: EntityRendererProvider.Context ->
-//            LatexHumanRenderer(context, true)
-//          }
-            registerEntityRenderer(
-                PURE_WHITE_LATEX_YUFENG.get()
-            ) { context: EntityRendererProvider.Context ->
-                DarkLatexYufengRenderer(context)
-            }
-            registerEntityRenderer(
-                NONE_ENTITY.get()
-            ) { context: EntityRendererProvider.Context ->
-                NoneEntityRenderer(context)
-            }
+            registerEntityRenderer(A_ENTITY.get(), ::DarkLatexYufengRenderer)
+            registerEntityRenderer(A_HORSE.get(), ::HorseRenderer)
+            registerEntityRenderer(SOUL.get(), ::SoulRenderer)
+            registerEntityRenderer(PURE_WHITE_LATEX_YUFENG.get(), ::DarkLatexYufengRenderer)
+            registerEntityRenderer(NONE_ENTITY.get(), ::NoneEntityRenderer)
+            registerEntityRenderer(MISC.get(), ::NoneEntityRenderer)
+            registerEntityRenderer(PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get(), ::DarkLatexYufengRenderer)
+            registerEntityRenderer(MOVE_ENTITY.get(), ::SeatEntityRenderer)
+            registerEntityRenderer(MEI_XI_YUAN.get(), ::LatexOrcaRenderer)
+            registerEntityRenderer(B_HORSE.get(), ::HorseRenderer)
+            registerEntityRenderer(FREZO_MS.get(), ::FrezoMSRenderer)
+            registerEntityRenderer(TIAN_LING.get(), ::TianLingRenderer)
+            registerEntityRenderer(SPECIAL.get(), ::SpecialRenderer)
+
             registerEntityRenderer(
                 NOT_CAN_DISMOUNT_BOAT.get()
             ) { context: EntityRendererProvider.Context ->
                 BoatRenderer(context, false)
-            }
-            registerEntityRenderer(
-                MISC.get()
-            ) { context: EntityRendererProvider.Context ->
-                NoneEntityRenderer(context)
-            }
-            registerEntityRenderer(
-                PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get()
-            ) { context: EntityRendererProvider.Context ->
-                DarkLatexYufengRenderer(context)
-            }
-            registerEntityRenderer(
-                MOVE_ENTITY.get()
-            ) { context: EntityRendererProvider.Context ->
-                SeatEntityRenderer(context)
-            }
-            registerEntityRenderer(
-                MEI_XI_YUAN.get()
-            ) { context: EntityRendererProvider.Context ->
-                LatexOrcaRenderer(context)
-            }
-            registerEntityRenderer(
-                B_HORSE.get()
-            ) { context: EntityRendererProvider.Context ->
-                HorseRenderer(context)
             }
             if (ModList.get().isLoaded("swem")) {
                 registerEntityRenderer(

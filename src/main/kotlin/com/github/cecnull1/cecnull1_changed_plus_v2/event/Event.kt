@@ -1,12 +1,12 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
+import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.getComponent
 import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.hasComponent
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.Cecnull1_changed_plus
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
@@ -14,13 +14,14 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
-import com.github.cecnull1.cecnull1_changed_plus_v2.toRL
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toRL
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.wuDiTime
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.Flying
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTransfurDataOrNull
@@ -56,7 +57,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
-import net.minecraftforge.common.capabilities.CapabilityProvider
 import net.minecraftforge.event.TickEvent
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.LivingAttackEvent
@@ -85,7 +85,7 @@ object Event {
                 )
             }
         }
-        if (player.hasComponent<Flying>(Cecnull1_changed_plus.entityComponentMap, Constant.NBTKeys.FLYING.toRL())) {
+        if (player.getComponent<Flying>(Cecnull1_changed_plus.entityComponentMap, Constant.NBTKeys.FLYING.toRL())?.boolean == true) {
             player.foodData.foodLevel++
             player.foodData.setSaturation(player.foodData.saturationLevel+1)
             if (!player.abilities.flying) {
@@ -100,6 +100,7 @@ object Event {
             when {
                 changedEntity is VariantTickPlusAble -> changedEntity.playerVariantTick(player, event.player.level())
             }
+
         }
         if (player.health.isNaN()) {
             player.health = 0.0f
@@ -192,7 +193,7 @@ object Event {
 
         fun sync() {
             if (event.phase != TickEvent.Phase.END) return
-            if (player.level().isClientSide && event.player == Minecraft.getInstance().player) {
+            if (player.level.isClientSide && event.player == Minecraft.getInstance().player) {
                 NetworkHandler.haStateSendToServer()
                 NetworkHandler.componentsSendToServer()
             }
@@ -207,12 +208,12 @@ object Event {
                 0 -> {
                     val newEntity = ModEntities.PURE_WHITE_LATEX_YUFENG.get().create(entity.level())?: return
                     newEntity.setPos(entity.position())
-                    entity.level().addFreshEntity(newEntity)
+                    entity.level.addFreshEntity(newEntity)
                 }
                 199 -> {
                     val newEntity = ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get().create(entity.level())?: return
                     newEntity.setPos(entity.position())
-                    entity.level().addFreshEntity(newEntity)
+                    entity.level.addFreshEntity(newEntity)
                 }
                 else -> {}
             }
@@ -299,9 +300,9 @@ object Event {
         }
 
         event.entity as? Player then player@ {
-            if (this.level().isClientSide) return@player
+            if (this.level.isClientSide) return@player
             (this.vehicle as? SeatEntity) then {
-                (this.level().getBlockEntity(this@then.attachedBlockPos) as? BBlockEntity) then {
+                (this.level.getBlockEntity(this@then.attachedBlockPos) as? BBlockEntity) then {
                     if (seatedEntity?.id == this@player.id && !this@player.isCreative && event.source.type() != DamageTypes.FELL_OUT_OF_WORLD) event.isCanceled = true
                 }
             }
@@ -456,11 +457,11 @@ object Event {
     fun onPlayerRespawn(event: PlayerEvent.PlayerRespawnEvent) {
         val player = event.entity as? ServerPlayer ?: return
         if (player is IPlayerExtendedData) {
-            if (!player.level().gameRules.getBoolean(ModGameRule.KeepHA)) {
+            if (!player.level.gameRules.getBoolean(ModGameRule.KeepHA)) {
                 player.haItem = ItemStack.EMPTY
                 player.hasHA = false
             }
-            if (!player.level().gameRules.getBoolean(ModGameRule.KeepArmorHA)) {
+            if (!player.level.gameRules.getBoolean(ModGameRule.KeepArmorHA)) {
                 player.haArmorItems = initHaArmorItems()
                 player.hasArmorHA = false
             }
@@ -488,7 +489,7 @@ object Event {
 
     fun onPlayerLogin(event: PlayerEvent.PlayerLoggedInEvent) {
         // 玩家登录时同步数据
-        if (!event.entity.level().isClientSide) {
+        if (!event.entity.level.isClientSide) {
             NetworkHandler.haStateSendToClient(event.entity)
         }
     }
@@ -496,7 +497,7 @@ object Event {
     fun onAccessoryDrop(event: AccessorySlots.DropItemEvent) {
         val player = event.entity as? ServerPlayer ?: return
         if (player is IPlayerExtendedData) {
-            if (player.hasArmorHA && player.level().gameRules.getBoolean(ModGameRule.KeepArmorHA)) event.keepItem()
+            if (player.hasArmorHA && player.level.gameRules.getBoolean(ModGameRule.KeepArmorHA)) event.keepItem()
         }
     }
 
@@ -631,7 +632,7 @@ fun ServerPlayer.sendHeadRotationUpdate(yHeadRot: Float) {
 
 // 在需要更新头部旋转的地方使用：
 fun syncHeadLookAt(livingEntity: LivingEntity, attacker: Entity) {
-    if (livingEntity.level().isClientSide) return
+    if (livingEntity.level.isClientSide) return
 
     // 计算头部应该转向的位置（使用attacker的眼睛位置）
     val targetPos = attacker.getEyePosition(1.0f)
@@ -649,7 +650,7 @@ fun syncHeadLookAt(livingEntity: LivingEntity, attacker: Entity) {
         }
         else -> {
             // 对于非玩家实体，广播给追踪这个实体的所有客户端
-            (livingEntity.level() as? ServerLevel)?.chunkSource?.broadcast(livingEntity,
+            (livingEntity.level as? ServerLevel)?.chunkSource?.broadcast(livingEntity,
                 ClientboundRotateHeadPacket(
                     livingEntity,
                     (headRot * 256.0f / 360.0f).toInt().toByte()

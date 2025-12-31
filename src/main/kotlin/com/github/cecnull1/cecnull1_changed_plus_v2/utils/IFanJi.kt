@@ -12,7 +12,7 @@ import net.minecraft.world.entity.player.Player
 interface IFanJi {
     fun onAttackedBy(attacker: Entity) {
         if (this !is ChangedEntity) return
-        if (!this.level().gameRules.getBoolean(ModGameRule.canFanJi)) return
+        if (!this.level.gameRules.getBoolean(ModGameRule.canFanJi)) return
         val livingEntity = this.maybeGetUnderlying()
         syncHeadLookAt(livingEntity, attacker)
         if (livingEntity is Player) {

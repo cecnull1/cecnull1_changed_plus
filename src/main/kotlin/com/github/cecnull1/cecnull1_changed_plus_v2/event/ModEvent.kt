@@ -3,6 +3,7 @@
 
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
+import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.Events.onCommonSetup
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
@@ -20,7 +21,9 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onMount
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerCloned
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerLogin
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerRespawn
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IKeepConscious
 import com.github.cecnull1.cecnull1lib.utils.changed.entityVariant
+import com.github.cecnull1.cecnull1lib.utils.changed.playerTransfurVariant
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.minecraft.world.entity.player.Player
@@ -83,9 +86,7 @@ fun onLivingChangeTarget(event: LivingChangeTargetEvent) {
 }
 
 fun onKeepConscious(event: ProcessTransfur.KeepConsciousEvent) {
-    if (event.variant?.`is`(ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT) == true ||
-        event.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT) == true ||
-        event.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_AND_ARMOR_TRANSFUR_VARIANT) == true) {
-            event.shouldKeepConscious = true
+    event.player.playerTransfurVariant?.changedEntity as? IKeepConscious then {
+        if (isKeep()) event.shouldKeepConscious = true
     }
 }

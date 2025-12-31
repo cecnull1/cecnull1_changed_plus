@@ -73,12 +73,19 @@ object ModTransfurVariant {
         }.build()
     }
 
-//    val ZOMBIE_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Zombie>> = REGISTRY.register("form_$ZOMBIE_ID") {
-//        TransfurVariant.Builder.of(ModEntities.ZOMBIE)
-//            .visionType(VisionType.NIGHT_VISION)
-//            .faction(LatexType.NEUTRAL)
-//            .breatheMode(TransfurVariant.BreatheMode.ANY)
-//            .build()
-//    }
+    val FREZO_MS_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<FrezoMS>> = REGISTRY.register("form_frezo_ms") {
+        TransfurVariant.Builder.of(LicensedCharacters.FREZO_MS).apply {
+        }.build()
+    }
+
+    val TIAN_LING_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<TianLing>> = REGISTRY.register("form_tian_ling") {
+        TransfurVariant.Builder.of(LicensedCharacters.TIAN_LING).apply {
+        }.build()
+    }
+
+    val SPECIAL_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Special>> = REGISTRY.register("form_special") {
+        TransfurVariant.Builder.of(LicensedCharacters.SPECIAL).apply {
+        }.build()
+    }
 }
 

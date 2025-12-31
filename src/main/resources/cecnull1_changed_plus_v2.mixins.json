@@ -18,7 +18,10 @@
     "AccessorySlotsAccessor",
     "EntityMixin",
     "LivingEntityAccessor",
-    "RegistryObjectAccessor"
+    "RegistryObjectAccessor",
+    "EntityAccessor",
+    "ModelPartAccessor",
+    "TransfurVariantInstanceMixin"
   ],
   "client": [
   ],

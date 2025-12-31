@@ -3,8 +3,8 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 
-interface IDismount {
-    fun canDismount(mountType: MountType = MountType.None): Boolean = true
+interface IOnMount {
+    fun onMount(mountType: MountType = MountType.None): Boolean = true
 }
 
 sealed interface MountType {

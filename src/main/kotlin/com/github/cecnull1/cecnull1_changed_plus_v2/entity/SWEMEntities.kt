@@ -8,8 +8,9 @@ import com.alaharranhonor.swem.items.TackType
 import com.alaharranhonor.swem.items.TackType.*
 import com.alaharranhonor.swem.registry.EntitySetup
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IDismount
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IOnMount
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MountType
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.level
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.github.cecnull1.cecnull1lib.utils.vector.KVec3
@@ -43,7 +44,7 @@ object SWEMEntities {
 
 open class O(type: EntityType<out O>,
              worldIn: Level
-) : SWEMHorseEntity(type, worldIn), IDismount {
+) : SWEMHorseEntity(type, worldIn), IOnMount {
     var owner2: LivingEntity? = null
 
     override fun addAdditionalSaveData(tag: CompoundTag) {
@@ -62,7 +63,7 @@ open class O(type: EntityType<out O>,
         }
     }
 
-    override fun canDismount(mountType: MountType): Boolean {
+    override fun onMount(mountType: MountType): Boolean {
         return false
     }
 
@@ -95,7 +96,7 @@ open class O(type: EntityType<out O>,
     override fun tick() {
         if (canFly()) startFlying()
         super.tick()
-        level().findNearestEntity(
+        level.findNearestEntity(
             vec3 = position(),
             length = 10.0,
             clazz = Player::class.java

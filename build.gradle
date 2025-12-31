@@ -15,6 +15,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.2.21'
     //id 'com.google.devtools.ksp' version '2.2.0-2.0.2'
 }
 
@@ -180,18 +181,15 @@ dependencies {
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
         jarJar.ranged(it, "[0.5.0,)")
     }
-    implementation fg.deobf(files("libs/geckolib-forge-1.20.1-4.7.3.jar"))
-    implementation fg.deobf(files("libs/apoli-forge-1.20.1-2.9.0.8.jar"))
-    implementation fg.deobf(files("libs/origins-forge-1.20.1-1.10.0.9-all.jar"))
-    implementation fg.deobf(files("libs/Changed-m1.20.1-v0.15.0-dev.jar"))
-    implementation fg.deobf(files("libs/Psi-1.20.1-102.jar"))
-    implementation fg.deobf(files("libs/cecnull1lib-2.0.jar"))
-    implementation fg.deobf(files("libs/swemlite-1.20.1-1.0.0.jar"))
-    implementation fg.deobf(files("libs/cecnull1_cforge-1.0.jar"))
+    fileTree(dir: 'libs', include: '*.jar').each { file ->
+        implementation fg.deobf(files(file))
+    }
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     //ksp ("com.google.auto.service:auto-service:1.0")
     //implementation("com.google.auto.service:auto-service-annotations:1.0")
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.9.0'
+    testImplementation "org.jetbrains.kotlin:kotlin-test:2.2.21"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

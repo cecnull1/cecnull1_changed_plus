@@ -4,13 +4,15 @@ import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.addComponent
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.Cecnull1_changed_plus
 import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.Lang.BODY_WARNING
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.Lang.MESSAGE
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
-import com.github.cecnull1.cecnull1_changed_plus_v2.toRL
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.Flying
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toRL
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.dimensions
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.level
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
@@ -79,9 +81,9 @@ object ModBlocks {
             val type: MType<*>? = Util.fetchChoiceType(References.BLOCK_ENTITY, id)
 
             BlockEntityType.Builder.of(
-                { pos, state -> BBlockEntity(BBLOCK_BLOCKENTITY.get(), pos, state) },
+                fun(pos, state) = BBlockEntity(BBLOCK_BLOCKENTITY.get(), pos, state),
                 BBLOCK.get()
-            ).build(null)
+            ).build(type)
         }
 }
 
@@ -119,14 +121,16 @@ class ABlock : ChangedBlock(Properties.of().jumpFactor(0f)) {
 
                 player.ifPlayerTransfurred {
                     if (it.parent.canGlide && it.changedEntity !is PureWhiteLatexYufengAndArmor) {
-                        player.addComponent(Cecnull1_changed_plus.entityComponentMap, NBTKeys.FLYING.toRL(), Flying)
+                        player.addComponent(Cecnull1_changed_plus.entityComponentMap, NBTKeys.FLYING.toRL(),
+                            Flying(true)
+                        )
                     } else {
                         player.vehicle ?: run {
                             ModEntities.A_HORSE.get().create(player.level())?.apply {
                                 // 仅在 horse 非空时执行
                                 setPos(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
                                 persistentData[NBTKeys.BetterNeon.WFXC] = true
-                                player.level().addFreshEntity(this)
+                                player.level.addFreshEntity(this)
                                 player.startRiding(this)
                             }
                         }
@@ -239,12 +243,22 @@ open class BBlockEntity(type: BlockEntityType<*>, pos: BlockPos, state: BlockSta
         super.setRemoved()
         entityHolder?.discard()
         entityHolder = null
+        Any()
     }
 }
 
 open class BBlock(): Block(Properties.of().destroyTime(-1.0f).explosionResistance(Float.MAX_VALUE)), EntityBlock, SeatableBlock {
     override fun getSitOffset(p0: BlockGetter, p1: BlockState, p2: BlockPos): Vec3 {
-        return Vec3(0.0, 0.0, 0.0)
+        val blockEntity = p0.getBlockEntity(p2)
+        return if (blockEntity !is BBlockEntity) {
+            Vec3.ZERO
+        } else {
+            val seatedEntity = blockEntity.seatedEntity ?: return Vec3.ZERO
+            val yOffset: Float = seatedEntity.dimensions.height*.75f
+            seatedEntity.isInWall
+
+            Vec3(0.0, yOffset.toDouble()-1, 0.0)
+        }
     }
 
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity {

@@ -32,7 +32,7 @@ data class MPlayerExtendedData(
                     val old = data.haState.hasHA
                     if (value != old) {
                         data.haState.hasHA = value
-                        getLogger().info("${this.level()}: Has HA changed from $old to $value")
+                        getLogger().info("${this.level}: Has HA changed from $old to $value")
                         if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
                     }
                 }
@@ -51,7 +51,7 @@ data class MPlayerExtendedData(
                     val old = data.haState.hasArmorHA
                     if (old != value) {
                         data.haState.hasArmorHA = value
-                        getLogger().info("${this.level()}: Has Armor HA changed from $old to $value")
+                        getLogger().info("${this.level}: Has Armor HA changed from $old to $value")
                         if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
                     }
                 }
@@ -70,7 +70,7 @@ data class MPlayerExtendedData(
                     val old = data.haState.haItem
                     if (old !== value && !ItemStack.matches(old, value)) {
                         data.haState.haItem = value
-                        getLogger().info("${this.level()}: HA Item changed from $old to $value")
+                        getLogger().info("${this.level}: HA Item changed from $old to $value")
                         if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
                     }
                 }
@@ -94,7 +94,7 @@ data class MPlayerExtendedData(
                     val old = data.haState.haArmorItems
                     if (old != value) {
                         data.haState.haArmorItems = value
-                        getLogger().info("${this.level()}: HA Armor Items changed from $old to $value")
+                        getLogger().info("${this.level}: HA Armor Items changed from $old to $value")
                         if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
                     }
                 }

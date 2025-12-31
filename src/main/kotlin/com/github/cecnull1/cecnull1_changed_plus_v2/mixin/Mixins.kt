@@ -1,35 +1,39 @@
+@file:Suppress("USELESS_IS_CHECK", "UNUSED_PARAMETER", "UNUSED_VARIABLE")
 package com.github.cecnull1.cecnull1_changed_plus_v2.mixin
 
 import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus.post
+import com.github.cecnull1.cecnull1_cforge.core.ComponentContainer
+import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.getComponent
 import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.hasComponent
 import com.github.cecnull1.cecnull1_changed_plus_v2.Cecnull1_changed_plus.Companion.entityComponentMap
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
+import com.github.cecnull1.cecnull1_changed_plus_v2.cbor.format
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.AEntity
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.BBlockMoveEntity
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.MeiXiYuan
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.Soul
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.meiyun
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CPlayerTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
-import com.github.cecnull1.cecnull1_changed_plus_v2.toRL
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.EntityExtendedComponentSer
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.Flying
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.toComponentContainer
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.toComponentsSer
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.nbt.asCompoundTag
 import com.github.cecnull1.cecnull1lib.utils.nbt.buildNBT
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue
+import kotlinx.serialization.ExperimentalSerializationApi
 import net.ltxprogrammer.changed.data.AccessorySlotType
 import net.ltxprogrammer.changed.data.AccessorySlots
+import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
+import net.minecraft.client.model.geom.ModelPart
 import net.minecraft.core.NonNullList
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
@@ -38,6 +42,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.network.ServerGamePacketListenerImpl
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Inventory
@@ -53,6 +58,7 @@ import net.minecraftforge.fluids.FluidType
 import net.minecraftforge.registries.RegistryObject
 import org.spongepowered.asm.mixin.Mixin
 import org.spongepowered.asm.mixin.Pseudo
+import org.spongepowered.asm.mixin.Shadow
 import org.spongepowered.asm.mixin.Unique
 import org.spongepowered.asm.mixin.gen.Accessor
 import org.spongepowered.asm.mixin.injection.At
@@ -62,6 +68,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
 
 @Mixin(Entity::class)
 abstract class EntityMixin {
+    @Inject(method = ["m_5830_"], at = [At("HEAD")], remap = false, cancellable = true)
+    fun isInWall(cir: CallbackInfoReturnable<Boolean>) {
+        if (this is Player) {
+            if (this.vehicle is BBlockMoveEntity) {
+                cir.mreturn(false) // 防止Player本身因为卡个正着而无法特定操作
+            }
+        }
+    }
+
     @ModifyExpressionValue(
         method = ["*"],
         at = [At(
@@ -82,20 +97,21 @@ abstract class EntityMixin {
     @Inject(method = ["m_7998_(Lnet/minecraft/world/entity/Entity;Z)Z"], at = [At("HEAD")], cancellable = true, remap = false)
     private fun startRiding(entity: Entity, b: Boolean, ci: CallbackInfoReturnable<Boolean>) {
         if (!entity.isRemoved && !(this as Entity).isRemoved) {
-            if (((this as Entity).vehicle as? IDismount)?.canDismount(MountType.Move(this, entity)) == false) ci.mreturn(false)
+            if ((entity as? IOnMount)?.onMount(MountType.Mount((this as Entity), entity)) == false) ci.mreturn(false)
+            if (((this as Entity).vehicle as? IOnMount)?.onMount(MountType.Move(this, entity)) == false) ci.mreturn(false)
         }
     }
 
     @Inject(method = ["m_8127_()V"], at = [At("HEAD")], cancellable = true, remap = false)
     private fun stopRiding(ci: CallbackInfo) {
         if ((this as Entity).vehicle?.isRemoved == false && !(this as Entity).isRemoved) {
-            if (((this as Entity).vehicle as? IDismount)?.canDismount(MountType.Dismount(this)) == false) ci.cancel()
+            if (((this as Entity).vehicle as? IOnMount)?.onMount(MountType.Dismount(this)) == false) ci.cancel()
         }
     }
 
     @Inject(method = ["m_20256_"], at = [At("HEAD")], remap = false, cancellable = true)
     fun setDeltaMovementS(vec: Vec3, ci: CallbackInfo) {
-        if (vec == Vec3.ZERO && this is Player && this.vehicle is BBlockMoveEntity && !this.level().isClientSide) {
+        if (vec == Vec3.ZERO && this is Player && this.vehicle is BBlockMoveEntity && !this.level.isClientSide) {
             ci.cancel()
         }
     }
@@ -161,17 +177,24 @@ abstract class LivingEntityMixin {
         }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Inject(method = ["m_7380_"], at = [At("HEAD")], remap = false)
     private fun modifySaveTag(original: CompoundTag, cir: CallbackInfo) {
         if (this is IPlayerExtendedData) this.cecnull1PlayerExtendedSave(original)
-        serializerEntityComponent(this, entityComponentMap, original)   // 直接写进去
+        original.putByteArray("LivingEntityCbor", format.encodeToByteArray(
+            EntityExtendedComponentSer,
+            entityComponentMap[this as LivingEntity]?.toComponentsSer() ?: HashMap()
+        ))
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Inject(method = ["m_7378_"], at = [At("HEAD")], remap = false)
     private fun injectLoadData(tag: CompoundTag, ci: CallbackInfo) {
         if (this is IPlayerExtendedData) cecnull1PlayerExtendedLoad(tag)
-        deserializerEntityComponent(this, entityComponentMap, tag)
-        NetworkHandler.componentsSendToClient(this as Entity)
+        val c = tag.getByteArray("LivingEntityCbor")
+        if (c.isNotEmpty()) entityComponentMap[this as LivingEntity] = format.decodeFromByteArray(
+            EntityExtendedComponentSer, c
+        ).toComponentContainer()
     }
 }
 
@@ -276,7 +299,7 @@ open class PlayerMixin: IPlayerExtendedData {
 
     @Inject(method = ["m_36342_"], at = [At("HEAD")], cancellable = true, remap = false)
     private fun wantsToStopRiding(cir: CallbackInfoReturnable<Boolean>) {
-        if (((this as Player).vehicle as? IDismount)?.canDismount(MountType.PlayerSelfDismount(this)) == false) cir.mreturn(false)
+        if (((this as Player).vehicle as? IOnMount)?.onMount(MountType.PlayerSelfDismount(this)) == false) cir.mreturn(false)
     }
 
     @ModifyExpressionValue(
@@ -293,7 +316,7 @@ open class PlayerMixin: IPlayerExtendedData {
                 when(this.playerTransfurVariant?.changedEntity) {
                     is Soul -> true
                     else -> false
-                } || this.hasComponent<Flying>(entityComponentMap, Constant.NBTKeys.FLYING.toRL()))) || original
+                } || this.getComponent<Flying>(entityComponentMap, Constant.NBTKeys.FLYING.toRL())?.boolean == true)) || original
     }
 }
 
@@ -426,8 +449,28 @@ abstract class FluidTypeMixin {
         cancellable = true
     )
     private fun canDrownIn(entity: LivingEntity, cir: CallbackInfoReturnable<Boolean>) {
-        cir.mreturn(false)
     }
+}
+
+@Mixin(TransfurVariantInstance::class)
+abstract class TransfurVariantInstanceMixin {
+    @get:Unique
+    inline val self get() = (this as TransfurVariantInstance<*>)
+
+    @field:Shadow
+    @get:Unique
+    private val host: Player? = null
+
+    @ModifyExpressionValue(
+        method = ["tickBreathing"],
+        at = [At(
+            value = "INVOKE",
+            target = $$"Lnet/ltxprogrammer/changed/entity/variant/TransfurVariant$BreatheMode;canBreatheWater()Z"
+        )],
+        remap = false
+    )
+    private fun optimisticCanBreatheWater(original: Boolean): Boolean =
+        original
 }
 
 @Mixin(AccessorySlots::class, remap = false)
@@ -442,10 +485,24 @@ interface LivingEntityAccessor {
     val isJumping: Boolean
 }
 
+@Mixin(Entity::class, remap = false)
+interface EntityAccessor {
+    @get:Accessor("f_19815_", remap = false)
+    val dimensions: EntityDimensions
+}
+
 @Mixin(RegistryObject::class, remap = false)
 interface RegistryObjectAccessor {
     @get:Accessor("value")
     val rawValue: Any?  // ← 用 Any? 接住，不猜泛型
+}
+
+
+
+@Mixin(ModelPart::class, remap = false)
+interface ModelPartAccessor {
+    @get:Accessor("f_104213_")
+    val children: Map<String, ModelPart>
 }
 
 private inline fun <reified T> CallbackInfoReturnable<T>.mreturn(returnValue: T?) {

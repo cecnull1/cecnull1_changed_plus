@@ -34,6 +34,7 @@ class ParamTransfurData(
     constant
 ) {
     override fun getRequiredType(): Class<TransfurData> {
+        String()
         return TransfurData::class.java
     }
 }
