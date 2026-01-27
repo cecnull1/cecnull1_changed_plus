@@ -5,7 +5,8 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL_ID
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FutiEntityType
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.rlclass
 import net.ltxprogrammer.changed.entity.MiningStrength
 import net.ltxprogrammer.changed.entity.TransfurMode
 import net.ltxprogrammer.changed.entity.VisionType
@@ -23,7 +24,8 @@ object ModTransfurVariant {
         TransfurVariant.Builder.of(ModEntities.A_ENTITY).apply {
             glide()
             visionType(VisionType.NIGHT_VISION)
-            stepSize(320 + 64f) // 320-(-64) = 320+64
+
+            // 320-(-64) = 320+64, stepSize(320 + 64f) Deprecated
             miningStrength(MiningStrength.STRONG)
             breatheMode(TransfurVariant.BreatheMode.ANY)
             addAbility(ChangedAbilities.TOGGLE_WAVE_VISION)
@@ -53,14 +55,6 @@ object ModTransfurVariant {
         }.build()
     }
 
-    val PURE_WHITE_LATEX_YUFENG_AND_ARMOR_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<PureWhiteLatexYufengAndArmor>> = REGISTRY.register("form_$PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID") {
-        TransfurVariant.Builder.of(ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR).apply {
-            visionType(VisionType.NIGHT_VISION)
-            breatheMode(TransfurVariant.BreatheMode.ANY)
-            glide()
-        }.build()
-    }
-
     val NONE_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<NoneTransfurVariant>> = REGISTRY.register("form_none") {
         TransfurVariant.Builder.of(ModEntities.NONE_ENTITY).build()
     }
@@ -73,18 +67,13 @@ object ModTransfurVariant {
         }.build()
     }
 
-    val FREZO_MS_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<FrezoMS>> = REGISTRY.register("form_frezo_ms") {
-        TransfurVariant.Builder.of(LicensedCharacters.FREZO_MS).apply {
-        }.build()
-    }
-
-    val TIAN_LING_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<TianLing>> = REGISTRY.register("form_tian_ling") {
-        TransfurVariant.Builder.of(LicensedCharacters.TIAN_LING).apply {
-        }.build()
-    }
-
     val SPECIAL_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Special>> = REGISTRY.register("form_special") {
         TransfurVariant.Builder.of(LicensedCharacters.SPECIAL).apply {
+        }.build()
+    }
+
+    val FUTI_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Futi>> = REGISTRY.register("form_${rlclass<Futi>()}") {
+        TransfurVariant.Builder.of(FutiEntityType).apply {
         }.build()
     }
 }

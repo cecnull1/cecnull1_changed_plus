@@ -1,10 +1,8 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
 import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.getComponent
-import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.hasComponent
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
-import com.github.cecnull1.cecnull1_changed_plus_v2.Cecnull1_changed_plus
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
@@ -21,7 +19,8 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Co
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.wuDiTime
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.Flying
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.EntityExtendedComponent
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTransfurDataOrNull
@@ -76,6 +75,7 @@ import kotlin.math.sqrt
 object Event {
     fun onPlayerTick(event: CPlayerTickEvent) = event.process {
         val player = event.player
+        if (player.level.isClientSide) return@process
         if (player.getModData(MODID).getBoolean(Constant.NBTKeys.BODY_WARNING)) {
             player.ifPlayerNotTransfurred {
                 player.progressTransfur(1f, TransfurData(
@@ -85,7 +85,7 @@ object Event {
                 )
             }
         }
-        if (player.getComponent<Flying>(Cecnull1_changed_plus.entityComponentMap, Constant.NBTKeys.FLYING.toRL())?.boolean == true) {
+        if ((player as EntityExtendedComponent).components.getComponent<Flying>(Constant.NBTKeys.FLYING.toRL())?.boolean == true) {
             player.foodData.foodLevel++
             player.foodData.setSaturation(player.foodData.saturationLevel+1)
             if (!player.abilities.flying) {
@@ -100,7 +100,6 @@ object Event {
             when {
                 changedEntity is VariantTickPlusAble -> changedEntity.playerVariantTick(player, event.player.level())
             }
-
         }
         if (player.health.isNaN()) {
             player.health = 0.0f
@@ -202,16 +201,12 @@ object Event {
     }
 
     fun onLivingTick(event: CLivingTickEvent) {
+        if (event.entity.level.isClientSide) return
         (event.entity as? PureWhiteLatexWolf)?.let {
             entity ->
             when (entity.random.nextInt(20*60)) {
                 0 -> {
                     val newEntity = ModEntities.PURE_WHITE_LATEX_YUFENG.get().create(entity.level())?: return
-                    newEntity.setPos(entity.position())
-                    entity.level.addFreshEntity(newEntity)
-                }
-                199 -> {
-                    val newEntity = ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get().create(entity.level())?: return
                     newEntity.setPos(entity.position())
                     entity.level.addFreshEntity(newEntity)
                 }
@@ -246,10 +241,6 @@ object Event {
             playerModData.remove(Constant.NBTKeys.BODY_WARNING)
         }
         persistentData[MODID] = playerModData
-
-        if (event.newVariant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_AND_ARMOR_TRANSFUR_VARIANT) == true) {
-            player.shaWanYiDeAddArmor(player)
-        }
     }
 
     fun onHurt(event: LivingHurtEvent) {
@@ -454,6 +445,7 @@ object Event {
             }
         }
     }
+
     fun onPlayerRespawn(event: PlayerEvent.PlayerRespawnEvent) {
         val player = event.entity as? ServerPlayer ?: return
         if (player is IPlayerExtendedData) {
@@ -464,9 +456,6 @@ object Event {
             if (!player.level.gameRules.getBoolean(ModGameRule.KeepArmorHA)) {
                 player.haArmorItems = initHaArmorItems()
                 player.hasArmorHA = false
-            }
-            if (player.transfurData?.variant?.`is`(ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_AND_ARMOR_TRANSFUR_VARIANT) == true) {
-                player.shaWanYiDeAddArmor(player)
             }
             NetworkHandler.haStateSendToClient(event.entity)
         }
@@ -585,9 +574,8 @@ fun Player.moveItemToTarget(sourceEntity: Player) {
     for (i in 0 until sourceEntity.inventory.armor.size) {
         sourceEntity.inventory.armor[i] = ItemStack.EMPTY
     }
-
-    inventory.armor = inventory.armor
 }
+
 fun Player.forceInventory(f: (ItemStack) -> Unit) {
     for (itemStack in Iterables.concat(
         inventory.items,

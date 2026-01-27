@@ -1,7 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 
-import com.github.cecnull1.cecnull1_cforge.core.PipeCore.calc
-import com.github.cecnull1.cecnull1_cforge.core.ResourceLocation
+import com.github.cecnull1.cecnull1_cforge.core.data.ResourceLocation
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.mixin.EntityAccessor
 import com.github.cecnull1.cecnull1_changed_plus_v2.mixin.LivingEntityAccessor
@@ -20,6 +19,8 @@ import java.util.stream.Stream
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.reflect.KClass
+import kotlin.reflect.jvm.jvmName
 
 // 通用扩展函数
 fun <T : Any> Iterator<T?>.toImmutableSafeList(): List<T> {
@@ -127,3 +128,20 @@ fun Vec3.calcl(
 }
 
 fun String.toRL() = ResourceLocation(Constant.MODID, this)
+
+fun String.camelToSnake(): String {
+    return replace(Regex("([a-z0-9])([A-Z])"), "$1_$2")
+        .replace(Regex("([A-Z]+)([A-Z][a-z])"), "$1_$2")
+        .lowercase()
+}
+
+fun String.toRLString(): String {
+    return this.camelToSnake()
+        .replace(Regex("\\W+"), "_")
+        .trim('_')
+}
+
+fun KClass<*>.toRLString(): String =
+    this.simpleName?.toRLString() ?: this.jvmName.substringAfterLast(".").toRLString()
+
+inline fun <reified T> rlclass(): String = T::class.toRLString()

@@ -1,26 +1,29 @@
-@file:OptIn(ExperimentalSerializationApi::class)
+@file:OptIn(ExperimentalSerializationApi::class, ExperimentalRegistry::class)
 
-package com.github.cecnull1.cecnull1_changed_plus_v2.utils.component
+package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 
+import com.github.cecnull1.cecnull1_cforge.big_core.ExperimentalRegistry
+import com.github.cecnull1.cecnull1_cforge.big_core.Registry
+import com.github.cecnull1.cecnull1_cforge.big_core.RegistryCore.register
 import com.github.cecnull1.cecnull1_cforge.core.ComponentContainer
-import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.addComponent
 import com.github.cecnull1.cecnull1_cforge.core.IComponent
-import com.github.cecnull1.cecnull1_cforge.core.ResourceLocation
-import com.github.cecnull1.cecnull1_changed_plus_v2.cbor.format
+import com.github.cecnull1.cecnull1_cforge.core.data.ResourceLocation
+import com.github.cecnull1.cecnull1_changed_plus_v2.cbor.RLSer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.PolymorphicSerializer
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
-import kotlin.collections.iterator
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
+
+interface EntityExtendedComponent {
+    var components: ComponentContainer
+}
 
 typealias ComponentsSer = MutableMap<String, MutableMap<ResourceLocation, IComponentSer>>
 
@@ -28,7 +31,7 @@ object EntityExtendedComponentSer : KSerializer<ComponentsSer> {
 
     // 内层 map: ResourceLocation -> IComponentSer
     private val innerMapSerializer = MapSerializer(
-        keySerializer = ResourceLocation.serializer(),
+        keySerializer = RLSer,
         valueSerializer = PolymorphicSerializer(IComponentSer::class)
     )
 
@@ -68,7 +71,7 @@ fun ComponentContainer.toComponentsSer(): ComponentsSer {
             .mapValues { (_, comp) -> comp as IComponentSer }
 
         if (serializableInner.isNotEmpty()) {
-            val typeName = type.qualifiedName ?: error("Anonymous class cannot be serialized: $type")
+            val typeName = type.toString()
             result[typeName] = ConcurrentHashMap(serializableInner)
         }
     }
@@ -77,28 +80,23 @@ fun ComponentContainer.toComponentsSer(): ComponentsSer {
 }
 
 fun ComponentsSer.toComponentContainer(): ComponentContainer {
-    val result = ConcurrentHashMap<KClass<out IComponent>, ConcurrentMap<ResourceLocation, IComponent>>()
+    val result = ComponentContainer()
 
     // 遍历所有内层 map，忽略外层 typeName！
-    for (innerMap in this.values) {
-        for ((rl, component) in innerMap) {
-            @Suppress("UNCHECKED_CAST")
-            val kClass = component::class as KClass<out IComponent>
-
-            result.computeIfAbsent(kClass) { ConcurrentHashMap() }[rl] = component
+    for (innerMap in this) {
+        for ((rl, component) in innerMap.value) {
+            result.computeIfAbsent(TypeRegistry.registry[innerMap.key.toRL()]) { ConcurrentHashMap() }[rl] = component
         }
     }
 
     return result
 }
 
-@Serializable
-sealed interface IComponentSer : IComponent
-
-fun main() {
-    val e: ComponentContainer = ConcurrentHashMap()
-    e.addComponent(ResourceLocation.fromString("e:e"), Flying(true))
-    val r = format.encodeToByteArray(e.toComponentsSer())
-    println(r.toList())
-    println(format.decodeFromByteArray(EntityExtendedComponentSer, r))
+object TypeRegistry {
+    val registry: Registry<KType> = Registry()
+    inline fun <reified T> register() {
+        registry.register(typeOf<T>().toString().toRL(), typeOf<T>())
+    }
 }
+
+interface IComponentSer : IComponent

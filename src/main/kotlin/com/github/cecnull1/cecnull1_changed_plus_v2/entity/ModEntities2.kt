@@ -7,7 +7,7 @@ import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.orElseProcess
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.pipeIf
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.pipeUnless
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
-import com.github.cecnull1.cecnull1_cforge.core.ResourceLocation
+import com.github.cecnull1.cecnull1_cforge.core.data.ResourceLocation
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.cbor.format
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
@@ -28,7 +28,6 @@ import net.ltxprogrammer.changed.block.entity.StasisChamberBlockEntity
 import net.ltxprogrammer.changed.entity.PowderSnowWalkable
 import net.ltxprogrammer.changed.entity.SeatEntity
 import net.ltxprogrammer.changed.entity.beast.AquaticEntity
-import net.ltxprogrammer.changed.entity.beast.LatexHuman
 import net.ltxprogrammer.changed.entity.beast.LatexOrca
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedAttributes
@@ -89,6 +88,9 @@ class BBlockMoveEntity(entityType: EntityType<out SeatEntity>, level: Level) : S
             this.entityData[XYZA] = value
         }
 
+    override fun shouldRiderSit(): Boolean {
+        return vehicle != null
+    }
 
     override fun tick() {
         super.tick()
@@ -171,14 +173,15 @@ class BBlockMoveEntity(entityType: EntityType<out SeatEntity>, level: Level) : S
 
     override fun onBelowWorld() {
         setPos(x, y+320, z)
-        level.getBlockEntity(attachedBlockPos) as? BBlockEntity then {
+        level.getBlockEntity(attachedBlockPos) as? BBlockEntity then BBlockEntity@ {
             seatedEntity then {
                 this.transfur(
                     TransfurData(
-                        variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_AND_ARMOR_TRANSFUR_VARIANT.get(),
+                        variant = ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get(),
                         keepConscious = true
                     )
                 )
+                this.shaWanYiDeAddArmor(this as? Player ?: return@then)
             }
         }
     }
@@ -345,7 +348,7 @@ open class BHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entit
                     transfurVariant = mountType.entity.entityVariant ?: transfurVariant
                     id = mountType.entity.uuid
                 }
-                return transfurVariant != null
+                transfurVariant != null
             } // 仅当是玩家且玩家已被兽化时能被骑乘
             else -> true
         }

@@ -68,7 +68,7 @@ private val EVENT_HANDLERS: Map<KClass<*>, (Any) -> Unit> = buildMap {
 /**
  * CForge 事件监听器：接收 ByForgeEvent，分发内部的 Forge 事件
  */
-fun onForgeEvent(cforgeEvent: ByForgeEvent<*>) {
+fun onForgeEvent(cforgeEvent: ByForgeEvent) {
     val forgeEvent = cforgeEvent.event
     val handler = EVENT_HANDLERS[forgeEvent::class]
     handler?.invoke(forgeEvent)

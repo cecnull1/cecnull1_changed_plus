@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 buildscript {
     ext.kotlin_version = '2.2.21'
     repositories {
@@ -228,6 +230,14 @@ tasks.named('jar', Jar).configure {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions {
+        freeCompilerArgs += ['-XXLanguage:+UnnamedLocalVariables']
+        // 其他选项如 jvmTarget 也可以保留
+        jvmTarget = '21' // 或你使用的 Java 版本
+    }
 }
 
 kotlin {

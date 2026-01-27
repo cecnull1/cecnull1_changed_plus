@@ -107,12 +107,6 @@ object ModEntities {
             .build(MISC_ID)
     }
 
-    val PURE_WHITE_LATEX_YUFENG_AND_ARMOR: RegistryObject<EntityType<PureWhiteLatexYufengAndArmor>> = REGISTER.register(PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID) {
-        EntityType.Builder.of(::PureWhiteLatexYufengAndArmor, ChangedMobCategories.CHANGED)
-            .sized(0.7f, 1.93f)
-            .build(PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID)
-    }
-
     val NOT_CAN_DISMOUNT_BOAT : RegistryObject<EntityType<NotCanDismountBoat>> = REGISTER.register(NOT_CAN_DISMOUNT_BOAT_ID) {
         EntityType.Builder.of(::NotCanDismountBoat, MobCategory.MISC)
             .sized(1.375F, 0.5625F)
@@ -159,6 +153,7 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
         attributes[ForgeMod.SWIM_SPEED.get()] = 2.0
         attributes[Attributes.ATTACK_DAMAGE] = 40.0
         attributes[ChangedAttributes.TRANSFUR_DAMAGE.get()] = 40.0
+        attributes[ForgeMod.STEP_HEIGHT_ADDITION.get()] = computeStepHeightOffset(320.0 + 64.0)
     }
 
     override fun registerGoals() {
@@ -277,10 +272,6 @@ open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : 
     }
 }
 
-open class PureWhiteLatexYufengAndArmor(type: EntityType<out AEntity>, level: Level?) : PureWhiteLatexYufeng(type,
-    level
-)
-
 open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(type, level), IOnMount {
     companion object {
         const val YU_ZHI = 10f
@@ -308,7 +299,7 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
     override fun onMount(mountType: MountType): Boolean {
         return when (mountType) {
             is MountType.Dismount -> {
-                return !mountType.entity.isAlive && !this.isAlive
+                !mountType.entity.isAlive && !this.isAlive
             }
             is MountType.PlayerSelfDismount -> {
                 if (mountType.player.isShiftKeyDown) {
@@ -401,9 +392,6 @@ fun ChangedEntity.aEntityTick() {
 
     if (entity.meiyun()) {
         entity.autoMove(12)
-    }
-    if (entity is Player) {
-        entity.hasArmorHA = true
     }
     applyTerminalVelocity(entity)
 }

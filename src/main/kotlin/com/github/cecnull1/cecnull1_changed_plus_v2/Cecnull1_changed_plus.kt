@@ -1,28 +1,27 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2
 
-import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus
-import com.github.cecnull1.cecnull1_cforge.core.CForgeEventBus.post
-import com.github.cecnull1.cecnull1_cforge.core.ComponentMap
+import com.github.cecnull1.cecnull1_cforge.core.CForgeEventCore.post
+import com.github.cecnull1.cecnull1_cforge.core.CForgeEventCore.registerFastEvents
+import com.github.cecnull1.cecnull1_cforge.core.EventBus
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.calc
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.LicensedCharacters.FREZO_MS
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.LicensedCharacters.SPECIAL
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.LicensedCharacters.TIAN_LING
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_HORSE
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.MISC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NONE_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NOT_CAN_DISMOUNT_BOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_AND_ARMOR
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.B_HORSE
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MEI_XI_YUAN
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MOVE_ENTITY
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FutiEntityType
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.SWEMEntities.O_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
@@ -36,7 +35,11 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.model.ZombieModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceOperatorEntityGetTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceTrickTransfurLivingEntity
-import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.*
+import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.GenericRenderer
+import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.NoneEntityRenderer
+import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.SpecialRenderer
+import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.newrl
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TypeRegistry.register
 import net.ltxprogrammer.changed.client.RegisterComplexRenderersEvent
 import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
 import net.ltxprogrammer.changed.client.renderer.LatexOrcaRenderer
@@ -68,33 +71,18 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 import vazkii.psi.api.PsiAPI
 
+val bus = EventBus()
+
 @Mod(MODID)
 class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
     init {
-        val modEventBus = context.modEventBus
-        Animations.REGISTRY.register(modEventBus)
-        ModEntities.REGISTER.register(modEventBus)
-        ModEntities2.REGISTER.register(modEventBus)
-        LicensedCharacters.REGISTER.register(modEventBus)
-        ModTransfurVariant.REGISTRY.register(modEventBus)
-        ModBlocks.REGISTRY_BLOCKENTITY.register(modEventBus)
-        ModBlocks.REGISTRY_BLOCK.register(modEventBus)
-        ModItems.REGISTER.register(modEventBus)
-        ModGameRule.register()
-
-        if (ModList.get().isLoaded("psi")) {
-            PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
-            PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
-        }
-        if (ModList.get().isLoaded("swem")) {
-            SWEMEntities.REGISTER.register(modEventBus)
-        }
-
-        CForgeEventBus.registerEvents<TakeOffEvent>(::onTakeOff)
-        CForgeEventBus.registerEvents<ByForgeEvent<*>>(::onForgeEvent)
-        CForgeEventBus.registerFastEvents<CPlayerTickEvent>(::onPlayerTick)
-        CForgeEventBus.registerFastEvents<CLivingTickEvent>(::onLivingTick)
-        CForgeEventBus.registerFastEvents<NullSafeAttributeCreationEvent> { event ->
+        register<Flying>()
+        LicensedCharacterInit.registerEvent()
+        bus.registerFastEvents<TakeOffEvent>(::onTakeOff)
+        bus.registerFastEvents<ByForgeEvent>(::onForgeEvent)
+        bus.registerFastEvents<CPlayerTickEvent>(::onPlayerTick)
+        bus.registerFastEvents<CLivingTickEvent>(::onLivingTick)
+        bus.registerFastEvents<NullSafeAttributeCreationEvent> { event ->
             event.put(
                 A_ENTITY.get(),
                 ChangedEntity.createLatexAttributes().build()
@@ -138,10 +126,6 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
                     .build()
             )
             event.put(
-                PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-            event.put(
                 MEI_XI_YUAN.get(),
                 ChangedEntity.createLatexAttributes().build()
             )
@@ -150,15 +134,7 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
                 Horse.createBaseHorseAttributes().build()
             )
             event.put(
-                FREZO_MS.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-            event.put(
-                TIAN_LING.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-            event.put(
-                SPECIAL.get(),
+                FutiEntityType.get(),
                 ChangedEntity.createLatexAttributes().build()
             )
             if (ModList.get().isLoaded("swem")) {
@@ -168,10 +144,26 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
                 )
             }
         }
-    }
 
-    companion object {
-        val entityComponentMap = ComponentMap()
+        val modEventBus = context.modEventBus
+        LicensedCharacterInit.registerEntities(modEventBus)
+        Animations.REGISTRY.register(modEventBus)
+        ModEntities.REGISTER.register(modEventBus)
+        ModEntities2.REGISTER.register(modEventBus)
+        ModEntities3.REGISTRY.register(modEventBus)
+        ModTransfurVariant.REGISTRY.register(modEventBus)
+        ModBlocks.REGISTRY_BLOCKENTITY.register(modEventBus)
+        ModBlocks.REGISTRY_BLOCK.register(modEventBus)
+        ModItems.REGISTER.register(modEventBus)
+        ModGameRule.register()
+
+        if (ModList.get().isLoaded("psi")) {
+            PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
+            PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
+        }
+        if (ModList.get().isLoaded("swem")) {
+            SWEMEntities.REGISTER.register(modEventBus)
+        }
     }
 }
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD)
@@ -185,7 +177,7 @@ object Events {
     @JvmStatic
     @SubscribeEvent
     fun registerEntityAttributes(event: EntityAttributeCreationEvent) {
-        NullSafeAttributeCreationEvent(event).post()
+        NullSafeAttributeCreationEvent(event).post(bus)
     }
 }
 
@@ -234,19 +226,21 @@ object ClientEvents {
     @JvmStatic
     @SubscribeEvent
     fun registerEntityRenderers(event: RegisterRenderers) {
+        RegisterRenderers(event).post(bus)
         event.apply {
             registerEntityRenderer(A_ENTITY.get(), ::DarkLatexYufengRenderer)
             registerEntityRenderer(A_HORSE.get(), ::HorseRenderer)
-            registerEntityRenderer(SOUL.get(), ::SoulRenderer)
+            registerEntityRenderer(SOUL.get(), ::NoneEntityRenderer)
             registerEntityRenderer(PURE_WHITE_LATEX_YUFENG.get(), ::DarkLatexYufengRenderer)
             registerEntityRenderer(NONE_ENTITY.get(), ::NoneEntityRenderer)
             registerEntityRenderer(MISC.get(), ::NoneEntityRenderer)
-            registerEntityRenderer(PURE_WHITE_LATEX_YUFENG_AND_ARMOR.get(), ::DarkLatexYufengRenderer)
             registerEntityRenderer(MOVE_ENTITY.get(), ::SeatEntityRenderer)
+
             registerEntityRenderer(MEI_XI_YUAN.get(), ::LatexOrcaRenderer)
             registerEntityRenderer(B_HORSE.get(), ::HorseRenderer)
-            registerEntityRenderer(FREZO_MS.get(), ::FrezoMSRenderer)
-            registerEntityRenderer(TIAN_LING.get(), ::TianLingRenderer)
+
+            registerEntityRenderer(FutiEntityType.get(), ::GenericRenderer)
+
             registerEntityRenderer(SPECIAL.get(), ::SpecialRenderer)
 
             registerEntityRenderer(

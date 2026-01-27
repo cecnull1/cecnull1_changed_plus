@@ -2,10 +2,9 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.renderer
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.FrezoMS
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.Soul
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.Lnvincible
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.Special
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.TianLing
-import com.github.cecnull1.cecnull1_changed_plus_v2.model.SoulModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.UserHumanModel
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ltxprogrammer.changed.client.renderer.AdvancedHumanoidRenderer
@@ -14,7 +13,6 @@ import net.ltxprogrammer.changed.client.renderer.layers.GasMaskLayer
 import net.ltxprogrammer.changed.client.renderer.layers.LatexParticlesLayer
 import net.ltxprogrammer.changed.client.renderer.layers.TransfurCapeLayer
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel
-import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorHumanModel
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModelSet
 import net.ltxprogrammer.changed.client.renderer.model.armor.LatexHumanoidArmorModel
 import net.ltxprogrammer.changed.entity.BasicPlayerInfo
@@ -25,19 +23,19 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.Entity
 
-class SoulRenderer(context: EntityRendererProvider.Context): AdvancedHumanoidRenderer<Soul, SoulModel, ArmorHumanModel<Soul>>(
-    context,
-    SoulModel(context.bakeLayer(SoulModel.LAYER_LOCATION)),
-    ArmorHumanModel.MODEL_SET, 0.5f
-) {
-    override fun getTextureLocation(entity: Soul): ResourceLocation {
-        return TEXTURE
-    }
-
-    companion object {
-        private val TEXTURE = newrl(MODID, "textures/entities/soul.png")
-    }
-}
+//class SoulRenderer(context: EntityRendererProvider.Context): AdvancedHumanoidRenderer<Soul, SoulModel, ArmorHumanModel<Soul>>(
+//    context,
+//    SoulModel(context.bakeLayer(SoulModel.LAYER_LOCATION)),
+//    ArmorHumanModel.MODEL_SET, 0.5f
+//) {
+//    override fun getTextureLocation(entity: Soul): ResourceLocation {
+//        return TEXTURE
+//    }
+//
+//    companion object {
+//        private val TEXTURE = newrl(MODID, "textures/entities/soul.png")
+//    }
+//}
 
 class NoneEntityRenderer<T: Entity>(context: EntityRendererProvider.Context)
     : EntityRenderer<T>(context) {
@@ -63,14 +61,13 @@ class NoneEntityRenderer<T: Entity>(context: EntityRendererProvider.Context)
 abstract class UserEntityRenderer<
         T : ChangedEntity,
         R : AdvancedHumanoidModel<T>,
-        S : LatexHumanoidArmorModel<T, S>
         >(
     context: EntityRendererProvider.Context,
     main: R,
-    modelSet: ArmorModelSet<in T, *>,
+    modelSet: ArmorModelSet<in T, out LatexHumanoidArmorModel<in T, *>>,
     open val location: ResourceLocation,
     val f: Float = 0.9375f,
-) : AdvancedHumanoidRenderer<T, R, S>(
+) : AdvancedHumanoidRenderer<T, R>(
     context,
     main,
     modelSet,
@@ -103,7 +100,7 @@ abstract class UserSAHumanEntityRenderer<T : ChangedEntity>(
     context: EntityRendererProvider.Context,
     location: ResourceLocation,
     isAlex: Boolean
-) : UserEntityRenderer<T, UserHumanModel<T>, UserHumanModel.ArmorModel<T>>(
+) : UserEntityRenderer<T, UserHumanModel<T>>(
     context,
     UserHumanModel<T>(context.bakeLayer(
         if (isAlex) UserHumanModel.LAYER_LOCATION_ALEX else UserHumanModel.LAYER_LOCATION_STEVE
@@ -121,6 +118,18 @@ class TianLingRenderer(context: EntityRendererProvider.Context): UserSAHumanEnti
     context,
     location = newrl(MODID, "textures/entities/tian_ling.png"),
     isAlex = true
+)
+
+class LnvincibleRenderer(context: EntityRendererProvider.Context): UserSAHumanEntityRenderer<Lnvincible>(
+    context,
+    location = newrl(MODID, "textures/entities/lnvincible.png"),
+    isAlex = true
+)
+
+class GenericRenderer<T: ChangedEntity>(context: EntityRendererProvider.Context): UserSAHumanEntityRenderer<T>(
+    context,
+    location = newrl(MODID, "textures/entities/frezo_ms.png"),
+    isAlex = false
 )
 
 class SpecialRenderer(

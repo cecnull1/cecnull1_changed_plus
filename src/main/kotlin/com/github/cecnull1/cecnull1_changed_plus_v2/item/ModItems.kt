@@ -101,7 +101,7 @@ class NotCanTakeOffWetsuit : WetsuitItem(), ICanTakeOff {
     override fun canTakeOff(player: Player, slot: Slot, item: ItemStack): Boolean = false
 }
 
-class NotCanTakeOffLabCoat(): LabCoatItem(), ICanTakeOff {
+class NotCanTakeOffLabCoat : LabCoatItem(), ICanTakeOff {
     override fun allowedInSlot(itemStack: ItemStack?, wearer: LivingEntity?, slot: AccessorySlotType?): Boolean {
         return true
     }

@@ -7,7 +7,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IPlayerExtendedData
 import net.minecraft.client.Minecraft
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.FriendlyByteBuf
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
@@ -56,14 +55,14 @@ object NetworkHandler {
     private var messageId = 0
 
     fun register() {
-         CHANNEL.registerMessage(
+         val _ = CHANNEL.registerMessage(
             messageId++,
              SyncHaStateMessage::class.java,
             SyncHaStateMessage::encode,
             ::SyncHaStateMessage,
             SyncHaStateMessage::handle
         )
-        CHANNEL.registerMessage(
+        val _ = CHANNEL.registerMessage(
             messageId++,
             SyncComponentsMessage::class.java,
             SyncComponentsMessage::encode,
@@ -123,7 +122,7 @@ class SyncComponentsMessage(
 
     fun handle(context: Supplier<NetworkEvent.Context>) {
         context.get().enqueueWork {
-            val player = Minecraft.getInstance().level?.getEntity(entityId) as? Player
+            val _ = Minecraft.getInstance().level?.getEntity(entityId) as? Player
 //            if (player != null && data != null) {
 //                deserializerEntityComponent(player, Cecnull1_changed_plus.entityComponentMap, data)
 //            }

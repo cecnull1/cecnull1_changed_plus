@@ -1,31 +1,37 @@
 @file:OptIn(ExperimentalSerializationApi::class)
 package com.github.cecnull1.cecnull1_changed_plus_v2.cbor
 
-import com.github.cecnull1.cecnull1_cforge.core.ResourceLocation
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.ComponentsSer
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.EntityExtendedComponentSer
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.Flying
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.component.IComponentSer
-import kotlinx.serialization.*
+import com.github.cecnull1.cecnull1_cforge.core.data.ResourceLocation
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.EntityExtendedComponentSer
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IComponentSer
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.cbor.Cbor
-import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.listSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 
 val mcModule = SerializersModule {
-    contextual(ResourceLocation.serializer())   // 把 RL 的序列化器绑定到上下文
+    contextual(RLSer)   // 把 RL 的序列化器绑定到上下文
     contextual(UUIDSerializer)
     contextual(EntityExtendedComponentSer)
     polymorphic(IComponentSer::class) {
         subclass(Flying::class, Flying.serializer())
     }
+}
+
+val format = Cbor {
+    serializersModule = mcModule
 }
 
 object UUIDSerializer: KSerializer<UUID> {
@@ -45,6 +51,16 @@ object UUIDSerializer: KSerializer<UUID> {
     }
 }
 
-val format = Cbor {
-    serializersModule = mcModule
+object RLSer: KSerializer<ResourceLocation> {
+    override val descriptor = PrimitiveSerialDescriptor("ResourceLocation", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: ResourceLocation) {
+        // 序列化为 "modid:path"
+        encoder.encodeString("${value.modId}:${value.path}")
+    }
+
+    override fun deserialize(decoder: Decoder): ResourceLocation {
+        val str = decoder.decodeString()
+        return ResourceLocation.fromString(str)
+    }
 }

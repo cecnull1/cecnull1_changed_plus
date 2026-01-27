@@ -45,6 +45,7 @@ public final class AnimatorUtils {
                         dummy,
                         dummy
                 ))
+//                .addPreset(AnimatorPresets.humanLike(head, torso, leftArm, rightArm, leftLeg, rightLeg))
                 ;
     }
 }

@@ -81,7 +81,7 @@ data class MPlayerExtendedData(
                 if (this is IPlayerExtendedData) {
                     return this.mPlayerExtendedData.haState.haArmorItems
                 }
-                return mutableMapOf<EquipmentSlot, ItemStack>(
+                return mutableMapOf(
                     EquipmentSlot.HEAD to ItemStack.EMPTY,
                     EquipmentSlot.CHEST to ItemStack.EMPTY,
                     EquipmentSlot.LEGS to ItemStack.EMPTY,

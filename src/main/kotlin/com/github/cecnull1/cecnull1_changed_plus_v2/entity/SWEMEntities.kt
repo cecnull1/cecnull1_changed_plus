@@ -7,13 +7,13 @@ import com.alaharranhonor.swem.entities.horse.behaviors.impl.FlightBehavior
 import com.alaharranhonor.swem.items.TackType
 import com.alaharranhonor.swem.items.TackType.*
 import com.alaharranhonor.swem.registry.EntitySetup
+import com.github.cecnull1.cecnull1_cforge.core.data.KVec3
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IOnMount
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MountType
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.level
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
-import com.github.cecnull1.cecnull1lib.utils.vector.KVec3
 import com.github.cecnull1.cecnull1lib.utils.vector.toKVec3
 import com.github.cecnull1.cecnull1lib.utils.vector.toVec3
 import net.minecraft.nbt.CompoundTag
@@ -165,7 +165,7 @@ open class O(type: EntityType<out O>,
 
     override fun getRiddenInput(player: Player, vec3: Vec3): Vec3 {
         return (
-                super.getRiddenInput(player, vec3).toKVec3() + KVec3(0.0, 0.0, 1.0-player.zza)
+                super.getRiddenInput(player, vec3).toKVec3() + KVec3(0.0, 0.0, 1.0 - player.zza)
                 ).toVec3()
     }
 
@@ -210,7 +210,7 @@ class OF(
         rotation = rotationA
     }
 
-    override fun <T : Any?> getData(key: EntityDataAccessor<T?>?): T? {
+    override fun <T> getData(key: EntityDataAccessor<T?>?): T? {
         return if (key != IS_FLYING) super.getData(key) else {
             (super.getData(key as? EntityDataAccessor<Boolean>) || x) as? T
         }
