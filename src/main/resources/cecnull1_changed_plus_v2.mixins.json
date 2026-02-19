@@ -6,7 +6,6 @@
   "refmap": "cecnull1_changed_plus_v2.refmap.json",
   "mixins": [
     "LivingEntityMixin",
-    "ClientMixin",
     "PlayerMixin",
     "InventoryMixin",
     "MixinServerGamePacketListenerImpl",
@@ -21,7 +20,10 @@
     "RegistryObjectAccessor",
     "EntityAccessor",
     "ModelPartAccessor",
-    "TransfurVariantInstanceMixin"
+    "TransfurVariantInstanceMixin",
+    "AccessChestAbilityInstanceMixin",
+    "ServerPlayerMixin",
+    "ProcessTransfurMixin"
   ],
   "client": [
   ],

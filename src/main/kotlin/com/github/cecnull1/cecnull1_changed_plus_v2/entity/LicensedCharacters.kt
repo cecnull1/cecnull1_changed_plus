@@ -1,7 +1,9 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 
+import com.github.cecnull1.cecnull1_cforge.big_core.ExperimentalRegistry
+import com.github.cecnull1.cecnull1_cforge.big_core.Registry
+import com.github.cecnull1.cecnull1_cforge.big_core.RegistryCore.register
 import com.github.cecnull1.cecnull1_cforge.core.CForgeEventCore.registerFastEvents
-import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.ano.ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.ano.Licensed
 import com.github.cecnull1.cecnull1_changed_plus_v2.bus
@@ -13,6 +15,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.FrezoMSRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.LnvincibleRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.TianLingRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.rlclass
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toRLString
 import net.ltxprogrammer.changed.ability.IAbstractChangedEntity
 import net.ltxprogrammer.changed.entity.AttributePresets
 import net.ltxprogrammer.changed.entity.ChangedEntity
@@ -22,7 +25,6 @@ import net.ltxprogrammer.changed.entity.beast.LatexHuman
 import net.ltxprogrammer.changed.entity.latex.LatexType
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedLatexTypes
-import net.ltxprogrammer.changed.init.ChangedMobCategories
 import net.ltxprogrammer.changed.init.ChangedRegistry
 import net.ltxprogrammer.changed.util.Color3
 import net.minecraft.nbt.CompoundTag
@@ -32,6 +34,7 @@ import net.minecraft.network.syncher.SynchedEntityData
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.MobCategory
 import net.minecraft.world.entity.ai.attributes.AttributeMap
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.storage.loot.BuiltInLootTables
@@ -64,6 +67,7 @@ object LicensedCharacterInit {
     }
 
     val STATIC_ATTRIBUTE_REGISTRY = mutableListOf<RegistryObject<out EntityType<out LivingEntity>>>()
+    val VARIANT_REGISTRY = Registry<TransfurVariant<*>>() // 不使用RegistryObject即可使用的自定义Registry。
 }
 
 object LicensedCharacters {
@@ -90,7 +94,7 @@ private inline fun <reified T: ChangedEntity> registerEntity(
     noinline entityClassRef: (EntityType<out T>, Level) -> T
 ): RegistryObject<EntityType<T>> {
     return LicensedCharacters.REGISTER.register(rlclass<T>()) {
-        EntityType.Builder.of(entityClassRef, ChangedMobCategories.CHANGED).apply {
+        EntityType.Builder.of(entityClassRef, MobCategory.MONSTER).apply {
             clientTrackingRange(10)
             sized(0.6F, 1.8F)
         }.build(rlclass<T>())
@@ -99,9 +103,15 @@ private inline fun <reified T: ChangedEntity> registerEntity(
     }
 }
 
+@OptIn(ExperimentalRegistry::class)
 private inline fun <reified T: ChangedEntity> RegistryObject<EntityType<T>>.registerTransfur(): RegistryObject<TransfurVariant<T>> {
     return LicensedCharacterTransfurs.REGISTER.register("form_${rlclass<T>()}") {
-        TransfurVariant.Builder.of(fun() = this.get()).build()
+        val build = TransfurVariant.Builder.of(fun() = this.get()).build()
+        LicensedCharacterInit.VARIANT_REGISTRY.register(
+            com.github.cecnull1.cecnull1_cforge.core.data.ResourceLocation(MODID, rlclass<T>()),
+            build
+        )
+        build
     }
 }
 
@@ -114,9 +124,15 @@ object UserLatex : LatexType() {
 
 abstract class UserEntity(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level) {
 
-    override fun getTransfurMode(): TransfurMode = TransfurMode.ABSORPTION
+    override fun getTransfurMode(): TransfurMode = TransfurMode.REPLICATION
     override fun getLatexType(): LatexType {
         return USER_LATEX.get()
+    }
+
+    override fun getSelfVariant(): TransfurVariant<*>? {
+        return LicensedCharacterInit.VARIANT_REGISTRY[
+            com.github.cecnull1.cecnull1_cforge.core.data.ResourceLocation(MODID, this::class.toRLString())
+        ] ?: super.selfVariant
     }
 
     override fun getTransfurColor(cause: TransfurCause?): Color3 {
@@ -146,7 +162,10 @@ open class TianLing(type: EntityType<out ChangedEntity>, level: Level): UserEnti
 
 @Licensed(
     name = "Lnvincible",
-    author = "unknown",
+    author = """
+        unknown.
+        by {"SKIN":{"url":"https://textures.minecraft.net/texture/743b1bb1fb7fe7c1e488bca733994c7c4c28c2d6cc4b3734c406223fe4e7c1f1","metadata":{"model":"slim"}}}
+    """,
     id =    ID(0x743b1bb1fb7fe7c1uL),
     idEx =  ID(0xe488bca733994c7cuL),
     idEx2 = ID(0x4c28c2d6cc4b3734uL),
@@ -218,14 +237,8 @@ open class Special(type: EntityType<out Special>, level: Level) : LatexHuman(typ
         entityData.define(SRL, "")
     }
 
-    override fun onReplicateOther(other: IAbstractChangedEntity, variant: TransfurVariant<*>) {
-        super.onReplicateOther(other, variant)
-        //if (this.getUUID() != this.getRepresentUUID()) return;
-        if (variant.`is`(ModTransfurVariant.SPECIAL_TRANSFUR_VARIANT)) {
-            (other.changedEntity as? LatexHuman) then {
-                setRepresentPlayer(this.representUUID)
-            }
-        }
+    override fun onReplicateOther(other: IAbstractChangedEntity) {
+        super.onReplicateOther(other)
     }
 
     companion object {

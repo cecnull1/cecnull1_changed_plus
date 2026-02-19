@@ -5,7 +5,9 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL_ID
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FlyingPureWhiteLatexYufengType
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FutiEntityType
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.LatexPinkHumanType
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.rlclass
 import net.ltxprogrammer.changed.entity.MiningStrength
 import net.ltxprogrammer.changed.entity.TransfurMode
@@ -74,6 +76,24 @@ object ModTransfurVariant {
 
     val FUTI_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Futi>> = REGISTRY.register("form_${rlclass<Futi>()}") {
         TransfurVariant.Builder.of(FutiEntityType).apply {
+        }.build()
+    }
+
+    val F_PURE_WHITE_LATEX_YUFENG: RegistryObject<TransfurVariant<FlyingPureWhiteLatexYufeng>> = REGISTRY.register("form_${rlclass<FlyingPureWhiteLatexYufeng>()}") {
+        TransfurVariant.Builder.of(FlyingPureWhiteLatexYufengType).apply {
+            visionType(VisionType.NIGHT_VISION)
+            breatheMode(TransfurVariant.BreatheMode.ANY)
+            glide()
+            miningStrength(MiningStrength.STRONG)
+        }.build()
+    }
+
+    val LATEX_PINK_HUMAN_VARIANT: RegistryObject<TransfurVariant<LatexPinkHuman>> = REGISTRY.register("form_${rlclass<LatexPinkHuman>()}") {
+        TransfurVariant.Builder.of(LatexPinkHumanType).apply {
+            visionType(VisionType.NIGHT_VISION)
+            breatheMode(TransfurVariant.BreatheMode.ANY)
+            glide()
+            miningStrength(MiningStrength.STRONG)
         }.build()
     }
 }

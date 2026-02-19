@@ -1,10 +1,12 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
+import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.addComponent
 import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.getComponent
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.AutoMove
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
@@ -21,12 +23,14 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Co
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.wuDiTime
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.EntityExtendedComponent
 import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.WFXCOwner
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTransfurDataOrNull
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.transfurData
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
+import com.github.cecnull1.cecnull1lib.utils.vector.toKVec3
 import com.google.common.collect.Iterables
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.entity.SeatEntity
@@ -40,6 +44,7 @@ import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.client.Minecraft
 import net.minecraft.commands.arguments.EntityAnchorArgument.Anchor
 import net.minecraft.core.Holder
+import net.minecraft.core.Registry
 import net.minecraft.network.protocol.game.*
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -59,6 +64,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraftforge.event.TickEvent
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.LivingAttackEvent
+import net.minecraftforge.event.entity.living.LivingDeathEvent
 import net.minecraftforge.event.entity.living.LivingFallEvent
 import net.minecraftforge.event.entity.living.LivingHurtEvent
 import net.minecraftforge.event.entity.living.LivingKnockBackEvent
@@ -181,7 +187,7 @@ object Event {
             player.ifPlayerNotTransfurred {
                 player.transfur(
                     TransfurData(
-                        ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get(),
+                        ModTransfurVariant.LATEX_PINK_HUMAN_VARIANT.get(),
                         keepConscious = true,
                         context = TransfurCause.WHITE_LATEX.toTransfurContext()
                     )
@@ -200,6 +206,22 @@ object Event {
         sync()
     }
 
+    @JvmStatic
+    @SubscribeEvent
+    fun onDead(event: LivingDeathEvent) {
+        event.entity as? ServerPlayer then {
+            val pos = (this.respawnPosition ?: this.level.sharedSpawnPos).toKVec3()
+            (vehicle as? LivingEntity)?.let {
+                Thread.startVirtualThread {
+                    level.getPlayerByUUID((it as EntityExtendedComponent).components.getComponent<WFXCOwner>("WFXCOwner".toRL())?.owner?: return@startVirtualThread)?: return@startVirtualThread
+                    it.changeDimension(server.getLevel(this.respawnDimension))
+                    it.teleportTo(pos.x, pos.y, pos.z)
+                    it.health = Float.POSITIVE_INFINITY
+                }
+            }
+        }
+    }
+
     fun onLivingTick(event: CLivingTickEvent) {
         if (event.entity.level.isClientSide) return
         (event.entity as? PureWhiteLatexWolf)?.let {
@@ -213,6 +235,28 @@ object Event {
                 else -> {}
             }
         }
+        (event.entity as EntityExtendedComponent).components.apply {
+            getComponent<WFXCOwner>("WFXCOwner".toRL()) then {
+                event.entity.level.getPlayerByUUID(this.owner) as? ServerPlayer then {
+                    if (this.isAlive) {
+                        startRiding(event.entity)
+                    }
+                }
+            }
+            getComponent<AutoMove>("AutoMove".toRL()) then {
+                if (this.isEnabled && event.phase == TickEvent.Phase.START) {
+                    event.entity.autoMove(this.speed)
+                }
+            }
+        }
+    }
+
+    fun onTravelEvent(event: LivingTravelEvent) {
+//        (event.entity as EntityExtendedComponent).components.getComponent<AutoMove>("AutoMove".toRL()) then {
+//            if (this.isEnabled) {
+//                event.entity.autoMove(this.speed)
+//            }
+//        }
     }
 
     fun onMount(event: EntityMountEvent) {
@@ -220,7 +264,14 @@ object Event {
         val entityBeingMounted: Entity = event.entityBeingMounted ?: return
         if (entityMounting.isAlive && entityBeingMounted.isAlive && event.isDismounting) {
             when {
-                entityBeingMounted.persistentData.getBoolean(WFXC) -> event.isCanceled = true
+                entityBeingMounted.persistentData.getBoolean(WFXC) -> {
+                    Thread.startVirtualThread {
+                        (entityBeingMounted as EntityExtendedComponent).components.addComponent("WFXCOwner".toRL(), WFXCOwner(
+                            entityMounting.uuid
+                        ))
+                    }
+                    event.isCanceled = true
+                }
                 entityMounting.getModData(MODID).getBoolean(Constant.NBTKeys.NO_DISMOUNTING) -> event.isCanceled = true
             }
         }
@@ -284,6 +335,10 @@ object Event {
                 event.isCanceled = true
             }
 
+            // 禁止被攻击
+            if (it.changedEntity is LatexPinkHuman) {
+                event.isCanceled = true
+            }
         }
         (attacker as? Player)?.ifPlayerTransfurred {
             // 调用灵魂附身

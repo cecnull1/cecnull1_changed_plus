@@ -31,7 +31,6 @@ import net.ltxprogrammer.changed.entity.beast.AquaticEntity
 import net.ltxprogrammer.changed.entity.beast.LatexOrca
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedAttributes
-import net.ltxprogrammer.changed.init.ChangedMobCategories
 import net.ltxprogrammer.changed.init.ChangedRegistry
 import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
@@ -65,7 +64,7 @@ object ModEntities2 {
         EntityType.Builder.of(::BBlockMoveEntity, MobCategory.MISC).sized(0f, 0.0f).build("move_entity")
     }
     val MEI_XI_YUAN: RegistryObject<EntityType<MeiXiYuan>> = REGISTER.register("mei_xi_yuan") {
-        EntityType.Builder.of(::MeiXiYuan, ChangedMobCategories.CHANGED).sized(.7f, 1.73f).build("mei_xi_yuan")
+        EntityType.Builder.of(::MeiXiYuan, MobCategory.MONSTER).sized(.7f, 1.73f).build("mei_xi_yuan")
     }
     val B_HORSE: RegistryObject<EntityType<BHorse>> = REGISTER.register("b_horse") {
         EntityType.Builder.of(::BHorse, MobCategory.AMBIENT).sized(
@@ -241,7 +240,7 @@ fun SeatEntity.toBBlockMoveEntity(): BBlockMoveEntity? {
 }
 
 open class MeiXiYuan(entityType: EntityType<out LatexOrca>, level: Level) : LatexOrca(entityType, level),
-    PowderSnowWalkable, AquaticEntity {
+    PowderSnowWalkable, AquaticEntity, ISwimming {
     override fun setAttributes(attributes: AttributeMap) = super.setAttributes(attributes) mutate {
         attributes[Attributes.MAX_HEALTH] += 10
         attributes[Attributes.ARMOR] += 10
@@ -285,7 +284,7 @@ open class MeiXiYuan(entityType: EntityType<out LatexOrca>, level: Level) : Late
             val v = 0.5
             pipeUnless (this.isInWaterOrBubble || this.isFallFlying && isInWaterRainOrBubble) then {
                 if (this.health.toInt() > 15) {
-                    this.hurt(this.level.damageSources().drown(), health-15)
+                    this.hurt(this.level.damageSources().drown(), health-14)
                 }
                 deltaMovement = deltaMovement.calcl(
                     direction = yRot.toHorizontalViewVec(),
@@ -299,7 +298,17 @@ open class MeiXiYuan(entityType: EntityType<out LatexOrca>, level: Level) : Late
                     applyToY = true
                 )
             }
+            // .5 * .5 = .25
+            if (deltaMovement.lengthSqr() < .25 && deltaMovement.lengthSqr() != 0.toDouble()) {
+                deltaMovement = deltaMovement.normalize().multiply(.5, .5, .5)
+            }
+
+            resetFallDistance()
         }
+    }
+
+    override fun isSwimming(old: Boolean): Boolean {
+        return isInWaterOrBubble || old
     }
 }
 

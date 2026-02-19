@@ -7,7 +7,9 @@ import com.github.cecnull1.cecnull1_cforge.core.PipeCore.calc
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.AutoMove
 import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.WFXCOwner
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.LicensedCharacters.SPECIAL
@@ -21,17 +23,17 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.B_HORSE
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MEI_XI_YUAN
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MOVE_ENTITY
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.CMinecartType
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FlyingPureWhiteLatexYufengType
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FutiEntityType
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.SWEMEntities.O_ENTITY
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.LatexPinkHumanType
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerTick
+import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onTravelEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
-import com.github.cecnull1.cecnull1_changed_plus_v2.model.AEntityModel
-import com.github.cecnull1.cecnull1_changed_plus_v2.model.SoulModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.UserHumanModel
-import com.github.cecnull1.cecnull1_changed_plus_v2.model.ZombieModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceOperatorEntityGetTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceTrickTransfurLivingEntity
@@ -43,6 +45,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TypeRegistry.register
 import net.ltxprogrammer.changed.client.RegisterComplexRenderersEvent
 import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
 import net.ltxprogrammer.changed.client.renderer.LatexOrcaRenderer
+import net.ltxprogrammer.changed.client.renderer.LatexPinkYuinDragonRenderer
 import net.ltxprogrammer.changed.client.renderer.SeatEntityRenderer
 import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer
 import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer.ModelComponent
@@ -51,9 +54,11 @@ import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.UseItemMode
 import net.ltxprogrammer.changed.init.ChangedAttributes
+import net.minecraft.client.model.geom.ModelLayers
 import net.minecraft.client.renderer.entity.BoatRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.client.renderer.entity.HorseRenderer
+import net.minecraft.client.renderer.entity.MinecartRenderer
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.horse.Horse
@@ -77,11 +82,14 @@ val bus = EventBus()
 class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
     init {
         register<Flying>()
+        register<WFXCOwner>()
+        register<AutoMove>()
         LicensedCharacterInit.registerEvent()
         bus.registerFastEvents<TakeOffEvent>(::onTakeOff)
         bus.registerFastEvents<ByForgeEvent>(::onForgeEvent)
         bus.registerFastEvents<CPlayerTickEvent>(::onPlayerTick)
         bus.registerFastEvents<CLivingTickEvent>(::onLivingTick)
+        bus.registerFastEvents<LivingTravelEvent>(::onTravelEvent)
         bus.registerFastEvents<NullSafeAttributeCreationEvent> { event ->
             event.put(
                 A_ENTITY.get(),
@@ -137,12 +145,14 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
                 FutiEntityType.get(),
                 ChangedEntity.createLatexAttributes().build()
             )
-            if (ModList.get().isLoaded("swem")) {
-                event.put(
-                    O_ENTITY.get(),
-                    com.alaharranhonor.swem.entities.horse.SWEMHorseEntity.createBaseHorseAttributes().build()
-                )
-            }
+            event.put(
+                FlyingPureWhiteLatexYufengType.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
+            event.put(
+                LatexPinkHumanType.get(),
+                ChangedEntity.createLatexAttributes().build()
+            )
         }
 
         val modEventBus = context.modEventBus
@@ -161,11 +171,9 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
             PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
             PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
         }
-        if (ModList.get().isLoaded("swem")) {
-            SWEMEntities.REGISTER.register(modEventBus)
-        }
     }
 }
+
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD)
 object Events {
     fun onCommonSetup(event: FMLCommonSetupEvent) {
@@ -215,9 +223,6 @@ object ClientEvents {
     @JvmStatic
     @SubscribeEvent
     fun registerLayerDefinitions(event: RegisterLayerDefinitions): Unit = event.process {
-        registerLayerDefinition(AEntityModel.LAYER_LOCATION, AEntityModel::createBodyLayer)
-        registerLayerDefinition(SoulModel.LAYER_LOCATION, AEntityModel::createBodyLayer)
-        registerLayerDefinition(ZombieModel.LAYER_LOCATION, ZombieModel::createBodyLayer)
         registerLayerDefinition(UserHumanModel.LAYER_LOCATION_STEVE, UserHumanModel.func::createSteveLayer)
         registerLayerDefinition(UserHumanModel.LAYER_LOCATION_ALEX, UserHumanModel.func::createAlexLayer)
         UserHumanModel.ArmorModel.MODEL_SET.registerDefinitions(event::registerLayerDefinition)
@@ -240,6 +245,11 @@ object ClientEvents {
             registerEntityRenderer(B_HORSE.get(), ::HorseRenderer)
 
             registerEntityRenderer(FutiEntityType.get(), ::GenericRenderer)
+            registerEntityRenderer(FlyingPureWhiteLatexYufengType.get(), ::DarkLatexYufengRenderer)
+            registerEntityRenderer(CMinecartType.get()) {
+                MinecartRenderer(it, ModelLayers.MINECART)
+            }
+            registerEntityRenderer(LatexPinkHumanType.get(), ::LatexPinkYuinDragonRenderer)
 
             registerEntityRenderer(SPECIAL.get(), ::SpecialRenderer)
 
@@ -247,13 +257,6 @@ object ClientEvents {
                 NOT_CAN_DISMOUNT_BOAT.get()
             ) { context: EntityRendererProvider.Context ->
                 BoatRenderer(context, false)
-            }
-            if (ModList.get().isLoaded("swem")) {
-                registerEntityRenderer(
-                    O_ENTITY.get()
-                ) { context: EntityRendererProvider.Context ->
-                    com.alaharranhonor.swem.client.render.SWEMHorseRenderer(context)
-                }
             }
         }
     }

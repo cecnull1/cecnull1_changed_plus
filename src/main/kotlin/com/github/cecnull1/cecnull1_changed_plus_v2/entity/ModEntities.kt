@@ -6,6 +6,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.NotCanDismountBoat.Companion.YU_ZHI
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.sendAbilitiesUpdate
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFlying
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
@@ -34,7 +35,6 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedAccessorySlots
 import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.ltxprogrammer.changed.init.ChangedLatexTypes
-import net.ltxprogrammer.changed.init.ChangedMobCategories
 import net.ltxprogrammer.changed.item.ClothingItem.CLOSED
 import net.ltxprogrammer.changed.util.Color3
 import net.ltxprogrammer.changed.util.ItemUtil
@@ -79,13 +79,13 @@ object ModEntities {
     }
 
     val A_ENTITY: RegistryObject<EntityType<AEntity>> = REGISTER.register(A_ENTITY_ID) {
-        EntityType.Builder.of(::AEntity, ChangedMobCategories.CHANGED)
+        EntityType.Builder.of(::AEntity, MobCategory.MONSTER)
             .sized(0.7f, 1.93f)
             .build(A_ENTITY_ID)
     }
 
     val PURE_WHITE_LATEX_YUFENG : RegistryObject<EntityType<PureWhiteLatexYufeng>> = REGISTER.register(PURE_WHITE_LATEX_YUFENG_ID) {
-        EntityType.Builder.of(::PureWhiteLatexYufeng, ChangedMobCategories.CHANGED)
+        EntityType.Builder.of(::PureWhiteLatexYufeng, MobCategory.MONSTER)
             .sized(0.7f, 1.93f)
             .build(PURE_WHITE_LATEX_YUFENG_ID)
     }
@@ -96,7 +96,7 @@ object ModEntities {
     }
 
     val SOUL: RegistryObject<EntityType<Soul>> = REGISTER.register(SOUL_ID) {
-        EntityType.Builder.of(::Soul, ChangedMobCategories.CHANGED)
+        EntityType.Builder.of(::Soul, MobCategory.MONSTER)
             .sized(0f, 0f)
             .build(SOUL_ID)
     }
@@ -127,7 +127,8 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
     PowderSnowWalkable, // 雪地行走
     AquaticEntity, // 水下允许
     IFanJi,
-    IKeepConscious { // 会反击
+    IKeepConscious,
+    IFlying { // 会反击
 
     override fun getLatexType(): LatexType = ChangedLatexTypes.DARK_LATEX.get()
     override fun getTransfurMode() = TransfurMode.REPLICATION
@@ -137,6 +138,10 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
 
     override fun variantTick(level: Level?) {
         super.variantTick(level)
+        tTick()
+    }
+
+    protected open fun tTick() {
         aEntityTick()
     }
 
@@ -159,6 +164,8 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
     override fun registerGoals() {
         super.registerGoals()
     }
+
+    override fun isFallFlying(old: Boolean): Boolean = this.meiyun() || old
 }
 
 open class Zombie(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level) {
@@ -267,9 +274,6 @@ open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : 
     override fun getLatexType() = ChangedLatexTypes.WHITE_LATEX.get()
     override fun getTransfurMode(): TransfurMode = TransfurMode.REPLICATION
     override fun isNoAi(): Boolean = false
-    override fun variantTick(level: Level?) {
-        super.variantTick(level)
-    }
 }
 
 open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(type, level), IOnMount {

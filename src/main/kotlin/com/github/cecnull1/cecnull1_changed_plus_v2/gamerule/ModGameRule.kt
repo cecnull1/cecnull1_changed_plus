@@ -27,9 +27,28 @@ object ModGameRule {
             BooleanValue.create(true)
         )
     }
+    val canRealKeepForm: GameRules.Key<BooleanValue> by lazy {
+        GameRules.register(
+            "$MODID:canRealKeepForm",
+            GameRules.Category.PLAYER,
+            BooleanValue.create(true)
+        )
+    }
+    val realKeepForm: GameRules.Key<BooleanValue> by lazy {
+        GameRules.register(
+            "$MODID:realKeepForm",
+            GameRules.Category.PLAYER,
+            BooleanValue.create(true) { s, v ->
+
+            }
+        )
+    }
+
     fun register() {
         KeepHA
         KeepArmorHA
         canFanJi
+        canRealKeepForm
+        realKeepForm
     }
 }

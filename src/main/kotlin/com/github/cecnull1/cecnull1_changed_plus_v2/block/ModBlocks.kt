@@ -1,7 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.block
 
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
-import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.Lang.BODY_WARNING
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.Lang.MESSAGE
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
@@ -20,8 +19,6 @@ import net.ltxprogrammer.changed.block.WhiteLatexBlock
 import net.ltxprogrammer.changed.block.WhiteLatexTransportInterface
 import net.ltxprogrammer.changed.block.entity.SeatableBlockEntity
 import net.ltxprogrammer.changed.entity.SeatEntity
-import net.ltxprogrammer.changed.entity.animation.AnimationCategory
-import net.ltxprogrammer.changed.init.ChangedAnimationEvents
 import net.ltxprogrammer.changed.init.ChangedTransfurVariants
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.minecraft.Util
@@ -217,14 +214,6 @@ open class BBlockEntity(type: BlockEntityType<*>, pos: BlockPos, state: BlockSta
                     )
                 )
             }
-        }
-        seatedEntity then {
-            ChangedAnimationEvents.broadcastEntityAnimation(
-                this,
-                Animations.CP_STASIS_IDLE.get(),
-                AnimationCategory.IDLE,
-                com.github.cecnull1.cecnull1_changed_plus_v2.animation.StasisAnimationParameters
-            )
         }
     }
 

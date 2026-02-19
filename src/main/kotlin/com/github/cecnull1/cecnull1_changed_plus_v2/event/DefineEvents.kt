@@ -12,6 +12,7 @@ import net.minecraft.world.inventory.Slot
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.phys.Vec3
 import net.minecraftforge.client.event.EntityRenderersEvent
 import net.minecraftforge.event.TickEvent
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent
@@ -43,6 +44,16 @@ data class CPlayerTickEvent(val player: Player, val phase: TickEvent.Phase): IEv
 data class CLivingTickEvent(val entity: LivingEntity, val phase: TickEvent.Phase): IEvent {
     override var isCanceled: Boolean = false
     override val isCancelable: Boolean = false
+}
+
+/**
+ * Hook:
+ * @see LivingEntity.travel
+ * @see LivingEntity.travelRidden
+ * */
+data class LivingTravelEvent(val entity: LivingEntity, val direction: Vec3, val phase: TickEvent.Phase, val riddenPlayer: Player? = null): IEvent {
+    override val isCancelable: Boolean = true
+    override var isCanceled: Boolean = false
 }
 
 @JvmInline

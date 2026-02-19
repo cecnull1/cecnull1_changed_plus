@@ -21,10 +21,14 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onMount
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerCloned
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerLogin
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerRespawn
+import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IKeepConscious
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.RealKeepForm
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.level
 import com.github.cecnull1.cecnull1lib.utils.changed.entityVariant
 import com.github.cecnull1.cecnull1lib.utils.changed.playerTransfurVariant
 import net.ltxprogrammer.changed.data.AccessorySlots
+import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.minecraft.world.entity.player.Player
 import net.minecraftforge.event.entity.EntityMountEvent
@@ -62,7 +66,6 @@ private val EVENT_HANDLERS: Map<KClass<*>, (Any) -> Unit> = buildMap {
     put(ProcessTransfur.EntityVariantAssigned.ChangedVariant::class) { onEntityVariantAssigned(it as ProcessTransfur.EntityVariantAssigned.ChangedVariant) }
     put(ProcessTransfur.KeepConsciousEvent::class) { onKeepConscious(it as ProcessTransfur.KeepConsciousEvent) }
     put(FMLCommonSetupEvent::class) { onCommonSetup(it as FMLCommonSetupEvent) }
-
 }
 
 /**
@@ -89,4 +92,8 @@ fun onKeepConscious(event: ProcessTransfur.KeepConsciousEvent) {
     event.player.playerTransfurVariant?.changedEntity as? IKeepConscious then {
         if (isKeep()) event.shouldKeepConscious = true
     }
+    event.player.playerTransfurVariant?.changedEntity as? RealKeepForm then {
+        if (event.player.level.gameRules.getBoolean(ModGameRule.canRealKeepForm)) event.shouldKeepConscious = true
+    }
+    if (event.player.level.gameRules.getBoolean(ModGameRule.realKeepForm)) event.shouldKeepConscious = true
 }

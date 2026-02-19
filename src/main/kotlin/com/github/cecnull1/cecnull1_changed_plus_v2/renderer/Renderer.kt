@@ -102,7 +102,7 @@ abstract class UserSAHumanEntityRenderer<T : ChangedEntity>(
     isAlex: Boolean
 ) : UserEntityRenderer<T, UserHumanModel<T>>(
     context,
-    UserHumanModel<T>(context.bakeLayer(
+    UserHumanModel(context.bakeLayer(
         if (isAlex) UserHumanModel.LAYER_LOCATION_ALEX else UserHumanModel.LAYER_LOCATION_STEVE
     )),
     UserHumanModel.ArmorModel.MODEL_SET, location

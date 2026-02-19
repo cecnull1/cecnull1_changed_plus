@@ -27,17 +27,12 @@ import net.minecraftforge.registries.RegistryObject
 
 
 object ModItems {
-    const val A_ARMOR_ID = "a_armor"
-
     val REGISTER: DeferredRegister<Item> = DeferredRegister.create(ForgeRegistries.ITEMS, MODID)
     val ABLOCK: RegistryObject<ABlock> = REGISTER.register(ModBlocks.A_BLOCK_ID) {
         ABlock()
     }
     val BBLOCK_ITME: RegistryObject<BBlockItem> = REGISTER.register("b_block") {
         BBlockItem()
-    }
-    val A_ARMOR: RegistryObject<AArmorItem> = REGISTER.register(A_ARMOR_ID) {
-        AArmorItem()
     }
     val WHITE_LATEX_BLOCK_V2: RegistryObject<WhiteLatexBlockV2Item> = REGISTER.register(ModBlocks.WHITE_LATEX_BLOCK_V2_ID) {
         WhiteLatexBlockV2Item()
@@ -60,22 +55,6 @@ class ABlock : ItemNameBlockItem(ModBlocks.A_BLOCK.get(), Properties())
 
 class BBlockItem : ItemNameBlockItem(ModBlocks.BBLOCK.get(), Properties())
 
-class AArmorItem : ArmorItem(ArmorMaterials.IRON, Type.CHESTPLATE, Properties()) {
-    override fun canElytraFly(stack: ItemStack?, entity: LivingEntity?): Boolean {
-        return true
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onArmorTick(stack: ItemStack?, level: Level?, player: Player?) {
-        super.onArmorTick(stack, level, player)
-        stack?.let {
-            if (!hasEnchantment(it, Enchantments.BINDING_CURSE)) {
-                it.enchant(Enchantments.BINDING_CURSE, 1)
-            }
-        }
-    }
-}
-
 class WhiteLatexBlockV2Item : ItemNameBlockItem(
     ModBlocks.WHITE_LATEX_BLOCK_V2.get(), Properties()
 )
@@ -93,7 +72,6 @@ class XinYueItem : Item(Properties()) {
 }
 
 class NotCanTakeOffWetsuit : WetsuitItem(), ICanTakeOff {
-    // 完全保留您原始纹理实现
     override fun getArmorTexture(stack: ItemStack?, entity: Entity?, slot: EquipmentSlot?, type: String?): String {
         return "changed:textures/models/wetsuit.png"
     }
