@@ -3,14 +3,7 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.pipeIf
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFanJi
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IOnMount
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.ISwimming
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MountType
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.RealKeepForm
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.calcl
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.rlclass
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toHorizontalViewVec
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
 import net.ltxprogrammer.changed.entity.AttributePresets
 import net.ltxprogrammer.changed.entity.ChangedEntity
@@ -24,7 +17,6 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
-import net.minecraft.world.entity.EntityType.EntityFactory
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.MobCategory
 import net.minecraft.world.entity.ai.attributes.AttributeMap
@@ -168,7 +160,7 @@ class CMinecart(type: EntityType<out Minecart>, level: Level?): Minecart(type, l
     }
 }
 
-class LatexPinkHuman(type: EntityType<out LatexPinkYuinDragon>, level: Level?): LatexPinkYuinDragon(type, level), RealKeepForm, IFanJi, ISwimming {
+class LatexPinkHuman(type: EntityType<out LatexPinkYuinDragon>, level: Level?): LatexPinkYuinDragon(type, level), RealKeepForm, IFanJi, ISwimming, IFlying {
     override fun getLatexType(): LatexType = ChangedLatexTypes.WHITE_LATEX.get()
     override fun setAttributes(attributes: AttributeMap) {
         super.setAttributes(attributes)
@@ -203,6 +195,8 @@ class LatexPinkHuman(type: EntityType<out LatexPinkYuinDragon>, level: Level?): 
     }
 
     override fun isSwimming(): Boolean {
-        return isInWaterOrBubble
+        return maybeGetUnderlying().isInWaterOrBubble
     }
+
+    override fun isFallFlying(old: Boolean): Boolean = maybeGetUnderlying().meiyun() || old
 }

@@ -38,9 +38,14 @@ object ModGameRule {
         GameRules.register(
             "$MODID:realKeepForm",
             GameRules.Category.PLAYER,
-            BooleanValue.create(true) { s, v ->
-
-            }
+            BooleanValue.create(true)
+        )
+    }
+    val isJiXianShiTF: GameRules.Key<BooleanValue> by lazy {
+        GameRules.register(
+            "$MODID:isJiXianShiTF",
+            GameRules.Category.PLAYER,
+            BooleanValue.create(false)
         )
     }
 
@@ -50,5 +55,6 @@ object ModGameRule {
         canFanJi
         canRealKeepForm
         realKeepForm
+        isJiXianShiTF
     }
 }

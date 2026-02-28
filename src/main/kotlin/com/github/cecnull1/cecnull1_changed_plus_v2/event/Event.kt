@@ -7,23 +7,22 @@ import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
 import com.github.cecnull1.cecnull1_changed_plus_v2.component.AutoMove
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
+import com.github.cecnull1.cecnull1_changed_plus_v2.component.WFXCOwner
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
+import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule.isJiXianShiTF
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.toRL
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.wuDiTime
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.EntityExtendedComponent
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.WFXCOwner
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTransfurDataOrNull
@@ -44,7 +43,6 @@ import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.client.Minecraft
 import net.minecraft.commands.arguments.EntityAnchorArgument.Anchor
 import net.minecraft.core.Holder
-import net.minecraft.core.Registry
 import net.minecraft.network.protocol.game.*
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -63,11 +61,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.phys.Vec3
 import net.minecraftforge.event.TickEvent
 import net.minecraftforge.event.entity.EntityMountEvent
-import net.minecraftforge.event.entity.living.LivingAttackEvent
-import net.minecraftforge.event.entity.living.LivingDeathEvent
-import net.minecraftforge.event.entity.living.LivingFallEvent
-import net.minecraftforge.event.entity.living.LivingHurtEvent
-import net.minecraftforge.event.entity.living.LivingKnockBackEvent
+import net.minecraftforge.event.entity.living.*
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent
 import net.minecraftforge.event.entity.player.PlayerEvent
 import net.minecraftforge.event.entity.player.PlayerInteractEvent
@@ -210,6 +204,7 @@ object Event {
     @SubscribeEvent
     fun onDead(event: LivingDeathEvent) {
         event.entity as? ServerPlayer then {
+
             val pos = (this.respawnPosition ?: this.level.sharedSpawnPos).toKVec3()
             (vehicle as? LivingEntity)?.let {
                 Thread.startVirtualThread {
@@ -514,6 +509,14 @@ object Event {
             }
             NetworkHandler.haStateSendToClient(event.entity)
         }
+
+        if (player.level.gameRules.getBoolean(isJiXianShiTF)) {
+            player.transfur(TransfurData(
+                ModTransfurVariant.LATEX_PINK_HUMAN_VARIANT.get(),
+                keepConscious = true
+            ))
+        }
+
 //        player.ifPlayerNotTransfurred {
 //            player.setPlayerTransfurVariant(
 //                transfurData = TransfurData(
