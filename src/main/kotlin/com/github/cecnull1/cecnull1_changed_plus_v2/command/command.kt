@@ -25,7 +25,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.server.command.EnumArgument
 
-
 @Mod.EventBusSubscriber(modid = MODID)
 object CommandEvent {
     @JvmStatic

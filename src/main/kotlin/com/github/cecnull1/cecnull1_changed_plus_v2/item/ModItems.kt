@@ -37,14 +37,8 @@ object ModItems {
     val WHITE_LATEX_BLOCK_V2: RegistryObject<WhiteLatexBlockV2Item> = REGISTER.register(ModBlocks.WHITE_LATEX_BLOCK_V2_ID) {
         WhiteLatexBlockV2Item()
     }
-    val XIN_YUE: RegistryObject<XinYueItem> = REGISTER.register("xin_yue") {
-        XinYueItem()
-    }
     val NOT_CAN_TAKE_OFF_WETSUIT: RegistryObject<NotCanTakeOffWetsuit> = REGISTER.register("not_can_take_off_wetsuit") {
         NotCanTakeOffWetsuit()
-    }
-    val UN_TRANSFUR_SYRINGE: RegistryObject<UnTransfurSyringe> = REGISTER.register("un_transfur_syringe") {
-        UnTransfurSyringe(Item.Properties())
     }
     val NOT_CAN_TAKE_OFF_LAB_COAT: RegistryObject<NotCanTakeOffLabCoat> = REGISTER.register("not_can_take_off_lab_coat") {
         NotCanTakeOffLabCoat()
@@ -58,18 +52,6 @@ class BBlockItem : ItemNameBlockItem(ModBlocks.BBLOCK.get(), Properties())
 class WhiteLatexBlockV2Item : ItemNameBlockItem(
     ModBlocks.WHITE_LATEX_BLOCK_V2.get(), Properties()
 )
-
-class XinYueItem : Item(Properties()) {
-    override fun hurtEnemy(
-        itemStack: ItemStack,
-        entity: LivingEntity,
-        sourceentity: LivingEntity
-    ): Boolean {
-        super.hurtEnemy(itemStack, entity, sourceentity)
-
-        return false
-    }
-}
 
 class NotCanTakeOffWetsuit : WetsuitItem(), ICanTakeOff {
     override fun getArmorTexture(stack: ItemStack?, entity: Entity?, slot: EquipmentSlot?, type: String?): String {
@@ -114,13 +96,4 @@ class NotCanTakeOffLabCoat : LabCoatItem(), ICanTakeOff {
     }
 
     override fun canTakeOff(player: Player, slot: Slot, item: ItemStack) = this.getClothingState(item)?.getValue(CLOSED) != true
-}
-
-class UnTransfurSyringe(properties: Properties) : BloodSyringe(properties) {
-    override fun finishUsingItem(stack: ItemStack, level: Level, entity: LivingEntity): ItemStack {
-        if (entity is Player) {
-            entity.removePlayerTransfurVariant()
-        }
-        return super.finishUsingItem(stack, level, entity)
-    }
 }

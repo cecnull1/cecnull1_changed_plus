@@ -10,14 +10,14 @@ object ModGameRule {
         GameRules.register(
             "$MODID:keepHa",
             GameRules.Category.PLAYER,
-            BooleanValue.create(true)
+            BooleanValue.create(false)
         )
     }
     val KeepArmorHA: GameRules.Key<BooleanValue> by lazy {
         GameRules.register(
             "$MODID:keepArmorHa",
             GameRules.Category.PLAYER,
-            BooleanValue.create(true)
+            BooleanValue.create(false)
         )
     }
     val canFanJi: GameRules.Key<BooleanValue> by lazy {
@@ -31,21 +31,21 @@ object ModGameRule {
         GameRules.register(
             "$MODID:canRealKeepForm",
             GameRules.Category.PLAYER,
-            BooleanValue.create(true)
+            BooleanValue.create(false)
         )
     }
     val realKeepForm: GameRules.Key<BooleanValue> by lazy {
         GameRules.register(
             "$MODID:realKeepForm",
             GameRules.Category.PLAYER,
-            BooleanValue.create(true)
+            BooleanValue.create(false)
         )
     }
     val isJiXianShiTF: GameRules.Key<BooleanValue> by lazy {
         GameRules.register(
             "$MODID:isJiXianShiTF",
             GameRules.Category.PLAYER,
-            BooleanValue.create(false)
+            BooleanValue.create(true)
         )
     }
 

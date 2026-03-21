@@ -5,6 +5,7 @@ import com.github.cecnull1.cecnull1_cforge.core.CForgeEventCore.registerFastEven
 import com.github.cecnull1.cecnull1_cforge.core.EventBus
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.calc
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
+import com.github.cecnull1.cecnull1_changed_plus_v2.Events.onNullSafeAttributeCreationEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
 import com.github.cecnull1.cecnull1_changed_plus_v2.component.AutoMove
@@ -19,7 +20,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.MISC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NONE_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NOT_CAN_DISMOUNT_BOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.B_HORSE
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MEI_XI_YUAN
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MOVE_ENTITY
@@ -52,7 +52,6 @@ import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRendere
 import net.ltxprogrammer.changed.client.renderer.layers.AccessoryLayer
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel
 import net.ltxprogrammer.changed.entity.ChangedEntity
-import net.ltxprogrammer.changed.entity.UseItemMode
 import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.minecraft.client.model.geom.ModelLayers
 import net.minecraft.client.renderer.entity.BoatRenderer
@@ -79,7 +78,7 @@ import vazkii.psi.api.PsiAPI
 val bus = EventBus()
 
 @Mod(MODID)
-class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
+class Cecnull1ChangedPlus(context: FMLJavaModLoadingContext) {
     init {
         register<Flying>()
         register<WFXCOwner>()
@@ -90,70 +89,7 @@ class Cecnull1_changed_plus(context: FMLJavaModLoadingContext) {
         bus.registerFastEvents<CPlayerTickEvent>(::onPlayerTick)
         bus.registerFastEvents<CLivingTickEvent>(::onLivingTick)
         bus.registerFastEvents<LivingTravelEvent>(::onTravelEvent)
-        bus.registerFastEvents<NullSafeAttributeCreationEvent> { event ->
-            event.put(
-                A_ENTITY.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-            event.put(
-                A_HORSE.get(),
-                Horse.createBaseHorseAttributes()
-                    .add(Attributes.MAX_HEALTH, 20.0)
-                    .add(Attributes.MOVEMENT_SPEED, 3.0)
-                    .add(ForgeMod.SWIM_SPEED.get(), 2.0)
-                    .add(Attributes.ATTACK_DAMAGE, 0.0)
-                    .build()
-            )
-            event.put(
-                SOUL.get(),
-                ChangedEntity.createLatexAttributes()
-                    .add(Attributes.MAX_HEALTH, 1.0)
-                    .add(Attributes.MOVEMENT_SPEED, 0.0)
-                    .add(ForgeMod.SWIM_SPEED.get(), 0.0)
-                    .add(Attributes.ATTACK_DAMAGE, 0.01)
-                    .add(Attributes.JUMP_STRENGTH, 0.0)
-                    .add(Attributes.FLYING_SPEED)
-                    .build()
-            )
-            event.put(
-                PURE_WHITE_LATEX_YUFENG.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-            event.put(
-                NONE_ENTITY.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-            event.put(
-                MISC.get(),
-                ChangedEntity.createLatexAttributes()
-                    .add(Attributes.MAX_HEALTH, 24.0)
-                    .add(Attributes.MOVEMENT_SPEED, 4.0)
-                    .add(ForgeMod.SWIM_SPEED.get(), 2.0)
-                    .add(Attributes.ATTACK_DAMAGE, 20.0)
-                    .add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
-                    .build()
-            )
-            event.put(
-                MEI_XI_YUAN.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-            event.put(
-                B_HORSE.get(),
-                Horse.createBaseHorseAttributes().build()
-            )
-            event.put(
-                FutiEntityType.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-            event.put(
-                FlyingPureWhiteLatexYufengType.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-            event.put(
-                LatexPinkHumanType.get(),
-                ChangedEntity.createLatexAttributes().build()
-            )
-        }
+        bus.registerFastEvents<NullSafeAttributeCreationEvent>(::onNullSafeAttributeCreationEvent)
 
         val modEventBus = context.modEventBus
         LicensedCharacterInit.registerEntities(modEventBus)
@@ -187,11 +123,64 @@ object Events {
     fun registerEntityAttributes(event: EntityAttributeCreationEvent) {
         NullSafeAttributeCreationEvent(event).post(bus)
     }
+
+    fun onNullSafeAttributeCreationEvent(event: NullSafeAttributeCreationEvent) {
+        event.put(
+            A_ENTITY.get(),
+            ChangedEntity.createLatexAttributes().build()
+        )
+        event.put(
+            A_HORSE.get(),
+            Horse.createBaseHorseAttributes()
+                .add(Attributes.MAX_HEALTH, 20.0)
+                .add(Attributes.MOVEMENT_SPEED, 3.0)
+                .add(ForgeMod.SWIM_SPEED.get(), 2.0)
+                .add(Attributes.ATTACK_DAMAGE, 0.0)
+                .build()
+        )
+        event.put(
+            PURE_WHITE_LATEX_YUFENG.get(),
+            ChangedEntity.createLatexAttributes().build()
+        )
+        event.put(
+            NONE_ENTITY.get(),
+            ChangedEntity.createLatexAttributes().build()
+        )
+        event.put(
+            MISC.get(),
+            ChangedEntity.createLatexAttributes()
+                .add(Attributes.MAX_HEALTH, 24.0)
+                .add(Attributes.MOVEMENT_SPEED, 4.0)
+                .add(ForgeMod.SWIM_SPEED.get(), 2.0)
+                .add(Attributes.ATTACK_DAMAGE, 20.0)
+                .add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
+                .build()
+        )
+        event.put(
+            MEI_XI_YUAN.get(),
+            ChangedEntity.createLatexAttributes().build()
+        )
+        event.put(
+            B_HORSE.get(),
+            Horse.createBaseHorseAttributes().build()
+        )
+        event.put(
+            FutiEntityType.get(),
+            ChangedEntity.createLatexAttributes().build()
+        )
+        event.put(
+            FlyingPureWhiteLatexYufengType.get(),
+            ChangedEntity.createLatexAttributes().build()
+        )
+        event.put(
+            LatexPinkHumanType.get(),
+            ChangedEntity.createLatexAttributes().build()
+        )
+    }
 }
 
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.MOD, value = [Dist.CLIENT])
 object ClientEvents {
-
     @JvmStatic
     @SubscribeEvent
     fun registerComplexEntityRenderers(event: RegisterComplexRenderersEvent) {
@@ -235,7 +224,6 @@ object ClientEvents {
         event.apply {
             registerEntityRenderer(A_ENTITY.get(), ::DarkLatexYufengRenderer)
             registerEntityRenderer(A_HORSE.get(), ::HorseRenderer)
-            registerEntityRenderer(SOUL.get(), ::NoneEntityRenderer)
             registerEntityRenderer(PURE_WHITE_LATEX_YUFENG.get(), ::DarkLatexYufengRenderer)
             registerEntityRenderer(NONE_ENTITY.get(), ::NoneEntityRenderer)
             registerEntityRenderer(MISC.get(), ::NoneEntityRenderer)
@@ -261,25 +249,3 @@ object ClientEvents {
         }
     }
 }
-
-private fun registerUseItemMode(
-    name: String, showHotbar: Boolean, holdMainHand: Boolean,
-    holdOffHand: Boolean, interact: Boolean, breakBlocks: Boolean
-): UseItemMode {
-    return UseItemMode.create(
-        name.uppercase(),  // 名称必须大写
-        showHotbar,
-        holdMainHand,
-        holdOffHand,
-        interact,
-        breakBlocks
-    )
-}
-
-val SOUL_USE_ITEM_MODE = registerUseItemMode("SOUL_USE_ITEM_MODE",
-    showHotbar = false,
-    holdMainHand = true,
-    holdOffHand = false,
-    interact = false,
-    breakBlocks = false
-)

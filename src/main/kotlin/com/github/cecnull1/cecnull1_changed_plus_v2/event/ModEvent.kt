@@ -81,11 +81,6 @@ fun onTakeOff(event: TakeOffEvent) {
 }
 
 fun onLivingChangeTarget(event: LivingChangeTargetEvent) {
-    (event.newTarget as? Player)?.let {
-        if (it.entityVariant?.`is`(ModTransfurVariant.SOUL_TRANSFUR_VARIANT.get()) == true) {
-            event.newTarget = event.originalTarget
-        }
-    }
 }
 
 fun onKeepConscious(event: ProcessTransfur.KeepConsciousEvent) {

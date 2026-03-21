@@ -194,7 +194,6 @@ object Event {
             if (event.phase != TickEvent.Phase.END) return
             if (player.level.isClientSide && event.player == Minecraft.getInstance().player) {
                 NetworkHandler.haStateSendToServer()
-                NetworkHandler.componentsSendToServer()
             }
         }
         sync()
@@ -325,19 +324,10 @@ object Event {
             }
         }
         (livingEntity as? Player)?.ifPlayerTransfurred {
-            // 检测玩家所代表的生物是否是魂体
-            if (it.`is`(ModTransfurVariant.SOUL_TRANSFUR_VARIANT)) {
-                event.isCanceled = true
-            }
-
             // 禁止被攻击
             if (it.changedEntity is LatexPinkHuman) {
                 event.isCanceled = true
             }
-        }
-        (attacker as? Player)?.ifPlayerTransfurred {
-            // 调用灵魂附身
-            lingHunFuShen(event, it, livingEntity, attacker)
         }
 
         event.entity as? Player then player@ {
@@ -347,74 +337,6 @@ object Event {
                     if (seatedEntity?.id == this@player.id && !this@player.isCreative && event.source.type() != DamageTypes.FELL_OUT_OF_WORLD) event.isCanceled = true
                 }
             }
-        }
-    }
-
-    private fun lingHunFuShen(
-        event: LivingAttackEvent,
-        instance: TransfurVariantInstance<*>,
-        livingEntity: LivingEntity,
-        attacker: Player
-    ) {
-        if (instance.`is`(ModTransfurVariant.SOUL_TRANSFUR_VARIANT)) {
-            // 取消攻击
-            event.isCanceled = true
-            // 获取 LivingEntity 的数据
-            val persistentData = livingEntity.persistentData
-            // 获取 LivingEntity 的 ModData
-            val entityModData = livingEntity.getModData(MODID)
-            // 获取 LivingEntity 的变体
-            val entityVariant = ProcessTransfur.getEntityVariant(livingEntity).getOrNull()
-            // 如果 LivingEntity 有变体，或 LivingEntity 是 Player
-            if (entityVariant != null || livingEntity is Player) {
-                // 增加 LivingEntity 的攻击值
-                entityModData[Constant.NBTKeys.SOUL_SP_ATTACK_VALUE] =
-                    entityModData.getDouble(Constant.NBTKeys.SOUL_SP_ATTACK_VALUE) + 1.0
-                // 如果 LivingEntity 的攻击值 >= LivingEntity 的生命值
-                if (entityModData.getDouble(Constant.NBTKeys.SOUL_SP_ATTACK_VALUE) >= livingEntity.health) {
-                    // 移除 LivingEntity 的攻击值
-                    entityModData.remove(Constant.NBTKeys.SOUL_SP_ATTACK_VALUE)
-                    // 将 attacker 的变体改为 entityVariant
-                    attacker.transfurData = entityVariant.toTransfurDataOrNull()
-                    // 将 attacker 的当前飞行状态改为 false ，以防止变体设置后仍然处于 true 的情况
-                    attacker.abilities.flying = false
-                    // 实体间覆盖
-                    attacker.movePosToTarget(livingEntity)
-                    attacker.removeAllEffects()
-                    livingEntity.activeEffectsMap.values.forEach {
-                        attacker.addEffect(MobEffectInstance(it))
-                    }
-                    livingEntity.removeAllEffects()
-                    attacker.health = livingEntity.health
-                    if (livingEntity is Player) {
-                        attacker.moveItemToTarget(livingEntity)
-                        attacker.foodData.foodLevel = livingEntity.foodData.foodLevel
-                        attacker.foodData.setSaturation(livingEntity.foodData.saturationLevel)
-                        attacker.experienceLevel = livingEntity.experienceLevel
-                        attacker.experienceProgress = livingEntity.experienceProgress
-                    } else {
-                        attacker.foodData.foodLevel = 20
-                        attacker.foodData.setSaturation(20f)
-                    }
-                    if (attacker is ServerPlayer) {
-                        attacker.sendPositionUpdate()
-                        attacker.sendHealthUpdate()
-                    }
-                    // 删除/杀死livingEntity
-                    if (livingEntity is Player) {
-                        livingEntity.hurt(
-                            livingEntity.damageSources().fellOutOfWorld(),  // 使用 DamageSources 获取岩浆伤害
-                            Float.POSITIVE_INFINITY
-                        )
-                    } else livingEntity.remove(Entity.RemovalReason.KILLED)
-                    // 如果 livingEntity 的健康值为 NaN，则将其设置为 0
-                    if (livingEntity.health.isNaN()) {
-                        livingEntity.health = 0f
-                    }
-                }
-            }
-            // 将 entityModData 存储到 persistentData 中
-            persistentData[MODID] = entityModData
         }
     }
 
@@ -428,11 +350,6 @@ object Event {
     }
 
     fun onEntityPickup(event: EntityItemPickupEvent) {
-        event.entity?.ifPlayerTransfurred {
-            if (it.`is`(ModTransfurVariant.SOUL_TRANSFUR_VARIANT)) {
-                event.isCanceled = true
-            }
-        }
     }
 
     fun onBlockBreak(event: BlockEvent.BreakEvent) = event process {
@@ -708,24 +625,4 @@ fun syncHeadLookAt(livingEntity: LivingEntity, attacker: Entity) {
 fun ServerPlayer.sendAbilitiesUpdate() {
     val clientBoundPlayerAbilitiesPacket = ClientboundPlayerAbilitiesPacket(abilities)
     connection.send(clientBoundPlayerAbilitiesPacket)
-}
-
-fun LivingEntity.faceEntity(attackTarget: Entity) {
-    val dx = attackTarget.x - this.x
-    val dz = attackTarget.z - this.z
-    val dy = attackTarget.eyeY - this.eyeY
-
-    // 计算 yaw（水平方向）
-    val targetYaw = Mth.atan2(dz, dx) * (180.0f / Math.PI).toFloat() - 90.0f
-
-    // 计算 pitch（垂直方向），注意负号！
-    val distanceXZ = sqrt(dx * dx + dz * dz)
-    val targetPitch = Mth.atan2(dy, distanceXZ) * (180.0f / Math.PI).toFloat()
-
-    // 设置旋转
-    this.xRot = targetPitch.toFloat()
-    this.yRot = targetYaw.toFloat()
-
-    // 同步头部朝向
-    this.yHeadRot = targetYaw.toFloat()
 }

@@ -55,19 +55,12 @@ object NetworkHandler {
     private var messageId = 0
 
     fun register() {
-         val _ = CHANNEL.registerMessage(
+         CHANNEL.registerMessage(
             messageId++,
              SyncHaStateMessage::class.java,
             SyncHaStateMessage::encode,
             ::SyncHaStateMessage,
             SyncHaStateMessage::handle
-        )
-        val _ = CHANNEL.registerMessage(
-            messageId++,
-            SyncComponentsMessage::class.java,
-            SyncComponentsMessage::encode,
-            ::SyncComponentsMessage,
-            SyncComponentsMessage::handle
         )
     }
 
@@ -86,47 +79,5 @@ object NetworkHandler {
 
     fun haStateSendToServer() {
         CHANNEL.sendToServer(SyncHaStateMessage(Minecraft.getInstance().player?.id ?: -1, null))
-    }
-
-    fun componentsSendToClient(entity: Entity) {
-//        CHANNEL.sendTo(
-//            SyncComponentsMessage(
-//                entityId = entity.id,
-//                data = CompoundTag().apply {
-//                    serializerEntityComponent(entity, Cecnull1_changed_plus.entityComponentMap, this)
-//                }
-//            ),
-//            (entity as? ServerPlayer)?.connection?.connection?:return,
-//            NetworkDirection.PLAY_TO_CLIENT
-//        )
-    }
-
-    fun componentsSendToServer() {
-        CHANNEL.sendToServer(SyncComponentsMessage(Minecraft.getInstance().player?.id ?: -1, null))
-    }
-}
-
-class SyncComponentsMessage(
-    private val entityId: Int,
-    private val data: CompoundTag? = null
-) {
-    constructor(buf: FriendlyByteBuf) : this(
-        entityId = buf.readInt(),
-        data = buf.readNbt()
-    )
-
-    fun encode(buf: FriendlyByteBuf) {
-        buf.writeInt(entityId)
-        buf.writeNbt(data)
-    }
-
-    fun handle(context: Supplier<NetworkEvent.Context>) {
-        context.get().enqueueWork {
-            val _ = Minecraft.getInstance().level?.getEntity(entityId) as? Player
-//            if (player != null && data != null) {
-//                deserializerEntityComponent(player, Cecnull1_changed_plus.entityComponentMap, data)
-//            }
-        }
-        context.get().packetHandled = true
     }
 }

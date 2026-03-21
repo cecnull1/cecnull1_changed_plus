@@ -73,23 +73,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
 abstract class EntityMixin: EntityExtendedComponent {
     @get:Unique private inline val self get() = this as Entity
 
-//    @ModifyReturnValue(method = ["m_20202_"], at = [At("RETURN")], remap = false)
-//    fun getVehicle(entity: Entity?): Entity? {
-//        if (entity is BBlockMoveEntity && entity.vehicle != null) {
-//            return entity.vehicle
-//        }
-//        return entity
-//    }
-
-//    @ModifyReturnValue(method = ["m_146895_"], at = [At("RETURN")], remap = false)
-//    fun getFirstPassenger(entity: Entity?): Entity? {
-//        if (entity is BBlockMoveEntity && entity.firstPassenger != null) {
-//            return entity.firstPassenger
-//        }
-//        return entity
-//    }
-
-
     @Inject(method = ["m_5830_"], at = [At("HEAD")], remap = false, cancellable = true)
     fun isInWall(cir: CallbackInfoReturnable<Boolean>) {
         if (self is Player) {
@@ -98,23 +81,6 @@ abstract class EntityMixin: EntityExtendedComponent {
             }
         }
     }
-
-//    @ModifyExpressionValue(
-//        method = ["*"],
-//        at = [At(
-//            value = "FIELD",
-//            target = "Lnet/minecraft/world/entity/Entity;f_19794_:Z",
-//            remap = false
-//        )],
-//        remap = false
-//    )
-//    fun isNoPhysics(original: Boolean): Boolean {
-//        return (this is Player && (
-//                when(this.playerTransfurVariant?.changedEntity) {
-//                    is Soul -> true
-//                    else -> false
-//                })) || original
-//    }
 
     @Inject(method = ["m_7998_(Lnet/minecraft/world/entity/Entity;Z)Z"], at = [At("HEAD")], cancellable = true, remap = false)
     private fun startRiding(entity: Entity, b: Boolean, ci: CallbackInfoReturnable<Boolean>) {
@@ -273,10 +239,6 @@ abstract class LivingEntityMixin {
 @Mixin(Player::class)
 @Pseudo
 open class PlayerMixin: IPlayerExtendedData {
-//    @Unique private var `cecnull1$cecnull1_changed_plus_v2$canDismount`: Boolean = false
-//        @Unique get
-//        @Unique set
-
     @Unique
     private val `cecnull1$cecnull1_changed_plus_v2$MPlayerExtendedData`: MPlayerExtendedData = MPlayerExtendedData()
         @Unique get
@@ -296,16 +258,6 @@ open class PlayerMixin: IPlayerExtendedData {
             tag[MODID].asCompoundTag()["HAState"].asCompoundTag()
         )
     }
-
-//    @Inject(method = ["m_7380_"], at = [At("HEAD")], remap = false)
-//    private fun injectSaveData(tag: CompoundTag, ci: CallbackInfo) {
-//
-//    }
-//
-//    @Inject(method = ["m_7378_"], at = [At("HEAD")], remap = false)
-//    private fun injectLoadData(tag: CompoundTag, ci: CallbackInfo) {
-//
-//    }
 
     @Inject(method = ["m_6844_"], at = [At("RETURN")], cancellable = true, remap = false)
     private fun getItemBySlot(slot: EquipmentSlot, cir: CallbackInfoReturnable<ItemStack>) {

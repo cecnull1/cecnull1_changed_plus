@@ -1,10 +1,8 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 
-import com.github.cecnull1.cecnull1_changed_plus_v2.SOUL_USE_ITEM_MODE
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_ID
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.SOUL_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FlyingPureWhiteLatexYufengType
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FutiEntityType
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.LatexPinkHumanType
@@ -33,21 +31,6 @@ object ModTransfurVariant {
             addAbility(ChangedAbilities.TOGGLE_WAVE_VISION)
         }.build()
     }
-
-    val SOUL_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Soul>> = REGISTRY.register("form_$SOUL_ID") {
-        TransfurVariant.Builder.of(ModEntities.SOUL).apply {
-            visionType(VisionType.NIGHT_VISION)
-            breatheMode(TransfurVariant.BreatheMode.NONE)
-            transfurMode(TransfurMode.NONE)
-            itemUseMode(SOUL_USE_ITEM_MODE)
-        }.build()
-    }
-
-//    val C_PLAYER_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<CPlayer>> = REGISTRY.register("form_$CPLAYER_ID") {
-//        TransfurVariant.Builder.of(ModEntities.C_PLAYER).apply {
-//            faction(LatexType.NEUTRAL)
-//        }.build()
-//    }
 
     val PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<PureWhiteLatexYufeng>> = REGISTRY.register("form_$PURE_WHITE_LATEX_YUFENG_ID") {
         TransfurVariant.Builder.of(ModEntities.PURE_WHITE_LATEX_YUFENG).apply {

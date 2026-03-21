@@ -65,14 +65,11 @@ import java.util.*
 
 object ModEntities {
     const val A_ENTITY_ID = "a_entity"
-    const val ZOMBIE_ID = "zombie"
     const val A_HORSE_ID = "a_horse"
-    const val SOUL_ID  = "soul"
     const val PURE_WHITE_LATEX_YUFENG_ID = "pure_white_latex_yufeng"
     const val NOT_CAN_DISMOUNT_BOAT_ID = "not_can_dismount_boat"
     const val NONE_ENTITY_ID = "none_entity"
     const val MISC_ID = "misc"
-    const val PURE_WHITE_LATEX_YUFENG_AND_ARMOR_ID = "pure_white_latex_yufeng_by_ncdboat"
 
     val REGISTER: DeferredRegister<EntityType<*>> by lazy {
         DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID)
@@ -93,12 +90,6 @@ object ModEntities {
     val A_HORSE: RegistryObject<EntityType<AHorse>> = REGISTER.register(A_HORSE_ID) {
         EntityType.Builder.of(::AHorse, MobCategory.MISC)
             .build(A_HORSE_ID)
-    }
-
-    val SOUL: RegistryObject<EntityType<Soul>> = REGISTER.register(SOUL_ID) {
-        EntityType.Builder.of(::Soul, MobCategory.MONSTER)
-            .sized(0f, 0f)
-            .build(SOUL_ID)
     }
 
     val MISC: RegistryObject<EntityType<Misc>> = REGISTER.register(MISC_ID) {
@@ -168,16 +159,6 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
     override fun isFallFlying(old: Boolean): Boolean = this.meiyun() || old
 }
 
-open class Zombie(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level) {
-    override fun getLatexType(): LatexType {
-        return ChangedLatexTypes.NONE.get()
-    }
-
-    override fun getTransfurMode(): TransfurMode? {
-        return TransfurMode.REPLICATION
-    }
-}
-
 open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entityType, level), IOnMount,
     IMount {
     override fun isTamed(): Boolean {
@@ -228,45 +209,6 @@ open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entit
     override fun isSaddled(): Boolean = true
     override fun isSaddleable(): Boolean = true
     override fun onMount(mountType: MountType): Boolean = mountType !is MountType.Dismount
-}
-
-open class Soul(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level), VariantTickPlusAble {
-//    init {
-//        noPhysics = true
-//    }
-
-    override fun getLatexType(): LatexType {
-        return ChangedLatexTypes.NONE.get()
-    }
-
-    override fun getTransfurMode(): TransfurMode {
-        return TransfurMode.NONE
-    }
-
-    override fun isNoAi(): Boolean {
-        return true
-    }
-
-    override fun variantTick(level: Level?) {
-        noPhysics = true
-        super.variantTick(level)
-        if (health.isNaN()) {
-            health = Float.POSITIVE_INFINITY
-        }
-    }
-
-    override fun playerVariantTick(player: Player, level: Level?) {
-        player.noPhysics = true
-        player.health = Float.POSITIVE_INFINITY
-        player.foodData.foodLevel = 20
-        player.foodData.setSaturation(5f)
-        val abilities = player.abilities
-        if (!abilities.flying) {
-            abilities.flying = true
-            player.onUpdateAbilities()
-            if (player is ServerPlayer) player.sendAbilitiesUpdate()
-        }
-    }
 }
 
 open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : AEntity(type, level), VariantTickPlusAble, IFanJi {
