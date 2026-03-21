@@ -4,11 +4,8 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.ICanTakeOff
-import com.github.cecnull1.cecnull1lib.utils.EnchantmentUtils.hasEnchantment
-import com.github.cecnull1.cecnull1lib.utils.changed.removePlayerTransfurVariant
 import net.ltxprogrammer.changed.data.AccessorySlotContext
 import net.ltxprogrammer.changed.data.AccessorySlotType
-import net.ltxprogrammer.changed.item.BloodSyringe
 import net.ltxprogrammer.changed.item.LabCoatItem
 import net.ltxprogrammer.changed.item.WetsuitItem
 import net.minecraft.network.chat.Component
@@ -18,9 +15,9 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.Slot
-import net.minecraft.world.item.*
-import net.minecraft.world.item.enchantment.Enchantments
-import net.minecraft.world.level.Level
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemNameBlockItem
+import net.minecraft.world.item.ItemStack
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject

@@ -25,8 +25,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Co
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.wuDiTime
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
-import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.toTransfurDataOrNull
-import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData.Companion.transfurData
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.github.cecnull1.cecnull1lib.utils.vector.toKVec3
@@ -49,7 +47,6 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
 import net.minecraft.world.damagesource.DamageTypes
-import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
@@ -68,8 +65,6 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent
 import net.minecraftforge.event.level.BlockEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber
-import kotlin.jvm.optionals.getOrNull
-import kotlin.math.sqrt
 
 @EventBusSubscriber(modid = MODID, bus = EventBusSubscriber.Bus.FORGE)
 object Event {

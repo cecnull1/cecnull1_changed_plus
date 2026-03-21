@@ -4,9 +4,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.IS_HA
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PLAYER
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.NotCanDismountBoat.Companion.YU_ZHI
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.sendAbilitiesUpdate
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IFlying
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem

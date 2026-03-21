@@ -8,7 +8,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FutiEnti
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.LatexPinkHumanType
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.rlclass
 import net.ltxprogrammer.changed.entity.MiningStrength
-import net.ltxprogrammer.changed.entity.TransfurMode
 import net.ltxprogrammer.changed.entity.VisionType
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedAbilities

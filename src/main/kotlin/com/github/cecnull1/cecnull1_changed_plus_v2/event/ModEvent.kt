@@ -6,7 +6,6 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.event
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.Events.onCommonSetup
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onAccessoryDrop
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onBlockBreak
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onDimensionChange
@@ -25,12 +24,9 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IKeepConscious
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.RealKeepForm
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.level
-import com.github.cecnull1.cecnull1lib.utils.changed.entityVariant
 import com.github.cecnull1.cecnull1lib.utils.changed.playerTransfurVariant
 import net.ltxprogrammer.changed.data.AccessorySlots
-import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
 import net.ltxprogrammer.changed.process.ProcessTransfur
-import net.minecraft.world.entity.player.Player
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.*
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent
