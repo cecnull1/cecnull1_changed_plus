@@ -59,14 +59,14 @@ class UserHumanModel<T : ChangedEntity>(root: ModelPart) : AdvancedHumanoidModel
     }
 
     override fun setupAnim(
-        entity: T?,
+        entity: T,
         limbSwing: Float,
         limbSwingAmount: Float,
         ageInTicks: Float,
         netHeadYaw: Float,
         headPitch: Float
     ) {
-        this.animator.setupAnim(entity!!, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch)
+        this.animator.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch)
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch)
     }
 
@@ -104,7 +104,7 @@ class UserHumanModel<T : ChangedEntity>(root: ModelPart) : AdvancedHumanoidModel
         return animator
     }
 
-    override fun prepareMobModel(entity: T?, limbSwing: Float, limbSwingAmount: Float, partialTicks: Float) {
+    override fun prepareMobModel(entity: T, limbSwing: Float, limbSwingAmount: Float, partialTicks: Float) {
         super.prepareMobModel(entity, limbSwing, limbSwingAmount, partialTicks)
     }
 
