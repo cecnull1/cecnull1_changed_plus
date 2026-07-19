@@ -145,3 +145,5 @@ fun KClass<*>.toRLString(): String =
     this.simpleName?.toRLString() ?: this.jvmName.substringAfterLast(".").toRLString()
 
 inline fun <reified T> rlclass(): String = T::class.toRLString()
+
+inline val String.form get() = "form_${this}"

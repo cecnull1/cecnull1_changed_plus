@@ -260,3 +260,8 @@ tasks.compileScala {
 kotlin {
     jvmToolchain(21)
 }
+compileKotlin {
+    compilerOptions {
+        freeCompilerArgs.set(["-Xcontext-parameters"])
+    }
+}

@@ -21,6 +21,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
+import net.minecraft.world.item.ItemStack
 import java.util.*
 
 val mcModule = SerializersModule {

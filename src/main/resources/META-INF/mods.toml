@@ -69,3 +69,11 @@ mandatory = true
 versionRange = "[0.14.1,)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[mods]]
+
+modId = "casualties_cecnull1"
+version = "${mod_version}"
+displayName = "Casualties: Cecnull1"
+authors = "${mod_authors}"
+description = ''''''

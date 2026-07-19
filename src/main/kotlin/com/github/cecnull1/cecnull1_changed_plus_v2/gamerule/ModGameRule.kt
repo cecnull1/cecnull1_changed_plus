@@ -45,7 +45,7 @@ object ModGameRule {
         GameRules.register(
             "$MODID:isJiXianShiTF",
             GameRules.Category.PLAYER,
-            BooleanValue.create(true)
+            BooleanValue.create(false)
         )
     }
 
