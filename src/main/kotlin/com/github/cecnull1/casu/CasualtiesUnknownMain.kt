@@ -2,6 +2,8 @@ package com.github.cecnull1.casu
 
 import com.github.cecnull1.casu.entity.expie.AbstractExperiment
 import com.github.cecnull1.casu.entity.expie.ExpieRegister
+import com.github.cecnull1.casu.renderer.ExpieGenericRenderer
+import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.GenericRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.NoneEntityRenderer
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.init.ChangedAttributes
@@ -97,6 +99,6 @@ object Events {
 
     context(t: RegisterRenderers)
     private fun registerExpieRenderer(e: Supplier<out EntityType<out AbstractExperiment>>) {
-        t.registerEntityRenderer(e.get(), ::NoneEntityRenderer)
+        t.registerEntityRenderer(e.get(), ::ExpieGenericRenderer)
     }
 }

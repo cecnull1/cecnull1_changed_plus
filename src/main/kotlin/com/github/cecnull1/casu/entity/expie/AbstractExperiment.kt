@@ -1,8 +1,11 @@
 package com.github.cecnull1.casu.entity.expie
 
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.get
+import com.github.cecnull1.cecnull1_changed_plus_v2.entity.set
 import net.ltxprogrammer.changed.entity.AttributePresets
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.TransfurMode
+import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.ai.attributes.AttributeMap
 import net.minecraft.world.level.Level
@@ -18,6 +21,7 @@ import net.minecraft.world.level.Level
  * - Jump Force -> [net.ltxprogrammer.changed.init.ChangedAttributes.JUMP_STRENGTH]
  * - Kick Damage -> [net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE] + [net.ltxprogrammer.changed.init.ChangedAttributes.MINING_SPEED]
  * - Swim Speed -> [net.minecraftforge.common.ForgeMod.SWIM_SPEED]
+ * - Run Speed -> [net.ltxprogrammer.changed.init.ChangedAttributes.SPRINT_SPEED]
  *
  * # VariantInstance:
  * - Base: [Experiment]
@@ -44,5 +48,8 @@ abstract class AbstractExperiment(type: EntityType<out AbstractExperiment>, leve
     override fun setAttributes(attributes: AttributeMap) {
         super.setAttributes(attributes)
         AttributePresets.playerLike(attributes)
+        attributes[ChangedAttributes.JUMP_STRENGTH.get()]*=7/5
+        attributes[ChangedAttributes.FALL_RESISTANCE.get()]*=7/5
+        Result
     }
 }

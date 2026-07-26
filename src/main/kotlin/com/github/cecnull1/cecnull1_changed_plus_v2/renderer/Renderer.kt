@@ -128,8 +128,8 @@ class LnvincibleRenderer(context: EntityRendererProvider.Context): UserSAHumanEn
 
 class GenericRenderer<T: ChangedEntity>(context: EntityRendererProvider.Context): UserSAHumanEntityRenderer<T>(
     context,
-    location = newrl(MODID, "textures/entities/frezo_ms.png"),
-    isAlex = false
+    location = newrl(MODID, "textures/entities/lnvincible.png"),
+    isAlex = true
 )
 
 class SpecialRenderer(

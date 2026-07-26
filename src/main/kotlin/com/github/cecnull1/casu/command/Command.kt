@@ -4,6 +4,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.command.argument
 import com.github.cecnull1.casu.MODID
 import net.minecraft.commands.Commands.literal
 import net.minecraft.commands.arguments.EntityArgument
+import net.minecraft.network.chat.Component
 import net.minecraftforge.event.RegisterCommandsEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.common.Mod
@@ -26,7 +27,15 @@ object Command {
                 it.removeAllEffects()
                 it.airSupply = it.maxAirSupply
             }
-            0
+            context.source.sendSuccess(
+                {Component.literal("Healed the ${
+                    players.joinToString {
+                        it.displayName.string
+                    }
+                }")},
+                true
+            )
+            1
         }.build()).build())
     }
 }
