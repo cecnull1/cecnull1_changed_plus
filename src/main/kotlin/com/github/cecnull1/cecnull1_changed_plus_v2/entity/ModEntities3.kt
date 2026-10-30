@@ -3,6 +3,7 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.pipeIf
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
+import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
 import net.ltxprogrammer.changed.entity.AttributePresets
@@ -27,12 +28,13 @@ import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.vehicle.Minecart
 import net.minecraft.world.level.Level
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.AABB
 import net.minecraftforge.common.ForgeMod
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
+import kotlin.compareTo
+import kotlin.comparisons.then
+import kotlin.io.normalize
 
 object ModEntities3 {
     val REGISTRY: DeferredRegister<EntityType<*>> = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID)
@@ -98,35 +100,9 @@ class FlyingPureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) :
     override fun variantTick(level: Level?) {
         super.variantTick(level)
         maybeGetUnderlying() then {
-            pipeIf(!hasEffect(MobEffects.DOLPHINS_GRACE)) then {
-                addEffect(MobEffects.DOLPHINS_GRACE.new(
-                    duration = MobEffectInstance.INFINITE_DURATION,
-                    ambient = true,
-                    visible = false
-                ))
-            }
-
-            deltaMovement = deltaMovement.calcl(
-                direction = if (!isFallFlying) lookAngle else yRot.toHorizontalViewVec(),
-                influence = .5,
-                applyToY = !isFallFlying
-            )
-
-            if (deltaMovement.lengthSqr() < 1.0 && deltaMovement.lengthSqr() != 0.toDouble()) {
-                deltaMovement = deltaMovement.normalize().scale(1.0)
-            }
-
-            if (this is Player) {
-                foodData.foodLevel+=20
-                foodData.setExhaustion(0f)
-                foodData.setSaturation(foodData.saturationLevel+20)
-            }
-
-            resetFallDistance()
+            flyingPureWhiteLatexYufengLike()
         }
     }
-
-    override fun tTick() {}
 
     override fun setAttributes(attributes: AttributeMap) {
         super.setAttributes(attributes)
@@ -137,6 +113,7 @@ class FlyingPureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) :
         attributes[ForgeMod.SWIM_SPEED.get()] = 3
         attributes[Attributes.ATTACK_DAMAGE] = 200.0
         attributes[ChangedAttributes.TRANSFUR_DAMAGE.get()] = 200.0
+        attributes[ModOper.aEntityLike.attributeKey.get()] = 0.0
     }
 
     override fun isFallFlying(old: Boolean): Boolean {
@@ -146,6 +123,34 @@ class FlyingPureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) :
     override fun isSwimming(old: Boolean): Boolean {
         return isInWaterOrBubble || old
     }
+}
+
+fun LivingEntity.flyingPureWhiteLatexYufengLike() {
+    pipeIf(!hasEffect(MobEffects.DOLPHINS_GRACE)) then {
+        addEffect(MobEffects.DOLPHINS_GRACE.new(
+            duration = MobEffectInstance.INFINITE_DURATION,
+            ambient = true,
+            visible = false
+        ))
+    }
+
+    deltaMovement = deltaMovement.calcl(
+        direction = if (!isFallFlying) lookAngle else yRot.toHorizontalViewVec(),
+        influence = .5,
+        applyToY = !isFallFlying
+    )
+
+    if (deltaMovement.lengthSqr() < 1.0 && deltaMovement.lengthSqr() != 0.toDouble()) {
+        deltaMovement = deltaMovement.normalize().scale(1.0)
+    }
+
+    if (this is Player) {
+        foodData.foodLevel+=20
+        foodData.setExhaustion(0f)
+        foodData.setSaturation(foodData.saturationLevel+20)
+    }
+
+    resetFallDistance()
 }
 
 class CMinecart(type: EntityType<out Minecart>, level: Level?): Minecart(type, level), IOnMount {
@@ -180,11 +185,11 @@ class LatexPinkHuman(type: EntityType<out LatexPinkYuinDragon>, level: Level?): 
         attributes[ChangedAttributes.SNEAK_SPEED.get()] = 1.5
         attributes[ChangedAttributes.GRAB_STRUGGLE_STRENGTH.get()] = Double.MAX_VALUE
         attributes[ChangedAttributes.FALL_RESISTANCE.get()] = 1.5
+        attributes[ModOper.aEntityLike.attributeKey.get()]
     }
 
     override fun variantTick(level: Level?) {
         super.variantTick(level)
-        aEntityTick()
         maybeGetUnderlying() as? Player then {
             pipeIf(!hasEffect(MobEffects.DOLPHINS_GRACE)) then {
                 addEffect(MobEffects.DOLPHINS_GRACE.new(

@@ -7,10 +7,8 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FlyingPu
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FutiEntityType
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.LatexPinkHumanType
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.rlclass
-import net.ltxprogrammer.changed.entity.MiningStrength
 import net.ltxprogrammer.changed.entity.VisionType
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
-import net.ltxprogrammer.changed.init.ChangedAbilities
 import net.ltxprogrammer.changed.init.ChangedRegistry
 import net.minecraft.sounds.SoundEvents
 import net.minecraftforge.registries.DeferredRegister
@@ -21,13 +19,13 @@ object ModTransfurVariant {
 
     val A_ENTITY_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<AEntity>> = REGISTRY.register("form_$A_ENTITY_ID") {
         TransfurVariant.Builder.of(ModEntities.A_ENTITY).apply {
-            glide()
+//            glide()
             visionType(VisionType.NIGHT_VISION)
 
-            // 320-(-64) = 320+64, stepSize(320 + 64f) Deprecated
-            miningStrength(MiningStrength.STRONG)
+//            // 320-(-64) = 320+64, stepSize(320 + 64f) Deprecated
+//            miningStrength(MiningStrength.STRONG)
             breatheMode(TransfurVariant.BreatheMode.ANY)
-            addAbility(ChangedAbilities.TOGGLE_WAVE_VISION)
+//            addAbility(ChangedAbilities.TOGGLE_WAVE_VISION)
         }.build()
     }
 
@@ -35,18 +33,14 @@ object ModTransfurVariant {
         TransfurVariant.Builder.of(ModEntities.PURE_WHITE_LATEX_YUFENG).apply {
             visionType(VisionType.NIGHT_VISION)
             breatheMode(TransfurVariant.BreatheMode.ANY)
-            glide()
+//            glide()
         }.build()
-    }
-
-    val NONE_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<NoneTransfurVariant>> = REGISTRY.register("form_none") {
-        TransfurVariant.Builder.of(ModEntities.NONE_ENTITY).build()
     }
 
     val MEI_XI_YUAN_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<MeiXiYuan>> = REGISTRY.register("form_mei_xi_yuan") {
         TransfurVariant.Builder.of(ModEntities2.MEI_XI_YUAN).apply {
             breatheMode(TransfurVariant.BreatheMode.ANY)
-            miningStrength(MiningStrength.STRONG)
+//            miningStrength(MiningStrength.STRONG)
             sound(SoundEvents.AXOLOTL_IDLE_WATER.location)
         }.build()
     }
@@ -65,17 +59,17 @@ object ModTransfurVariant {
         TransfurVariant.Builder.of(FlyingPureWhiteLatexYufengType).apply {
             visionType(VisionType.NIGHT_VISION)
             breatheMode(TransfurVariant.BreatheMode.ANY)
-            glide()
-            miningStrength(MiningStrength.STRONG)
+//            glide()
+//            miningStrength(MiningStrength.STRONG)
         }.build()
     }
 
     val LATEX_PINK_HUMAN_VARIANT: RegistryObject<TransfurVariant<LatexPinkHuman>> = REGISTRY.register("form_${rlclass<LatexPinkHuman>()}") {
         TransfurVariant.Builder.of(LatexPinkHumanType).apply {
             visionType(VisionType.NIGHT_VISION)
-            breatheMode(TransfurVariant.BreatheMode.ANY)
-            glide()
-            miningStrength(MiningStrength.STRONG)
+//            breatheMode(TransfurVariant.BreatheMode.ANY)
+//            glide()
+//            miningStrength(MiningStrength.STRONG)
         }.build()
     }
 }

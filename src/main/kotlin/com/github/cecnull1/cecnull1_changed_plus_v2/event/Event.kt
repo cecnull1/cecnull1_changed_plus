@@ -1,5 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.event
 
+import com.github.cecnull1.adeplike.api.OperValue.Companion.getOper
 import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.addComponent
 import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.getComponent
 import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
@@ -15,14 +16,13 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.Be
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule.isJiXianShiTF
-import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
+import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.wuDiTime
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
@@ -51,6 +51,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.RelativeMovement
+import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
@@ -70,7 +71,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber
 object Event {
     fun onPlayerTick(event: CPlayerTickEvent) = event.process {
         val player = event.player
-        if (player.level.isClientSide) return@process
+        if (player.level.isClientSide && event.phase == TickEvent.Phase.END) return@process
         if (player.getModData(MODID).getBoolean(Constant.NBTKeys.BODY_WARNING)) {
             player.ifPlayerNotTransfurred {
                 player.progressTransfur(1f, TransfurData(
@@ -101,47 +102,39 @@ object Event {
             if (player is ServerPlayer) player.sendHealthUpdate()
         }
 
-        for (itemStack in ItemUtil.getWearingItems(player).toImmutableSafeList()) {
-            if (itemStack.itemStack.item is NotCanTakeOffWetsuit && player.isInWater) {
-                val fixSpeed = 20.0
-                val delta = player.deltaMovement
-                val rotation = player.lookAngle
-                if (!player.isFallFlying) {
-                    player.deltaMovement = Vec3(
-                        delta.x + rotation.x / fixSpeed,
-                        delta.y + rotation.y / fixSpeed,
-                        delta.z + rotation.z / fixSpeed
-                    )
-                }
-                if (!player.isUnderWater) {
-                    player.deltaMovement = Vec3(
-                        delta.x,
-                        delta.y.coerceAtMost(0.0),
-                        delta.z
-                    )
-                }
+        if (player.isInWater && player.getOper(ModOper.hasNotCanTakeOffWetsuitLike).notZero()) {
+            val fixSpeed = 20.0
+            val delta = player.deltaMovement
+            val rotation = player.lookAngle
+            if (!player.isFallFlying) {
+                player.deltaMovement = Vec3(
+                    delta.x + rotation.x / fixSpeed,
+                    delta.y + rotation.y / fixSpeed,
+                    delta.z + rotation.z / fixSpeed
+                )
+            }
+            if (!player.isInWaterOrBubble) {
+                player.deltaMovement = Vec3(
+                    delta.x,
+                    delta.y.coerceAtMost(0.0),
+                    delta.z
+                )
             }
         }
 
-        // 检查是否在劫持状态
+        if (player.getOper(ModOper.flyingPureWhiteLatexYufengLike).notZero()) {
+            player.flyingPureWhiteLatexYufengLike()
+        }
+
         if (player.hasHA) {
-            // 检查劫持物品是否意外丢失
             if (player.haItem.isEmpty) {
-                // 获取当前选中的快捷栏槽位
                 val selectedSlot = player.inventory.selected
 
-                // 直接访问底层物品栏（避免通过属性访问器）
                 val slotItem = player.inventory.items[selectedSlot]
 
-                // 确保槽位有可劫持物品
                 if (!slotItem.isEmpty) {
-                    // 执行真正的物品转移
                     player.haItem = slotItem.copy()
-
-                    // 清空原始槽位（关键操作）
                     slotItem.count = 0
-
-                    // 不添加额外日志 - setter 会处理变更记录
                 }
             }
         }
@@ -168,10 +161,6 @@ object Event {
             }.toMutableMap()
         }
 
-        if (event.phase == TickEvent.Phase.START && player.wuDiTime --> 0) {
-            player.wuDiTime--
-        }
-
         if (player.persistentData.getBoolean(Constant.NBTKeys.BetterNeon.NORIDE2_BN_C_JH_TF)) {
             player.ifPlayerNotTransfurred {
                 player.transfur(
@@ -186,7 +175,6 @@ object Event {
         }
 
         fun sync() {
-            if (event.phase != TickEvent.Phase.END) return
             if (player.level.isClientSide && event.player == Minecraft.getInstance().player) {
                 NetworkHandler.haStateSendToServer()
             }
@@ -212,6 +200,11 @@ object Event {
     }
 
     fun onLivingTick(event: CLivingTickEvent) {
+        val aEntityLikeValue = event.entity.getOper(ModOper.aEntityLike)
+        if (event.phase == TickEvent.Phase.START && aEntityLikeValue.notZero()) {
+            event.entity.aEntityTick()
+        }
+
         if (event.entity.level.isClientSide) return
         (event.entity as? PureWhiteLatexWolf)?.let {
             entity ->
@@ -285,10 +278,6 @@ object Event {
 
     fun onHurt(event: LivingHurtEvent) {
         (event.entity as? Player)?.ifPlayerTransfurred {
-            if (it.changedEntity is AEntity) {
-                (event.entity as? Player)?.wuDiTime?.let { it1 -> event.amount = event.amount.coerceAtMost(20f) * (it1 <= 0.0).toInt() }
-                (event.entity as? Player)?.wuDiTime+=20
-            }
         }
     }
 
@@ -411,14 +400,18 @@ object Event {
     fun onPlayerRespawn(event: PlayerEvent.PlayerRespawnEvent) {
         val player = event.entity as? ServerPlayer ?: return
         if (player is IPlayerExtendedData) {
-            if (!player.level.gameRules.getBoolean(ModGameRule.KeepHA)) {
-                player.haItem = ItemStack.EMPTY
-                player.hasHA = false
-            }
-            if (!player.level.gameRules.getBoolean(ModGameRule.KeepArmorHA)) {
-                player.haArmorItems = initHaArmorItems()
-                player.hasArmorHA = false
-            }
+//            if (!player.level.gameRules.getBoolean(ModGameRule.KeepHA)) {
+//                player.haItem = ItemStack.EMPTY
+//                player.getAttribute(ModOper.hasHA.attributeKey.get())?.addPermanentModifier(
+//                    AttributeModifier("The HA Item", 1.0, AttributeModifier.Operation.ADDITION)
+//                )
+//            }
+//            if (!player.level.gameRules.getBoolean(ModGameRule.KeepArmorHA)) {
+//                player.haArmorItems = initHaArmorItems()
+//                player.getAttribute(ModOper.hasArmorHA.attributeKey.get())?.addPermanentModifier(
+//                    AttributeModifier("The ArmorHA Item", 1.0, AttributeModifier.Operation.ADDITION)
+//                )
+//            }
             NetworkHandler.haStateSendToClient(event.entity)
         }
 
@@ -428,18 +421,6 @@ object Event {
                 keepConscious = true
             ))
         }
-
-//        player.ifPlayerNotTransfurred {
-//            player.setPlayerTransfurVariant(
-//                transfurData = TransfurData(
-//                    variant = ModTransfurVariant.SOUL_TRANSFUR_VARIANT.get(),
-//                    keepConscious = true
-//                ),
-//                progress = 1f
-//            )
-//            player.playerTransfurVariantSafe?.willSurviveTransfur = true
-//            player.setPos(player.lastDeathLocation.getOrNull()?.pos()?.toKVec3()?.toVec3()?:player.position())
-//        }
     }
 
     fun onDimensionChange(event: PlayerEvent.PlayerChangedDimensionEvent) {
@@ -460,31 +441,24 @@ object Event {
         }
     }
 
-    // 核心摔伤处理逻辑
     fun onLivingFall(event: LivingFallEvent) {
         val entity = event.entity
         if (entity !is Player) return
 
-        // 使用您提供的扩展属性获取兽化状态
         val variant = entity.playerTransfurVariant ?: return
 
-        // 检查是否为纯粹的白胶狼
         if (isPureWhiteWolf(variant)) {
-            // 应用摔伤免疫规则
             handleFallImmunity(event)
         }
     }
 
     private fun isPureWhiteWolf(variant: TransfurVariantInstance<*>): Boolean {
-        // 直接比较变体注册对象
         return variant.changedEntity is PureWhiteLatexWolf
     }
 
     private fun handleFallImmunity(event: LivingFallEvent) {
-        // 计算原版应受伤害
         val originalDamage = calculateFallDamage(event.distance, event.damageMultiplier)
 
-        // 应用免疫规则：最多只受1点伤害
         event.damageMultiplier = if (originalDamage > 1f) {
             1f / originalDamage
         } else {
@@ -493,7 +467,6 @@ object Event {
     }
 
     private fun calculateFallDamage(distance: Float, multiplier: Float): Float {
-        // 原版摔伤计算公式 (Minecraft 1.20.1)
         return Mth.clamp(distance - 3.0f, 0.0f, 40.0f) * multiplier
     }
 }
@@ -581,14 +554,11 @@ fun ServerPlayer.sendPositionUpdate() {
     connection.send(clientBoundPlayerPositionPacket)
 }
 
-// 扩展函数：专门发送头部旋转更新
 fun ServerPlayer.sendHeadRotationUpdate(yHeadRot: Float) {
-    // 将yHeadRot转换为包需要的字节（范围：0-256 代表 0-360 度）
     val byteYHeadRot = (yHeadRot * 256.0f / 360.0f).toInt().toByte()
     connection.send(ClientboundRotateHeadPacket(this, byteYHeadRot))
 }
 
-// 在需要更新头部旋转的地方使用：
 fun syncHeadLookAt(livingEntity: LivingEntity, attacker: Entity) {
     if (livingEntity.level.isClientSide) return
 
@@ -601,13 +571,10 @@ fun syncHeadLookAt(livingEntity: LivingEntity, attacker: Entity) {
 
     when (livingEntity) {
         is ServerPlayer -> {
-            // 对于玩家，使用我们扩展的同步函数
             livingEntity.sendHeadRotationUpdate(headRot)
-            // 重置客户端预测
             livingEntity.connection.resetPosition()
         }
         else -> {
-            // 对于非玩家实体，广播给追踪这个实体的所有客户端
             (livingEntity.level as? ServerLevel)?.chunkSource?.broadcast(livingEntity,
                 ClientboundRotateHeadPacket(
                     livingEntity,

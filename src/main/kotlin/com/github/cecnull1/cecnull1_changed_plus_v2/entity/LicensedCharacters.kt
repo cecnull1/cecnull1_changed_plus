@@ -27,6 +27,7 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariant
 import net.ltxprogrammer.changed.init.ChangedLatexTypes
 import net.ltxprogrammer.changed.init.ChangedRegistry
 import net.ltxprogrammer.changed.util.Color3
+import net.ltxprogrammer.changed.world.LatexCoverProperties
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
@@ -115,11 +116,8 @@ private inline fun <reified T: ChangedEntity> RegistryObject<EntityType<T>>.regi
     }
 }
 
-object UserLatex : LatexType() {
-    override fun getLootTable(): ResourceLocation = BuiltInLootTables.EMPTY
+object UserLatex : LatexType(LatexCoverProperties.of()) {
     override fun isFriendlyTo(otherType: LatexType?): Boolean = super.isFriendlyTo(otherType) || otherType == this
-
-    override fun getRenderPropertiesInternal(): Any = ChangedLatexTypes.WHITE_LATEX.get().renderPropertiesInternal
 }
 
 abstract class UserEntity(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level) {

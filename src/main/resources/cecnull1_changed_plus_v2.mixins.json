@@ -21,7 +21,6 @@
     "EntityAccessor",
     "ModelPartAccessor",
     "TransfurVariantInstanceMixin",
-    "AccessChestAbilityInstanceMixin",
     "ServerPlayerMixin",
     "ProcessTransfurMixin"
   ],

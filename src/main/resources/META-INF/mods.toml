@@ -77,3 +77,14 @@ version = "${mod_version}"
 displayName = "Casualties: Cecnull1"
 authors = "${mod_authors}"
 description = ''''''
+
+[[mods]]
+
+modId = "adep_like"
+version = "${mod_version}"
+displayName = "ADEP-LIKE API"
+authors = "${mod_authors}"
+description = '''
+Attribute = Data = Enchant = Potion Like API
+'''
+

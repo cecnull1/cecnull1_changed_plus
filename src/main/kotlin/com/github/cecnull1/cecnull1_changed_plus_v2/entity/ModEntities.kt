@@ -5,6 +5,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.IS
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PLAYER
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.NotCanDismountBoat.Companion.YU_ZHI
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
+import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
@@ -22,6 +23,7 @@ import com.github.cecnull1.cecnull1lib.utils.vector.div
 import com.github.cecnull1.cecnull1lib.utils.vector.plus
 import com.github.cecnull1.cecnull1lib.utils.vector.times
 import net.ltxprogrammer.changed.entity.ChangedEntity
+import net.ltxprogrammer.changed.entity.ChangedEntity.createLatexAttributes
 import net.ltxprogrammer.changed.entity.PowderSnowWalkable
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.TransfurMode
@@ -45,6 +47,7 @@ import net.minecraft.world.entity.*
 import net.minecraft.world.entity.ai.attributes.Attribute
 import net.minecraft.world.entity.ai.attributes.AttributeMap
 import net.minecraft.world.entity.ai.attributes.AttributeModifier
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.horse.Horse
 import net.minecraft.world.entity.player.Player
@@ -125,15 +128,6 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
     override fun isMaskless() = false
     override fun getTransfurVariant(): TransfurVariant<*>? = this.selfVariant
 
-    override fun variantTick(level: Level?) {
-        super.variantTick(level)
-        tTick()
-    }
-
-    protected open fun tTick() {
-        aEntityTick()
-    }
-
     override fun getOwnerUUID(): UUID? {
         return entityData[DATA_OWNERUUID_ID].orElse(null)
     }
@@ -148,6 +142,8 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
         attributes[Attributes.ATTACK_DAMAGE] = 40.0
         attributes[ChangedAttributes.TRANSFUR_DAMAGE.get()] = 40.0
         attributes[ForgeMod.STEP_HEIGHT_ADDITION.get()] = computeStepHeightOffset(320.0 + 64.0)
+
+        attributes[ModOper.aEntityLike.attributeKey.get()] = 1.0
     }
 
     override fun registerGoals() {
@@ -156,6 +152,8 @@ open class AEntity(type: EntityType<out DarkLatexYufeng>, level: Level?) : DarkL
 
     override fun isFallFlying(old: Boolean): Boolean = this.meiyun() || old
 }
+
+fun createAEntityAttributes(): AttributeSupplier.Builder = createLatexAttributes().add(ModOper.aEntityLike.attributeKey.get())
 
 open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entityType, level), IOnMount,
     IMount {
@@ -246,9 +244,7 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
                 !mountType.entity.isAlive && !this.isAlive
             }
             is MountType.PlayerSelfDismount -> {
-                if (mountType.player.isShiftKeyDown) {
-                    onMount(MountType.Dismount(mountType.player))
-                } else false
+                mountType.player.isShiftKeyDown && onMount(MountType.Dismount(mountType.player))
             }
             is MountType.Move -> false
             else -> true
@@ -272,8 +268,6 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
                     direction = yRot.toHorizontalViewVec(),
                     applyToY = false
                 )
-            } else {
-                player.hasHA = false
             }
             this.persistentData[MODID] = this.getModData(MODID).also {
                     persistentData ->
@@ -321,8 +315,8 @@ open class Misc(type: EntityType<out ChangedEntity>, level: Level) : ChangedEnti
     override fun isNoAi() = false
 }
 
-fun ChangedEntity.aEntityTick() {
-    val entity = maybeGetUnderlying()
+fun LivingEntity.aEntityTick() {
+    val entity = this
     if (entity.isFallFlying) {
         entity.autoMove(48)
     }
@@ -347,34 +341,11 @@ fun LivingEntity.meiyun(): Boolean = this.isOnFire || this.isInLava || this.acti
 }
 
 fun Entity.shaWanYiDeAddArmor(player: Player) {
-    ItemUtil.tryEquipAccessory(
-        player,
-        run {
-            val item = ModItems.NOT_CAN_TAKE_OFF_LAB_COAT.get()
-            val itemStack = ItemStack(item)
-            item.setClothingState(itemStack, item.getClothingState(itemStack).setValue(CLOSED, true))
-            itemStack.count = 1
-            itemStack.tag = itemStack.orCreateTag.apply {
-                this[IS_HA] = true
-            }
-            itemStack
-        },
-        ChangedAccessorySlots.FULL_BODY.get()
-    )
-    ItemUtil.tryEquipAccessory(
-        player,
-        ItemStack(ModItems.NOT_CAN_TAKE_OFF_WETSUIT.get()).apply {
-            count = 1
-            this.tag = orCreateTag.apply {
-                this[IS_HA] = true
-            }
-        },
-        ChangedAccessorySlots.BODY.get()
-    )
-
     val modifierIdString = "${MODID}:${player.uuid}.riderIn(${this.uuid})"
     val uuid = UUID.nameUUIDFromBytes(modifierIdString.toByteArray(Charsets.US_ASCII)) // 将字符串转化为UUID
-    player.hasHA = true
+    player.getAttribute(ModOper.hasHA.attributeKey.get())?.addPermanentModifier(
+        AttributeModifier("The HA Item", 1.0, AttributeModifier.Operation.ADDITION)
+    )
     player.haItem = ItemStack(Items.DIAMOND_SWORD).apply {
         addAttributeModifier(
             Attributes.ATTACK_DAMAGE,
@@ -430,7 +401,9 @@ fun Entity.shaWanYiDeAddArmor(player: Player) {
 
         return this
     }
-    player.hasArmorHA = true
+    player.getAttribute(ModOper.hasArmorHA.attributeKey.get())?.addPermanentModifier(
+        AttributeModifier("The ArmorHA Item", 1.0, AttributeModifier.Operation.ADDITION)
+    )
     player.haArmorItems = mutableMapOf(
         EquipmentSlot.HEAD to ItemStack(Items.DIAMOND_HELMET).addArmorAttributeModifiers(),
         EquipmentSlot.CHEST to ItemStack(Items.DIAMOND_CHESTPLATE).addArmorAttributeModifiers(),

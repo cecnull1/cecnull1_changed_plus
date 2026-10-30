@@ -15,16 +15,11 @@ import java.util.Locale
 import kotlin.collections.iterator
 
 data class HAState(
-    var hasHA: Boolean = false,
-    var hasArmorHA: Boolean = false,
     var haItem: ItemStack = ItemStack.EMPTY,
     var haArmorItems: MutableMap<EquipmentSlot, ItemStack> = initHaArmorItems(),
     var haAccessorySlots: AccessorySlots = AccessorySlots(),
-    var wuDiTime: Int = 0
 ) {
     fun copyFrom(other: HAState, deepCopy: Boolean = false) {
-        hasHA = other.hasHA
-        hasArmorHA = other.hasArmorHA
         haItem = if (deepCopy) other.haItem.copy() else other.haItem
         haArmorItems = other.haArmorItems.mapValues { (_, itemStack) ->
             if (deepCopy) itemStack.copy() else itemStack
@@ -33,15 +28,12 @@ data class HAState(
         val otherHaAccessorySlots = other.haAccessorySlots
         haAccessorySlots = if (deepCopy) AccessorySlots(otherHaAccessorySlots.owner).apply {
             load(otherHaAccessorySlots.save())
-            // 2. 复制 lastItems（通过公共方法读写）
             otherHaAccessorySlots.slotTypes.forEach { slotType ->
                 val lastStack = otherHaAccessorySlots.getLastItem(slotType)
                 this.setLastItem(slotType, lastStack)
             }
             orderedSlots
         } else other.haAccessorySlots
-
-        wuDiTime = other.wuDiTime
     }
 
     fun copyFrom(player: Player) {
@@ -51,8 +43,6 @@ data class HAState(
     }
 
     fun loadNBTData(nbt: CompoundTag): HAState {
-        hasHA = nbt.getBoolean("hasHA")
-        hasArmorHA = nbt.getBoolean("hasArmorHA")
         haItem = ItemStack.of(nbt.getCompound("haItem"))
         haArmorItems = buildMap {
             for ((slot, itemStack) in nbt.getCompound("haArmorItems").entries) {
@@ -64,14 +54,11 @@ data class HAState(
             }
         }.toMutableMap()
         haAccessorySlots.load(nbt.getCompound("haAccessorySlots"))
-        wuDiTime = nbt.getInt("wuDiTime")
         return this
     }
 
     // 私有核心方法
     private fun writeTo(tag: CompoundTag): CompoundTag {
-        tag["hasHA"] = hasHA
-        tag["hasArmorHA"] = hasArmorHA
         tag["haItem"] = haItem.serializeNBT()
         tag["haArmorItems"] = buildNBT {
             for ((slot, itemStack) in haArmorItems) {
@@ -79,7 +66,6 @@ data class HAState(
             }
         }
         tag["haAccessorySlots"] = haAccessorySlots.save()
-        tag["wuDiTime"] = wuDiTime
         return tag
     }
 

@@ -59,12 +59,10 @@ object ExpieRegister {
     }
     val crystalVariant: RegistryObject<TransfurVariant<Crystal>> = variantRegistry.register(rlclass<Crystal>().form) {
         TransfurVariant.Builder.of(crystalType)
-            .addAbility(ChangedAbilities.GRAB_ENTITY_ABILITY)
             .build()
     }
     val velvetVariant: RegistryObject<TransfurVariant<Velvet>> = variantRegistry.register(rlclass<Velvet>().form) {
         TransfurVariant.Builder.of(velvetType)
-            .addAbility(ChangedAbilities.CREATE_COBWEB)
             .build()
     }
     val ickeVariant = variantRegistry.genericExperimentVariant(ickeType)

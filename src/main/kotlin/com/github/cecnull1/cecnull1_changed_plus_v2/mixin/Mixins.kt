@@ -1,10 +1,10 @@
 @file:Suppress("USELESS_IS_CHECK", "UNUSED_PARAMETER", "UNUSED_VARIABLE")
 package com.github.cecnull1.cecnull1_changed_plus_v2.mixin
 
+import com.github.cecnull1.adeplike.api.OperValue.Companion.getOper
 import com.github.cecnull1.cecnull1_cforge.core.CForgeEventCore.post
 import com.github.cecnull1.cecnull1_cforge.core.ComponentContainer
 import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.getComponent
-import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.hasComponent
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.bus
 import com.github.cecnull1.cecnull1_changed_plus_v2.cbor.format
@@ -18,7 +18,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.event.CPlayerTickEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.LivingTravelEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.TakeOffEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
-import com.github.cecnull1.cecnull1_changed_plus_v2.item.NotCanTakeOffWetsuit
+import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
@@ -31,7 +31,6 @@ import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue
 import com.llamalad7.mixinextras.injector.ModifyReturnValue
 import kotlinx.serialization.ExperimentalSerializationApi
-import net.ltxprogrammer.changed.ability.AccessChestAbilityInstance
 import net.ltxprogrammer.changed.data.AccessorySlotType
 import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
@@ -291,12 +290,8 @@ open class PlayerMixin: IPlayerExtendedData {
     @ModifyReturnValue(method = ["m_6069_"], at = [At("RETURN")], remap = false)
     private fun isSwimming(old: Boolean): Boolean {
         (this as Player) then {
-            if (this.accessorySlotsFast()?.fieldItems?.values?.any {
-                it.item is NotCanTakeOffWetsuit
-            }?: false) {
-                if (this.isInWater) {
-                    return(true)
-                }
+            if (this.isInWater && this.getOper(ModOper.hasNotCanTakeOffWetsuitLike).notZero()) {
+                return(true)
             }
             if ((this.playerTransfurVariant?.changedEntity as? ISwimming)?.isSwimming(old) == true) return(true)
         }
@@ -440,7 +435,7 @@ abstract class ServerPlayerMixin {
                     oldVariant.transfurProgression
                 )
                 if (newVariant == null) return@let
-                newVariant.load(oldVariant.save())
+                newVariant.load(oldVariant.saveGeneral())
                 newVariant.handleRespawn()
             }
         }
@@ -499,29 +494,6 @@ abstract class TransfurVariantInstanceMixin {
     @field:Shadow
     @get:Unique
     private val host: Player? = null
-
-    @ModifyExpressionValue(
-        method = ["tickBreathing"],
-        at = [At(
-            value = "INVOKE",
-            target = $$"Lnet/ltxprogrammer/changed/entity/variant/TransfurVariant$BreatheMode;canBreatheWater()Z"
-        )],
-        remap = false
-    )
-    private fun optimisticCanBreatheWater(original: Boolean): Boolean = original
-}
-
-@Mixin(AccessChestAbilityInstance::class)
-abstract class AccessChestAbilityInstanceMixin {
-    @Inject(method = ["onRemove"], at = [At("HEAD")], cancellable = true, remap = false)
-    private fun onRemove(ci: CallbackInfo) {
-        this as AccessChestAbilityInstance then {
-            if (entity.isDeadOrDying && (entity.level.gameRules.getBoolean(ModGameRule.realKeepForm))) {
-                clearContent()
-                ci.cancel()
-            }
-        }
-    }
 }
 
 @Mixin(AccessorySlots::class, remap = false)

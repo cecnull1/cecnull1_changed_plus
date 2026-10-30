@@ -34,12 +34,6 @@ object ModItems {
     val WHITE_LATEX_BLOCK_V2: RegistryObject<WhiteLatexBlockV2Item> = REGISTER.register(ModBlocks.WHITE_LATEX_BLOCK_V2_ID) {
         WhiteLatexBlockV2Item()
     }
-    val NOT_CAN_TAKE_OFF_WETSUIT: RegistryObject<NotCanTakeOffWetsuit> = REGISTER.register("not_can_take_off_wetsuit") {
-        NotCanTakeOffWetsuit()
-    }
-    val NOT_CAN_TAKE_OFF_LAB_COAT: RegistryObject<NotCanTakeOffLabCoat> = REGISTER.register("not_can_take_off_lab_coat") {
-        NotCanTakeOffLabCoat()
-    }
 }
 
 class ABlock : ItemNameBlockItem(ModBlocks.A_BLOCK.get(), Properties())
@@ -49,48 +43,3 @@ class BBlockItem : ItemNameBlockItem(ModBlocks.BBLOCK.get(), Properties())
 class WhiteLatexBlockV2Item : ItemNameBlockItem(
     ModBlocks.WHITE_LATEX_BLOCK_V2.get(), Properties()
 )
-
-class NotCanTakeOffWetsuit : WetsuitItem(), ICanTakeOff {
-    override fun getArmorTexture(stack: ItemStack?, entity: Entity?, slot: EquipmentSlot?, type: String?): String {
-        return "changed:textures/models/wetsuit.png"
-    }
-
-    override fun canTakeOff(player: Player, slot: Slot, item: ItemStack): Boolean = false
-}
-
-class NotCanTakeOffLabCoat : LabCoatItem(), ICanTakeOff {
-    override fun allowedInSlot(itemStack: ItemStack?, wearer: LivingEntity?, slot: AccessorySlotType?): Boolean {
-        return true
-    }
-
-    override fun shouldDisableSlot(slotContext: AccessorySlotContext<*>, otherSlot: AccessorySlotType): Boolean {
-        return false
-    }
-
-    override fun accessoryInteract(slotContext: AccessorySlotContext<*>) {
-        val itemStack = slotContext.stack() ?: ItemStack.EMPTY
-        val state = this.getClothingState(itemStack)
-        if (!state.getValue(CLOSED)) {
-            this.setClothingState(itemStack, this.getClothingState(itemStack).cycle(CLOSED))
-            val changeSound = this.getEquipSound(itemStack)
-            if (changeSound != null) slotContext.wearer().playSound(changeSound, 1f, 1f)
-        } else {
-            slotContext.wearer?.let {
-                if (it is ServerPlayer) {
-                    it.displayClientMessage(Component.literal(
-                        "你试图解开这套实验室服，但失败了。" + Constant.NI_BU_YING_GAI_CHUAN_DAI_ZHE_GE_WU_PIN_DE
-                    ), true)
-                }
-            }
-        }
-    }
-
-    override fun getArmorTexture(stack: ItemStack, entity: Entity?, slot: EquipmentSlot?, type: String?): String {
-        return if (this.getClothingState(stack)
-                .getValue(CLOSED)
-        ) "changed:textures/models/lab_coat_closed.png"
-        else "changed:textures/models/lab_coat.png"
-    }
-
-    override fun canTakeOff(player: Player, slot: Slot, item: ItemStack) = this.getClothingState(item)?.getValue(CLOSED) != true
-}

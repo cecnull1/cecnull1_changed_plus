@@ -4,14 +4,13 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.newrl
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.ltxprogrammer.changed.client.animations.Limb
+import net.ltxprogrammer.changed.Changed
+import net.ltxprogrammer.changed.client.renderer.animate.AnimatorPresets
 import net.ltxprogrammer.changed.client.renderer.animate.HumanoidAnimator
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorHumanModel
 import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModelSet
 import net.ltxprogrammer.changed.client.renderer.model.armor.LatexHumanoidArmorModel
-import net.ltxprogrammer.changed.client.tfanimations.HelperModel
-import net.ltxprogrammer.changed.client.tfanimations.TransfurHelper
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.minecraft.client.model.geom.ModelLayerLocation
 import net.minecraft.client.model.geom.ModelPart
@@ -23,8 +22,11 @@ import net.minecraft.client.model.geom.builders.MeshDefinition
 import net.minecraft.client.renderer.entity.RenderLayerParent
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.EquipmentSlot.*
 import net.minecraft.world.entity.HumanoidArm
 import net.minecraft.world.item.ItemStack
+import java.util.function.BiFunction
+import java.util.function.Function
 
 // Made with Blockbench 5.0.4
 // Exported for Minecraft version 1.17 or later with Mojang mappings
@@ -104,37 +106,63 @@ class UserHumanModel<T : ChangedEntity>(root: ModelPart) : AdvancedHumanoidModel
         return animator
     }
 
-    override fun prepareMobModel(entity: T, limbSwing: Float, limbSwingAmount: Float, partialTicks: Float) {
-        super.prepareMobModel(entity, limbSwing, limbSwingAmount, partialTicks)
-    }
-
     class ArmorModel<AT : ChangedEntity>(
         root: ModelPart,
         armorModel: net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel?
     ) : LatexHumanoidArmorModel<AT, ArmorModel<AT>>(root, armorModel) {
-        private val RightLeg: ModelPart = root.getChild("right_leg")
-        private val LeftLeg: ModelPart = root.getChild("left_leg")
         private val Head: ModelPart = root.getChild("head")
+        private val Hat: ModelPart = root.getChild("hat")
         private val Torso: ModelPart = root.getChild("body")
-        private val RightArm: ModelPart = root.getChild("right_arm")
+        private val LeftLeg: ModelPart = root.getChild("left_leg")
+        private val RightLeg: ModelPart = root.getChild("right_leg")
         private val LeftArm: ModelPart = root.getChild("left_arm")
-        private val animator: HumanoidAnimator<AT, ArmorModel<AT>> =
-            HumanoidAnimator.of<AT, ArmorModel<AT>>(this).hipOffset(-1.5f).legLength(10.5f)
-                .addPreset(
-                    AnimatorUtils.func.humanLikeC<AT, ArmorModel<AT>>(
-                        LeftLeg,
-                        RightLeg,
-                        LeftArm,
-                        RightArm,
-                        Head,
-                        Torso
-                    )
+        private val RightArm: ModelPart = root.getChild("right_arm")
+        private val animator: HumanoidAnimator<AT, ArmorModel<AT>> = HumanoidAnimator.of(this).hipOffset(-1.5f).legLength(10.5f)
+            .addPreset(
+                AnimatorPresets.humanLike(
+                    Head,
+                    Torso,
+                    LeftArm,
+                    RightArm,
+                    LeftLeg,
+                    RightLeg
                 )
+            )
+
+        override fun getAnimator(p0: AT): HumanoidAnimator<AT, *> = animator
+
+        override fun setupAnim(
+            entity: AT,
+            limbSwing: Float,
+            limbSwingAmount: Float,
+            ageInTicks: Float,
+            netHeadYaw: Float,
+            headPitch: Float
+        ) {
+            super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch)
+            Hat.copyFrom(Head)
+        }
+
+        override fun getArm(arm: HumanoidArm): ModelPart {
+            return if (arm == HumanoidArm.LEFT) this.LeftArm else this.RightArm
+        }
+
+        override fun getLeg(leg: HumanoidArm?): ModelPart? {
+            return if (leg == HumanoidArm.LEFT) this.LeftLeg else this.RightLeg
+        }
+
+        override fun getHead(): ModelPart {
+            return this.Head
+        }
+
+        override fun getTorso(): ModelPart {
+            return Torso
+        }
 
         override fun renderForSlot(
-            entity: AT?,
-            parent: RenderLayerParent<in AT?, *>?,
-            stack: ItemStack?,
+            entity: AT,
+            parent: RenderLayerParent<in AT, *>,
+            stack: ItemStack,
             slot: EquipmentSlot,
             poseStack: PoseStack,
             buffer: VertexConsumer,
@@ -149,30 +177,24 @@ class UserHumanModel<T : ChangedEntity>(root: ModelPart) : AdvancedHumanoidModel
             this.scaleForSlot(parent, slot, poseStack)
 
             when (slot) {
-                EquipmentSlot.HEAD -> Head.render(
-                    poseStack,
-                    buffer,
-                    packedLight,
-                    packedOverlay,
-                    red,
-                    green,
-                    blue,
-                    alpha
-                )
+                HEAD -> {
+                    Head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
+                    Hat.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
+                }
 
-                EquipmentSlot.CHEST -> {
+                CHEST -> {
                     Torso.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
                     LeftArm.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
                     RightArm.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
                 }
 
-                EquipmentSlot.LEGS -> {
+                LEGS -> {
                     Torso.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
                     LeftLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
                     RightLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
                 }
 
-                EquipmentSlot.FEET -> {
+                FEET -> {
                     LeftLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
                     RightLeg.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha)
                 }
@@ -183,58 +205,41 @@ class UserHumanModel<T : ChangedEntity>(root: ModelPart) : AdvancedHumanoidModel
             poseStack.popPose()
         }
 
-        override fun getTransfurHelperModel(limb: Limb?): HelperModel? {
-            if (limb == Limb.TORSO) return TransfurHelper.getFeminineTorso(this.armorModel)
-            return super.getTransfurHelperModel(limb)
-        }
-
-        override fun getArm(arm: HumanoidArm): ModelPart {
-            return if (arm == HumanoidArm.LEFT) LeftArm else RightArm
-        }
-
-        override fun getLeg(leg: HumanoidArm?): ModelPart? {
-            return if (leg == HumanoidArm.LEFT) LeftLeg else RightLeg
-        }
-
-        override fun getHead(): ModelPart {
-            return Head
-        }
-
-        override fun getTorso(): ModelPart {
-            return Torso
-        }
-
-        override fun getAnimator(entity: AT): HumanoidAnimator<AT, ArmorModel<AT>> {
-            return animator
-        }
-
-        override fun setupAnim(
-            entity: AT?,
-            limbSwing: Float,
-            limbSwingAmount: Float,
-            ageInTicks: Float,
-            netHeadYaw: Float,
-            headPitch: Float
-        ) {
-            this.animator.setupAnim(entity!!, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch)
-            super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch)
-        }
-
         companion object {
-            val MODEL_SET: ArmorModelSet<ChangedEntity, ArmorModel<ChangedEntity>> =
+            val MODEL_SET: ArmorModelSet<ChangedEntity, ArmorHumanModel<ChangedEntity>> =
                 ArmorModelSet.of(
-                    newrl(MODID, "user_entity_model"),
-                    { layer: net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel? ->
+                    newrl(MODID, "armor_player"),
+                    { layer: net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel ->
                         ArmorHumanModel.createArmorLayer(
-                            layer
+                            layer,
+                            false
                         )
                     },
-                    { root: ModelPart?, armorModel: net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel? ->
-                        ArmorModel(
-                            root!!,
-                            armorModel
+                    { modelPart: ModelPart?, model: net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel ->
+                        ArmorHumanModel(
+                            modelPart,
+                            model
                         )
-                    })
+                    },
+                    false
+                )
+            val MODEL_SET_SLIM: ArmorModelSet<ChangedEntity, ArmorHumanModel<ChangedEntity>> =
+                ArmorModelSet.of(
+                    newrl(MODID, "armor_player_slim"),
+                    { layer: net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel ->
+                        ArmorHumanModel.createArmorLayer(
+                            layer,
+                            true
+                        )
+                    },
+                    { modelPart: ModelPart?, model: net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel ->
+                        ArmorHumanModel(
+                            modelPart,
+                            model
+                        )
+                    },
+                    true
+                )
         }
     }
 

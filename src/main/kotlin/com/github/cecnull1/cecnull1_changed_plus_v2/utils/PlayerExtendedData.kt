@@ -1,5 +1,8 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 
+import com.github.cecnull1.adeplike.api.OperValue.Companion.getOper
+import com.github.cecnull1.adeplike.api.OperValue.Companion.getOperNoItem
+import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.mojang.logging.LogUtils.getLogger
 import net.ltxprogrammer.changed.data.AccessorySlots
@@ -19,44 +22,6 @@ data class MPlayerExtendedData(
     val haState: HAState = HAState()
 ) {
     companion object {
-        var Player.hasHA: Boolean
-            get() {
-                if (this is IPlayerExtendedData) {
-                    return this.mPlayerExtendedData.haState.hasHA
-                }
-                return false
-            }
-            set(value) {
-                if (this is IPlayerExtendedData) {
-                    val data = this.mPlayerExtendedData
-                    val old = data.haState.hasHA
-                    if (value != old) {
-                        data.haState.hasHA = value
-                        getLogger().info("${this.level}: Has HA changed from $old to $value")
-                        if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
-                    }
-                }
-            }
-
-        var Player.hasArmorHA: Boolean
-            get() {
-                if (this is IPlayerExtendedData) {
-                    return this.mPlayerExtendedData.haState.hasArmorHA
-                }
-                return false
-            }
-            set(value) {
-                if (this is IPlayerExtendedData) {
-                    val data = this.mPlayerExtendedData
-                    val old = data.haState.hasArmorHA
-                    if (old != value) {
-                        data.haState.hasArmorHA = value
-                        getLogger().info("${this.level}: Has Armor HA changed from $old to $value")
-                        if (this is ServerPlayer) NetworkHandler.haStateSendToClient(this)
-                    }
-                }
-            }
-
         var Player.haItem: ItemStack
             get() {
                 if (this is IPlayerExtendedData) {
@@ -118,21 +83,10 @@ data class MPlayerExtendedData(
                 }
             }
 
-        var Player.wuDiTime: Int
-            get() {
-                if (this is IPlayerExtendedData) {
-                    return this.mPlayerExtendedData.haState.wuDiTime
-                }
-                return 0
-            }
-            set(value) {
-                if (this is IPlayerExtendedData) {
-                    val data = this.mPlayerExtendedData
-                    val old = data.haState.wuDiTime
-                    if (old != value) {
-                        data.haState.wuDiTime = value
-                    }
-                }
-            }
+        val Player.hasHA: Boolean
+            get() = this.getOperNoItem(ModOper.hasHA).notZero()
+
+        val Player.hasArmorHA: Boolean
+            get() = this.getOperNoItem(ModOper.hasArmorHA).notZero()
     }
 }

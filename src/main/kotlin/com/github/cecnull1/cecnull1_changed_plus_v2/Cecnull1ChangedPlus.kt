@@ -34,6 +34,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onTravelEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.UserHumanModel
+import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceOperatorEntityGetTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceTrickTransfurLivingEntity
@@ -42,15 +43,12 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.NoneEntityRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.SpecialRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.newrl
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TypeRegistry.register
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.value
 import net.ltxprogrammer.changed.client.RegisterComplexRenderersEvent
 import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
 import net.ltxprogrammer.changed.client.renderer.LatexOrcaRenderer
 import net.ltxprogrammer.changed.client.renderer.LatexPinkYuinDragonRenderer
 import net.ltxprogrammer.changed.client.renderer.SeatEntityRenderer
-import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer
-import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer.ModelComponent
-import net.ltxprogrammer.changed.client.renderer.layers.AccessoryLayer
-import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModel
 import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.minecraft.client.model.geom.ModelLayers
@@ -58,7 +56,7 @@ import net.minecraft.client.renderer.entity.BoatRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.client.renderer.entity.HorseRenderer
 import net.minecraft.client.renderer.entity.MinecartRenderer
-import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.horse.Horse
 import net.minecraftforge.api.distmarker.Dist
@@ -66,6 +64,7 @@ import net.minecraftforge.client.event.EntityRenderersEvent.RegisterLayerDefinit
 import net.minecraftforge.client.event.EntityRenderersEvent.RegisterRenderers
 import net.minecraftforge.common.ForgeMod
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
 import net.minecraftforge.fml.ModList
 import net.minecraftforge.fml.common.Mod
@@ -102,6 +101,7 @@ class Cecnull1ChangedPlus(context: FMLJavaModLoadingContext) {
         ModBlocks.REGISTRY_BLOCK.register(modEventBus)
         ModItems.REGISTER.register(modEventBus)
         ModGameRule.register()
+        ModOper.operRegistry.register(modEventBus)
 
         if (ModList.get().isLoaded("psi")) {
             PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
@@ -124,10 +124,21 @@ object Events {
         NullSafeAttributeCreationEvent(event).post(bus)
     }
 
+    @JvmStatic
+    @SubscribeEvent
+    fun modEntityAttributes(event: EntityAttributeModificationEvent) {
+        event.add(EntityType.PLAYER, ModOper.test.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.aEntityLike.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.hasHA.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.hasArmorHA.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.hasNotCanTakeOffWetsuitLike.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.flyingPureWhiteLatexYufengLike.attributeKey.value)
+    }
+
     fun onNullSafeAttributeCreationEvent(event: NullSafeAttributeCreationEvent) {
         event.put(
             A_ENTITY.get(),
-            ChangedEntity.createLatexAttributes().build()
+            createAEntityAttributes().build()
         )
         event.put(
             A_HORSE.get(),
@@ -140,7 +151,7 @@ object Events {
         )
         event.put(
             PURE_WHITE_LATEX_YUFENG.get(),
-            ChangedEntity.createLatexAttributes().build()
+            createAEntityAttributes().build()
         )
         event.put(
             NONE_ENTITY.get(),
@@ -170,11 +181,11 @@ object Events {
         )
         event.put(
             FlyingPureWhiteLatexYufengType.get(),
-            ChangedEntity.createLatexAttributes().build()
+            createAEntityAttributes().build()
         )
         event.put(
             LatexPinkHumanType.get(),
-            ChangedEntity.createLatexAttributes().build()
+            createAEntityAttributes().build()
         )
     }
 }
@@ -191,22 +202,8 @@ object ClientEvents {
     @JvmStatic
     @SubscribeEvent
     fun registerAccessoryRenderers(event: FMLClientSetupEvent) {
-        AccessoryLayer.registerRenderer(
-            ModItems.NOT_CAN_TAKE_OFF_WETSUIT.get(), SimpleClothingRenderer.of(
-                ArmorModel.CLOTHING_INNER, setOf(
-                    ModelComponent(ArmorModel.CLOTHING_INNER, EquipmentSlot.CHEST),
-                    ModelComponent(ArmorModel.CLOTHING_INNER, EquipmentSlot.LEGS)
-                )
-            )
-        )
-        AccessoryLayer.registerRenderer(
-            ModItems.NOT_CAN_TAKE_OFF_LAB_COAT.get(), SimpleClothingRenderer.of(
-                ArmorModel.CLOTHING_OUTER, setOf(
-                    ModelComponent(ArmorModel.CLOTHING_OUTER, EquipmentSlot.CHEST),
-                    ModelComponent(ArmorModel.CLOTHING_MIDDLE, EquipmentSlot.LEGS)
-                )
-            )
-        )
+        event.enqueueWork {
+        }
     }
 
     @JvmStatic

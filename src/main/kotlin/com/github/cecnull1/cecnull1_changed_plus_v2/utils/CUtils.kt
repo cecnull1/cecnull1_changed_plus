@@ -1,5 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.utils
 
+import com.github.cecnull1.adeplike.api.OperValue
 import com.github.cecnull1.cecnull1_cforge.core.data.ResourceLocation
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.mixin.EntityAccessor
@@ -147,3 +148,8 @@ fun KClass<*>.toRLString(): String =
 inline fun <reified T> rlclass(): String = T::class.toRLString()
 
 inline val String.form get() = "form_${this}"
+
+fun OperValue.notZero() =
+    ((this.attribute?.value?:0.0) != 0.0) ||
+            (this.enchantMap.any { it.second != 0 }) ||
+            (this.effect != null)
