@@ -1,5 +1,6 @@
 package com.github.cecnull1.adeplike.api
 
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectCategory
 import net.minecraft.world.effect.MobEffectInstance
@@ -43,6 +44,16 @@ data class OperValue(
                 listOf(),
                 this.getEffect(operKey.effectKey.get())
             )
+
+        fun LivingEntity.itemEnchantLevelSendToNBT(compoundTag: CompoundTag, vararg operKey: OperKey) {
+            this.allSlots.forEach {
+                compoundTag.put(LivingEntity.getEquipmentSlotForItem(it).name, CompoundTag().apply {
+                    operKey.forEach { key ->
+                        putInt(key.enchantKey.id.toString(), it.getEnchantmentLevel(key.enchantKey.get()))
+                    }
+                })
+            }
+        }
     }
 }
 

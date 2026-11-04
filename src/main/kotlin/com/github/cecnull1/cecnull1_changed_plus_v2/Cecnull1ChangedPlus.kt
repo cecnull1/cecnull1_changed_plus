@@ -8,16 +8,12 @@ import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_changed_plus_v2.Events.onNullSafeAttributeCreationEvent
 import com.github.cecnull1.cecnull1_changed_plus_v2.animation.Animations
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.AutoMove
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.component.WFXCOwner
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.LicensedCharacters.SPECIAL
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_HORSE
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.MISC
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NONE_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.NOT_CAN_DISMOUNT_BOAT
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.B_HORSE
@@ -39,7 +35,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceOperatorEntityGetTransfurVariant
 import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceTrickTransfurLivingEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.GenericRenderer
-import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.NoneEntityRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.SpecialRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.newrl
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TypeRegistry.register
@@ -50,7 +45,6 @@ import net.ltxprogrammer.changed.client.renderer.LatexOrcaRenderer
 import net.ltxprogrammer.changed.client.renderer.LatexPinkYuinDragonRenderer
 import net.ltxprogrammer.changed.client.renderer.SeatEntityRenderer
 import net.ltxprogrammer.changed.entity.ChangedEntity
-import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.minecraft.client.model.geom.ModelLayers
 import net.minecraft.client.renderer.entity.BoatRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
@@ -79,9 +73,7 @@ val bus = EventBus()
 @Mod(MODID)
 class Cecnull1ChangedPlus(context: FMLJavaModLoadingContext) {
     init {
-        register<Flying>()
         register<WFXCOwner>()
-        register<AutoMove>()
         LicensedCharacterInit.registerEvent()
         bus.registerFastEvents<TakeOffEvent>(::onTakeOff)
         bus.registerFastEvents<ByForgeEvent>(::onForgeEvent)
@@ -133,6 +125,19 @@ object Events {
         event.add(EntityType.PLAYER, ModOper.hasArmorHA.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.hasNotCanTakeOffWetsuitLike.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.flyingPureWhiteLatexYufengLike.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.hasCFlying.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.autoMove.attributeKey.value)
+
+        event.add(EntityType.PLAYER, ModOper.forceSwim.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.forceSprint.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.forceInWater.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.noGravity.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.forceRide.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.forceFallFlying.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.forceClimbable.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.notOnGround.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.wocwodejiaohenhua.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.hasAutoMove2.attributeKey.value)
     }
 
     fun onNullSafeAttributeCreationEvent(event: NullSafeAttributeCreationEvent) {
@@ -152,20 +157,6 @@ object Events {
         event.put(
             PURE_WHITE_LATEX_YUFENG.get(),
             createAEntityAttributes().build()
-        )
-        event.put(
-            NONE_ENTITY.get(),
-            ChangedEntity.createLatexAttributes().build()
-        )
-        event.put(
-            MISC.get(),
-            ChangedEntity.createLatexAttributes()
-                .add(Attributes.MAX_HEALTH, 24.0)
-                .add(Attributes.MOVEMENT_SPEED, 4.0)
-                .add(ForgeMod.SWIM_SPEED.get(), 2.0)
-                .add(Attributes.ATTACK_DAMAGE, 20.0)
-                .add(ChangedAttributes.TRANSFUR_DAMAGE.get(), 20.0)
-                .build()
         )
         event.put(
             MEI_XI_YUAN.get(),
@@ -222,8 +213,6 @@ object ClientEvents {
             registerEntityRenderer(A_ENTITY.get(), ::DarkLatexYufengRenderer)
             registerEntityRenderer(A_HORSE.get(), ::HorseRenderer)
             registerEntityRenderer(PURE_WHITE_LATEX_YUFENG.get(), ::DarkLatexYufengRenderer)
-            registerEntityRenderer(NONE_ENTITY.get(), ::NoneEntityRenderer)
-            registerEntityRenderer(MISC.get(), ::NoneEntityRenderer)
             registerEntityRenderer(MOVE_ENTITY.get(), ::SeatEntityRenderer)
 
             registerEntityRenderer(MEI_XI_YUAN.get(), ::LatexOrcaRenderer)

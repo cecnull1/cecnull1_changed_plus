@@ -70,7 +70,6 @@ object ModEntities {
     const val PURE_WHITE_LATEX_YUFENG_ID = "pure_white_latex_yufeng"
     const val NOT_CAN_DISMOUNT_BOAT_ID = "not_can_dismount_boat"
     const val NONE_ENTITY_ID = "none_entity"
-    const val MISC_ID = "misc"
 
     val REGISTER: DeferredRegister<EntityType<*>> by lazy {
         DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID)
@@ -93,20 +92,10 @@ object ModEntities {
             .build(A_HORSE_ID)
     }
 
-    val MISC: RegistryObject<EntityType<Misc>> = REGISTER.register(MISC_ID) {
-        EntityType.Builder.of(::Misc, MobCategory.MISC)
-            .sized(0.7f, 1.93f)
-            .build(MISC_ID)
-    }
-
     val NOT_CAN_DISMOUNT_BOAT : RegistryObject<EntityType<NotCanDismountBoat>> = REGISTER.register(NOT_CAN_DISMOUNT_BOAT_ID) {
         EntityType.Builder.of(::NotCanDismountBoat, MobCategory.MISC)
             .sized(1.375F, 0.5625F)
             .build(NOT_CAN_DISMOUNT_BOAT_ID)
-    }
-
-    val NONE_ENTITY : RegistryObject<EntityType<NoneTransfurVariant>> = REGISTER.register(NONE_ENTITY_ID) {
-        EntityType.Builder.of(::NoneTransfurVariant, MobCategory.MISC).build(NONE_ENTITY_ID)
     }
 }
 
@@ -207,7 +196,7 @@ open class AHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entit
     override fun onMount(mountType: MountType): Boolean = mountType !is MountType.Dismount
 }
 
-open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : AEntity(type, level), VariantTickPlusAble, IFanJi {
+open class PureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : AEntity(type, level), IFanJi {
 
     override fun getLatexType() = ChangedLatexTypes.WHITE_LATEX.get()
     override fun getTransfurMode(): TransfurMode = TransfurMode.REPLICATION
@@ -283,22 +272,6 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
             }
         }
         super.tick()
-    }
-}
-
-open class NoneTransfurVariant(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level),
-    VariantTickPlusAble {
-    init {
-        this.remove(RemovalReason.DISCARDED)
-    }
-    override fun getLatexType(): LatexType {
-        return ChangedLatexTypes.NONE.get()
-    }
-    override fun getTransfurMode(): TransfurMode? {
-        return TransfurMode.NONE
-    }
-    override fun playerVariantTick(player: Player, level: Level?) {
-        player.removePlayerTransfurVariant()
     }
 }
 
@@ -430,6 +403,16 @@ inline fun <reified T: Number> Entity.autoMove(divSpeed: T, yEnabled: Boolean = 
     )
 }
 
+inline fun <reified T: Number> Entity.newAutoMove(speed: T, yEnabled: Boolean = true) {
+    val doubleSpeed = speed.toDouble()
+    val entity = this
+    entity.deltaMovement = entity.deltaMovement.funcNewAutoMove(
+        rotation = entity.lookAngle,
+        speed = doubleSpeed,
+        yEnabled = yEnabled
+    )
+}
+
 /**
  * 无副作用纯函数：计算自动移动的位移向量（不修改实体状态）。
  * @param rotation 旋转角度向量（影响移动方向）。
@@ -437,6 +420,8 @@ inline fun <reified T: Number> Entity.autoMove(divSpeed: T, yEnabled: Boolean = 
  * @param yEnabled 是否启用 Y 轴移动（`true` 保留 Y 轴速度，`false` 禁用）。
  */
 fun Vec3.funcAutoMove(rotation: Vec3, divSpeed: Double, yEnabled: Boolean = true) = this + ((rotation * Vec3(1.0, yEnabled.toInt().toDouble(), 1.0)) / Vec3(divSpeed, divSpeed, divSpeed))
+
+fun Vec3.funcNewAutoMove(rotation: Vec3, speed: Double, yEnabled: Boolean = true) = this + (rotation * Vec3(1.0, yEnabled.toInt().toDouble(), 1.0)).scale(speed)
 
 fun Boolean.toInt() = if (this) 1 else 0
 

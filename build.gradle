@@ -18,13 +18,11 @@ plugins {
     id 'idea'
     id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
     id 'org.jetbrains.kotlin.plugin.serialization' version '2.2.21'
-    //id 'scala'
     //id 'com.google.devtools.ksp' version '2.2.0-2.0.2'
 }
 
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'kotlin'
-apply plugin: 'scala'
 
 group = mod_group_id
 version = mod_version
@@ -133,9 +131,11 @@ minecraft {
 mixin {
     add sourceSets.main, "cecnull1_changed_plus_v2.refmap.json"
     add sourceSets.main, "casualties_cecnull1.refmap.json"
+    add sourceSets.main, "ccpv2ext.refmap.json"
 
     config "cecnull1_changed_plus_v2.mixins.json"
     config "casu.mixins.json"
+    config "ccpv2ext.mixins.json"
 }
 
 
@@ -178,10 +178,10 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.5"))
 
-    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
-        jarJar.ranged(it, "[0.5.0,)")
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.5")) {
+        jarJar.ranged(it, "[0.5.5,)")
     }
     fileTree(dir: 'libs', include: '*.jar').each { file ->
         implementation files(file)
@@ -239,11 +239,6 @@ tasks.withType(KotlinCompile).configureEach {
         freeCompilerArgs += ['-XXLanguage:+UnnamedLocalVariables']
         jvmTarget = '21'
     }
-}
-
-tasks.compileScala {
-    dependsOn compileKotlin
-    classpath += files(compileKotlin.destinationDirectory)
 }
 
 kotlin {

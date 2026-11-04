@@ -2,9 +2,7 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.cbor
 
 import com.github.cecnull1.cecnull1_cforge.core.data.ResourceLocation
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.AutoMove
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.EntityExtendedComponentSer
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.component.WFXCOwner
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IComponentSer
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -21,7 +19,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import kotlinx.serialization.modules.polymorphic
-import net.minecraft.world.item.ItemStack
 import java.util.*
 
 val mcModule = SerializersModule {
@@ -29,9 +26,7 @@ val mcModule = SerializersModule {
     contextual(UUIDSerializer)
     contextual(EntityExtendedComponentSer)
     polymorphic(IComponentSer::class) {
-        subclass(Flying::class, Flying.serializer())
         subclass(WFXCOwner::class, WFXCOwner.serializer())
-        subclass(AutoMove::class, AutoMove.serializer())
     }
 }
 

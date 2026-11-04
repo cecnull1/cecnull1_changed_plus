@@ -1,16 +1,12 @@
 @file:Suppress("USELESS_IS_CHECK", "UNUSED_PARAMETER", "UNUSED_VARIABLE")
 package com.github.cecnull1.cecnull1_changed_plus_v2.mixin
 
-import com.github.cecnull1.adeplike.api.OperValue.Companion.getOper
+import com.github.cecnull1.adeplike.api.OperValue.Companion.getOperNoItem
 import com.github.cecnull1.cecnull1_cforge.core.CForgeEventCore.post
 import com.github.cecnull1.cecnull1_cforge.core.ComponentContainer
-import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.getComponent
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.bus
 import com.github.cecnull1.cecnull1_changed_plus_v2.cbor.format
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.AutoMove
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
-import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.BBlockMoveEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.CLivingTickEvent
@@ -226,12 +222,6 @@ abstract class LivingEntityMixin {
 
     @Inject(method = ["m_274312_"], at = [At("RETURN")], remap = false, cancellable = true)
     fun getRiddenInput(player: Player, vec3: Vec3, cir: CallbackInfoReturnable<Vec3>) {
-        (this as EntityExtendedComponent).components.getComponent<AutoMove>("AutoMove".toRL()) then {
-            val self = (this@LivingEntityMixin as LivingEntity)
-            if (self.passengers.isNotEmpty() && this.isEnabled) {
-                cir.mreturn(Vec3(0.0, 0.0, 1.0/this.speed))
-            }
-        }
     }
 }
 
@@ -290,7 +280,7 @@ open class PlayerMixin: IPlayerExtendedData {
     @ModifyReturnValue(method = ["m_6069_"], at = [At("RETURN")], remap = false)
     private fun isSwimming(old: Boolean): Boolean {
         (this as Player) then {
-            if (this.isInWater && this.getOper(ModOper.hasNotCanTakeOffWetsuitLike).notZero()) {
+            if (this.isInWater && this.getOperNoItem(ModOper.hasNotCanTakeOffWetsuitLike).notZero()) {
                 return(true)
             }
             if ((this.playerTransfurVariant?.changedEntity as? ISwimming)?.isSwimming(old) == true) return(true)
@@ -325,7 +315,7 @@ open class PlayerMixin: IPlayerExtendedData {
         remap = false
     )
     fun isFlying(original: Boolean): Boolean {
-        return ((this as? Player != null) && ((this as EntityExtendedComponent).components.getComponent<Flying>(Constant.NBTKeys.FLYING.toRL())?.boolean == true)) || original
+        return ((this as? Player != null) && (this.getOperNoItem(ModOper.hasCFlying).notZero()) || original)
     }
 }
 

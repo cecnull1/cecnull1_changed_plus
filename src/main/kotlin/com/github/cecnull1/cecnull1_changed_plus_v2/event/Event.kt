@@ -7,8 +7,6 @@ import com.github.cecnull1.cecnull1_cforge.core.PipeCore.process
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.ModBlocks
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.AutoMove
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.component.WFXCOwner
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
@@ -37,7 +35,6 @@ import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
 import net.ltxprogrammer.changed.init.ChangedBlocks
 import net.ltxprogrammer.changed.init.ChangedSounds
 import net.ltxprogrammer.changed.process.ProcessTransfur
-import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.client.Minecraft
 import net.minecraft.commands.arguments.EntityAnchorArgument.Anchor
 import net.minecraft.core.Holder
@@ -51,7 +48,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.RelativeMovement
-import net.minecraft.world.entity.ai.attributes.AttributeModifier
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
@@ -75,13 +71,13 @@ object Event {
         if (player.getModData(MODID).getBoolean(Constant.NBTKeys.BODY_WARNING)) {
             player.ifPlayerNotTransfurred {
                 player.progressTransfur(1f, TransfurData(
-                    ModTransfurVariant.A_ENTITY_TRANSFUR_VARIANT.get(),
+                    ModTransfurVariant.PURE_WHITE_LATEX_YUFENG_TRANSFUR_VARIANT.get(),
                     context = TransfurCause.ATTACK_REPLICATE_LEFT.toTransfurContext()
                 )
                 )
             }
         }
-        if ((player as EntityExtendedComponent).components.getComponent<Flying>(Constant.NBTKeys.FLYING.toRL())?.boolean == true) {
+        if (player.getOper(ModOper.hasCFlying).notZero()) {
             player.foodData.foodLevel++
             player.foodData.setSaturation(player.foodData.saturationLevel+1)
             if (!player.abilities.flying) {
@@ -91,12 +87,6 @@ object Event {
             }
         }
 
-        player.ifPlayerTransfurred {
-            val changedEntity = it.changedEntity
-            when {
-                changedEntity is VariantTickPlusAble -> changedEntity.playerVariantTick(player, event.player.level())
-            }
-        }
         if (player.health.isNaN()) {
             player.health = 0.0f
             if (player is ServerPlayer) player.sendHealthUpdate()
@@ -205,29 +195,22 @@ object Event {
             event.entity.aEntityTick()
         }
 
-        if (event.entity.level.isClientSide) return
-        (event.entity as? PureWhiteLatexWolf)?.let {
-            entity ->
-            when (entity.random.nextInt(20*60)) {
-                0 -> {
-                    val newEntity = ModEntities.PURE_WHITE_LATEX_YUFENG.get().create(entity.level())?: return
-                    newEntity.setPos(entity.position())
-                    entity.level.addFreshEntity(newEntity)
-                }
-                else -> {}
-            }
+        if (event.phase == TickEvent.Phase.START) {
+            val (at, en, ef) = event.entity.getOper(ModOper.autoMove)
+            val v1 = at?.value?:0.0
+            val v2 = en.sumOf { it.second }
+            val v3 = ef?.amplifier?:0
+            event.entity.newAutoMove(v1+v2/48.0+v3/48.0)
         }
+
+        if (event.entity.level.isClientSide) return
+
         (event.entity as EntityExtendedComponent).components.apply {
             getComponent<WFXCOwner>("WFXCOwner".toRL()) then {
                 event.entity.level.getPlayerByUUID(this.owner) as? ServerPlayer then {
                     if (this.isAlive) {
                         startRiding(event.entity)
                     }
-                }
-            }
-            getComponent<AutoMove>("AutoMove".toRL()) then {
-                if (this.isEnabled && event.phase == TickEvent.Phase.START) {
-                    event.entity.autoMove(this.speed)
                 }
             }
         }
@@ -491,30 +474,30 @@ fun Player.moveItemToTarget(sourceEntity: Player) {
     val sourceSelected = sourceEntity.inventory.selected
 
     // 2. 遍历并直接替换当前玩家的 ItemStack（不修改列表结构）
-    for (i in 0 until inventory.items.size) {
+    for (i in inventory.items.indices) {
         inventory.items[i] = sourceEntity.inventory.items[i].copy()  // 使用 copy() 避免引用问题
     }
     inventory.selected = sourceSelected  // 直接赋值 selected
 
-    for (i in 0 until inventory.offhand.size) {
+    for (i in inventory.offhand.indices) {
         inventory.offhand[i] = sourceEntity.inventory.offhand[i].copy()
     }
 
-    for (i in 0 until inventory.armor.size) {
+    for (i in inventory.armor.indices) {
         inventory.armor[i] = sourceEntity.inventory.armor[i].copy()
     }
 
     // 3. 清空源玩家的 inventory（同样仅修改，不添加/删除）
-    for (i in 0 until sourceEntity.inventory.items.size) {
+    for (i in sourceEntity.inventory.items.indices) {
         sourceEntity.inventory.items[i] = ItemStack.EMPTY
     }
     sourceEntity.inventory.selected = 0
 
-    for (i in 0 until sourceEntity.inventory.offhand.size) {
+    for (i in sourceEntity.inventory.offhand.indices) {
         sourceEntity.inventory.offhand[i] = ItemStack.EMPTY
     }
 
-    for (i in 0 until sourceEntity.inventory.armor.size) {
+    for (i in sourceEntity.inventory.armor.indices) {
         sourceEntity.inventory.armor[i] = ItemStack.EMPTY
     }
 }

@@ -88,3 +88,12 @@ description = '''
 Attribute = Data = Enchant = Potion Like API
 '''
 
+[[mods]]
+
+modId = "ccpv2ext"
+version = "${mod_version}"
+displayName = "Changed Plus Ext"
+authors = "${mod_authors}"
+description = '''
+说个大实话：其实现在这个项目屎山有点多...
+'''

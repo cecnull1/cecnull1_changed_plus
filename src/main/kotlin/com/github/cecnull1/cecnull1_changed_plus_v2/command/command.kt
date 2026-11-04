@@ -1,8 +1,6 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.command
 
 import com.github.cecnull1.cecnull1_cforge.core.ComponentCore.addComponent
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.AutoMove
-import com.github.cecnull1.cecnull1_changed_plus_v2.component.Flying
 import com.github.cecnull1.cecnull1_changed_plus_v2.component.WFXCOwner
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.EntityExtendedComponent
@@ -43,28 +41,6 @@ object CommandEvent {
                                     WFXCOwner(owner.uuid))
                                 0
                             }
-                        }.then("Flying") {
-                            argument("enable", enableEnum).executes {
-                                runCatching {
-                                    val target = EntityArgument.getEntity(it, "target")
-                                    val enable = it.getArgument("enable", BoolEnable::class.java)
-                                    (target as EntityExtendedComponent).components.addComponent("Flying".toRL(), Flying(enable.isEnable()))
-                                }.onFailure { throwable ->
-                                    throw CommandRuntimeException(Component.literal(throwable.toString()))
-                                }
-                                0
-                            }
-                        }.then("AutoMove") {
-                            argument("enable", enableEnum).then(argument("divSpeed", DoubleArgumentType.doubleArg()).executes {
-                                val target = EntityArgument.getEntity(it, "target")
-                                val enable = it.getArgument("enable", BoolEnable::class.java)
-                                val speed = DoubleArgumentType.getDouble(it, "divSpeed")
-                                (target as EntityExtendedComponent).components.addComponent("AutoMove".toRL(), AutoMove(
-                                    enable.isEnable(),
-                                    speed
-                                ))
-                                0
-                            })
                         }
                     }
                 }
