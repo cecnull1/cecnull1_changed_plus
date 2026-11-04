@@ -6,20 +6,6 @@ import net.minecraft.world.level.GameRules.BooleanValue
 
 
 object ModGameRule {
-    val KeepHA: GameRules.Key<BooleanValue> by lazy {
-        GameRules.register(
-            "$MODID:keepHa",
-            GameRules.Category.PLAYER,
-            BooleanValue.create(false)
-        )
-    }
-    val KeepArmorHA: GameRules.Key<BooleanValue> by lazy {
-        GameRules.register(
-            "$MODID:keepArmorHa",
-            GameRules.Category.PLAYER,
-            BooleanValue.create(false)
-        )
-    }
     val canFanJi: GameRules.Key<BooleanValue> by lazy {
         GameRules.register(
             "$MODID:canFanJi",
@@ -50,8 +36,6 @@ object ModGameRule {
     }
 
     fun register() {
-        KeepHA
-        KeepArmorHA
         canFanJi
         canRealKeepForm
         realKeepForm

@@ -12,7 +12,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
-import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule.isJiXianShiTF
 import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
@@ -27,7 +26,6 @@ import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.github.cecnull1.cecnull1lib.utils.vector.toKVec3
 import com.google.common.collect.Iterables
-import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.entity.SeatEntity
 import net.ltxprogrammer.changed.entity.TransfurCause
 import net.ltxprogrammer.changed.entity.beast.PureWhiteLatexWolf
@@ -112,10 +110,6 @@ object Event {
             }
         }
 
-        if (player.getOper(ModOper.flyingPureWhiteLatexYufengLike).notZero()) {
-            player.flyingPureWhiteLatexYufengLike()
-        }
-
         if (player.hasHA) {
             if (player.haItem.isEmpty) {
                 val selectedSlot = player.inventory.selected
@@ -190,10 +184,7 @@ object Event {
     }
 
     fun onLivingTick(event: CLivingTickEvent) {
-        val aEntityLikeValue = event.entity.getOper(ModOper.aEntityLike)
-        if (event.phase == TickEvent.Phase.START && aEntityLikeValue.notZero()) {
-            event.entity.aEntityTick()
-        }
+
 
         if (event.phase == TickEvent.Phase.START) {
             val (at, en, ef) = event.entity.getOper(ModOper.autoMove)
@@ -201,6 +192,19 @@ object Event {
             val v2 = en.sumOf { it.second }
             val v3 = ef?.amplifier?:0
             event.entity.newAutoMove(v1+v2/48.0+v3/48.0)
+
+            val aEntityLikeValue = event.entity.getOper(ModOper.aEntityLike)
+            if (aEntityLikeValue.notZero()) {
+                event.entity.aEntityTick()
+            }
+
+            if (event.entity.getOper(ModOper.flyingPureWhiteLatexYufengLike).notZero()) {
+                event.entity.flyingPureWhiteLatexYufengLike()
+            }
+
+            if (event.entity.getOper(ModOper.meiXiYuanLike).notZero()) {
+                event.entity.meiXiYuanLikeTick()
+            }
         }
 
         if (event.entity.level.isClientSide) return
@@ -414,13 +418,6 @@ object Event {
         // 玩家登录时同步数据
         if (!event.entity.level.isClientSide) {
             NetworkHandler.haStateSendToClient(event.entity)
-        }
-    }
-
-    fun onAccessoryDrop(event: AccessorySlots.DropItemEvent) {
-        val player = event.entity as? ServerPlayer ?: return
-        if (player is IPlayerExtendedData) {
-            if (player.hasArmorHA && player.level.gameRules.getBoolean(ModGameRule.KeepArmorHA)) event.keepItem()
         }
     }
 

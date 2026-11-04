@@ -18,13 +18,8 @@ object Constant {
 
         const val FLYING = "Flying"
         const val BODY_WARNING = "BODY_WARNING"
-        const val SOUL_SP_ATTACK_VALUE = "soul_sp_attack_value"
-        const val CAN_CONSCIOUS_CONTROL = "can_conscious_control"
-        const val HA = "ha"
-        const val HA_O = "ha_o"
         const val PLAYERS = "players"
         const val PLAYER = "player"
-        const val IS_HA = "is_ha"
     }
     const val NI_BU_YING_GAI_CHUAN_DAI_ZHE_GE_WU_PIN_DE = "你不应该穿戴这个物品的……"
 }

@@ -4,7 +4,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.newrl
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
-import net.ltxprogrammer.changed.Changed
 import net.ltxprogrammer.changed.client.renderer.animate.AnimatorPresets
 import net.ltxprogrammer.changed.client.renderer.animate.HumanoidAnimator
 import net.ltxprogrammer.changed.client.renderer.model.AdvancedHumanoidModel
@@ -25,8 +24,6 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.EquipmentSlot.*
 import net.minecraft.world.entity.HumanoidArm
 import net.minecraft.world.item.ItemStack
-import java.util.function.BiFunction
-import java.util.function.Function
 
 // Made with Blockbench 5.0.4
 // Exported for Minecraft version 1.17 or later with Mojang mappings

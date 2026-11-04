@@ -1,28 +1,22 @@
 package com.github.cecnull1.cecnull1_changed_plus_v2.entity
 
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
-import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.IS_HA
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.PLAYER
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.NotCanDismountBoat.Companion.YU_ZHI
-import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haArmorItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.haItem
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasArmorHA
-import com.github.cecnull1.cecnull1_changed_plus_v2.utils.MPlayerExtendedData.Companion.hasHA
 import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurContextUtils.toTransfurContext
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
 import com.github.cecnull1.cecnull1lib.utils.changed.ifPlayerNotTransfurred
-import com.github.cecnull1.cecnull1lib.utils.changed.removePlayerTransfurVariant
 import com.github.cecnull1.cecnull1lib.utils.changed.transfur
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
 import com.github.cecnull1.cecnull1lib.utils.vector.div
 import com.github.cecnull1.cecnull1lib.utils.vector.plus
 import com.github.cecnull1.cecnull1lib.utils.vector.times
-import net.ltxprogrammer.changed.entity.ChangedEntity
 import net.ltxprogrammer.changed.entity.ChangedEntity.createLatexAttributes
 import net.ltxprogrammer.changed.entity.PowderSnowWalkable
 import net.ltxprogrammer.changed.entity.TransfurCause
@@ -32,23 +26,16 @@ import net.ltxprogrammer.changed.entity.beast.DarkLatexEntity
 import net.ltxprogrammer.changed.entity.beast.DarkLatexYufeng
 import net.ltxprogrammer.changed.entity.latex.LatexType
 import net.ltxprogrammer.changed.entity.variant.TransfurVariant
-import net.ltxprogrammer.changed.init.ChangedAccessorySlots
 import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.ltxprogrammer.changed.init.ChangedLatexTypes
-import net.ltxprogrammer.changed.item.ClothingItem.CLOSED
 import net.ltxprogrammer.changed.util.Color3
-import net.ltxprogrammer.changed.util.ItemUtil
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.*
-import net.minecraft.world.entity.ai.attributes.Attribute
-import net.minecraft.world.entity.ai.attributes.AttributeMap
-import net.minecraft.world.entity.ai.attributes.AttributeModifier
-import net.minecraft.world.entity.ai.attributes.AttributeSupplier
-import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.ai.attributes.*
 import net.minecraft.world.entity.animal.horse.Horse
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.vehicle.Boat
@@ -69,7 +56,6 @@ object ModEntities {
     const val A_HORSE_ID = "a_horse"
     const val PURE_WHITE_LATEX_YUFENG_ID = "pure_white_latex_yufeng"
     const val NOT_CAN_DISMOUNT_BOAT_ID = "not_can_dismount_boat"
-    const val NONE_ENTITY_ID = "none_entity"
 
     val REGISTER: DeferredRegister<EntityType<*>> by lazy {
         DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID)
@@ -98,7 +84,6 @@ object ModEntities {
             .build(NOT_CAN_DISMOUNT_BOAT_ID)
     }
 }
-
 
 /**
  * 一个强悍的实体
@@ -273,19 +258,6 @@ open class NotCanDismountBoat(type: EntityType<out Boat>, level: Level): Boat(ty
         }
         super.tick()
     }
-}
-
-open class Misc(type: EntityType<out ChangedEntity>, level: Level) : ChangedEntity(type, level) {
-    override fun getTransfurMode(): TransfurMode? {
-        return TransfurMode.REPLICATION
-    }
-
-    override fun getLatexType(): LatexType {
-        return ChangedLatexTypes.NONE.get()
-    }
-
-    override fun registerGoals() {}
-    override fun isNoAi() = false
 }
 
 fun LivingEntity.aEntityTick() {

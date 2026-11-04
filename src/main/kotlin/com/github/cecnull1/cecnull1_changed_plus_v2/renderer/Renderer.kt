@@ -23,20 +23,6 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.entity.Entity
 
-//class SoulRenderer(context: EntityRendererProvider.Context): AdvancedHumanoidRenderer<Soul, SoulModel, ArmorHumanModel<Soul>>(
-//    context,
-//    SoulModel(context.bakeLayer(SoulModel.LAYER_LOCATION)),
-//    ArmorHumanModel.MODEL_SET, 0.5f
-//) {
-//    override fun getTextureLocation(entity: Soul): ResourceLocation {
-//        return TEXTURE
-//    }
-//
-//    companion object {
-//        private val TEXTURE = newrl(MODID, "textures/entities/soul.png")
-//    }
-//}
-
 class NoneEntityRenderer<T: Entity>(context: EntityRendererProvider.Context)
     : EntityRenderer<T>(context) {
 

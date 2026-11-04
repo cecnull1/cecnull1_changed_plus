@@ -11,6 +11,7 @@ import com.github.cecnull1.cecnull1_cforge.core.data.ResourceLocation
 import com.github.cecnull1.cecnull1_changed_plus_v2.block.BBlockEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.cbor.format
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
+import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
 import com.github.cecnull1.cecnull1lib.utils.changed.TransfurData
 import com.github.cecnull1.cecnull1lib.utils.changed.entityVariant
@@ -41,6 +42,7 @@ import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.MobCategory
 import net.minecraft.world.entity.MoverType
 import net.minecraft.world.entity.ai.attributes.AttributeMap
@@ -248,68 +250,64 @@ open class MeiXiYuan(entityType: EntityType<out LatexOrca>, level: Level) : Late
         attributes[Attributes.MOVEMENT_SPEED] -= 0.1
         attributes[ForgeMod.SWIM_SPEED.get()] += 0.1
         attributes[ChangedAttributes.TRANSFUR_DAMAGE.get()] = 3
-    }
-
-    override fun variantTick(level: Level) = super.variantTick(level) process {
-        maybeGetUnderlying() then self@ {
-            pipeIf(!hasEffect(MobEffects.DOLPHINS_GRACE)) then {
-                addEffect(MobEffects.DOLPHINS_GRACE.new(
-                    duration = MobEffectInstance.INFINITE_DURATION,
-                    ambient = true,
-                    visible = false
-                ))
-            }
-
-            val ve = this.vehicle
-            if (ve is SeatEntity) {
-                when (level.getBlockEntity(ve.attachedBlockPos)) {
-                    is StasisChamberBlockEntity -> {
-                        return@self
-                    }
-                    is BBlockEntity -> {
-                        return@self
-                    }
-                }
-            }
-
-            pipeIf (this.isInWaterOrBubble && this.random.nextInt(50) == 0) then {
-                this.heal(1f)
-                if (this is Player) {
-                    foodData.foodLevel++
-                    foodData.setExhaustion(0f)
-                    foodData.setSaturation(foodData.saturationLevel+1)
-                }
-            }
-
-            val v = 0.5
-            pipeUnless (this.isInWaterOrBubble || this.isFallFlying && isInWaterRainOrBubble) then {
-                if (this.health.toInt() > 15) {
-                    this.hurt(this.level.damageSources().drown(), health-14)
-                }
-                deltaMovement = deltaMovement.calcl(
-                    direction = yRot.toHorizontalViewVec(),
-                    influence = v,
-                    applyToY = false  // 关键：不改变 Y 分量
-                )
-            } orElseProcess {
-                deltaMovement = deltaMovement.calcl(
-                    direction = lookAngle,
-                    influence = v,
-                    applyToY = true
-                )
-            }
-            // .5 * .5 = .25
-            if (deltaMovement.lengthSqr() < .25 && deltaMovement.lengthSqr() != 0.toDouble()) {
-                deltaMovement = deltaMovement.normalize().multiply(.5, .5, .5)
-            }
-
-            resetFallDistance()
-        }
+        attributes[ModOper.meiXiYuanLike.attributeKey.get()] = 1.0
     }
 
     override fun isSwimming(old: Boolean): Boolean {
         return isInWaterOrBubble || old
     }
+}
+
+fun LivingEntity.meiXiYuanLikeTick() {
+    pipeIf(!hasEffect(MobEffects.DOLPHINS_GRACE)) then {
+        addEffect(MobEffects.DOLPHINS_GRACE.new(
+            duration = MobEffectInstance.INFINITE_DURATION,
+            ambient = true,
+            visible = false
+        ))
+    }
+    val ve = this.vehicle
+    if (ve is SeatEntity) {
+        when (level.getBlockEntity(ve.attachedBlockPos)) {
+            is StasisChamberBlockEntity -> {
+                return
+            }
+            is BBlockEntity -> {
+                return
+            }
+        }
+    }
+    pipeIf (this.isInWaterOrBubble && this.random.nextInt(50) == 0) then {
+        this.heal(1f)
+        if (this is Player) {
+            foodData.foodLevel++
+            foodData.setExhaustion(0f)
+            foodData.setSaturation(foodData.saturationLevel+1)
+        }
+    }
+    val v = 0.5
+    pipeUnless (this.isInWaterOrBubble || this.isFallFlying && isInWaterRainOrBubble) then {
+        if (this.health.toInt() > 15) {
+            this.hurt(this.level.damageSources().drown(), health-14)
+        }
+        deltaMovement = deltaMovement.calcl(
+            direction = yRot.toHorizontalViewVec(),
+            influence = v,
+            applyToY = false  // 关键：不改变 Y 分量
+        )
+    } orElseProcess {
+        deltaMovement = deltaMovement.calcl(
+            direction = lookAngle,
+            influence = v,
+            applyToY = true
+        )
+    }
+    // .5 * .5 = .25
+    if (deltaMovement.lengthSqr() < .25 && deltaMovement.lengthSqr() != 0.toDouble()) {
+        deltaMovement = deltaMovement.normalize().multiply(.5, .5, .5)
+    }
+
+    resetFallDistance()
 }
 
 open class BHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entityType, level), IOnMount {
@@ -358,19 +356,16 @@ open class BHorse(entityType: EntityType<out Horse>, level: Level) : Horse(entit
                     id = mountType.entity.uuid
                 }
                 transfurVariant != null
-            } // 仅当是玩家且玩家已被兽化时能被骑乘
+            }
             else -> true
         }
     }
 
-
-    /* 写 */
     override fun addAdditionalSaveData(compoundTag: CompoundTag) {
         super.addAdditionalSaveData(compoundTag)
         val bs = format.encodeToByteArray(BHorseSaveData.serializer(), BHorseSaveData(
             ResourceLocation.fromStringSafe(transfurVariant?.formId.toString()), id
         ))
-//        getLogger().info("[SAVE] ${bs.toList()}")
         compoundTag.putByteArray("cborSer", bs)
     }
 

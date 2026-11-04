@@ -4,7 +4,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.A_ENTITY_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities.PURE_WHITE_LATEX_YUFENG_ID
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FlyingPureWhiteLatexYufengType
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FutiEntityType
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.LatexPinkHumanType
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.rlclass
 import net.ltxprogrammer.changed.entity.VisionType
@@ -47,11 +46,6 @@ object ModTransfurVariant {
 
     val SPECIAL_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Special>> = REGISTRY.register("form_special") {
         TransfurVariant.Builder.of(LicensedCharacters.SPECIAL).apply {
-        }.build()
-    }
-
-    val FUTI_TRANSFUR_VARIANT: RegistryObject<TransfurVariant<Futi>> = REGISTRY.register("form_${rlclass<Futi>()}") {
-        TransfurVariant.Builder.of(FutiEntityType).apply {
         }.build()
     }
 

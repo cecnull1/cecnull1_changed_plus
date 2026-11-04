@@ -23,4 +23,5 @@ object ModOper {
     val notOnGround = operRegistry.register("no_on_ground")
     val wocwodejiaohenhua = operRegistry.register("guang_hua")
     val hasAutoMove2 = operRegistry.register("has_auto_move_2")
+    val meiXiYuanLike = operRegistry.register("mei_xi_yuan_like")
 }

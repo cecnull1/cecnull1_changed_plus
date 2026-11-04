@@ -5,13 +5,8 @@ import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
-import com.github.cecnull1.cecnull1lib.utils.MCreatorFunction.findNearestEntity
-import net.ltxprogrammer.changed.entity.AttributePresets
-import net.ltxprogrammer.changed.entity.ChangedEntity
-import net.ltxprogrammer.changed.entity.TransfurMode
 import net.ltxprogrammer.changed.entity.beast.LatexPinkYuinDragon
 import net.ltxprogrammer.changed.entity.latex.LatexType
-import net.ltxprogrammer.changed.entity.variant.TransfurVariantInstance
 import net.ltxprogrammer.changed.init.ChangedAttributes
 import net.ltxprogrammer.changed.init.ChangedLatexTypes
 import net.minecraft.core.BlockPos
@@ -19,7 +14,6 @@ import net.minecraft.tags.BlockTags
 import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.MobCategory
@@ -32,18 +26,9 @@ import net.minecraftforge.common.ForgeMod
 import net.minecraftforge.registries.DeferredRegister
 import net.minecraftforge.registries.ForgeRegistries
 import net.minecraftforge.registries.RegistryObject
-import kotlin.compareTo
-import kotlin.comparisons.then
-import kotlin.io.normalize
 
 object ModEntities3 {
     val REGISTRY: DeferredRegister<EntityType<*>> = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MODID)
-
-    val FutiEntityType: RegistryObject<EntityType<Futi>> = REGISTRY.register(rlclass<Futi>()) {
-        EntityType.Builder.of(::Futi, MobCategory.MONSTER).apply {
-            sized(.7f, 1.73f)
-        }.build(rlclass<Futi>())
-    }
 
     val FlyingPureWhiteLatexYufengType: RegistryObject<EntityType<FlyingPureWhiteLatexYufeng>> =
         REGISTRY.register(rlclass<FlyingPureWhiteLatexYufeng>()) {
@@ -67,43 +52,7 @@ object ModEntities3 {
     }
 }
 
-class Futi(type: EntityType<out ChangedEntity>, level: Level): ChangedEntity(type, level) {
-    init {
-        noPhysics = true
-    }
-
-    override fun getTransfurMode(): TransfurMode = TransfurMode.NONE
-    override fun variantTick(level: Level) {
-        super.variantTick(level)
-        level.findNearestEntity(position(), 1.0, LivingEntity::class.java, maybeGetUnderlying()) then Living@ {
-            maybeGetUnderlying() then WithPlayer@ {
-                TransfurVariantInstance.syncEntityPosRotWithEntity(this@Living, this)
-            }
-        }
-    }
-
-    override fun setAttributes(attributes: AttributeMap) {
-        super.setAttributes(attributes)
-        AttributePresets.wolfLike(attributes)
-    }
-
-    override fun canCollideWith(entity: Entity): Boolean {
-        return false
-    }
-
-    override fun canBeCollidedWith(): Boolean {
-        return false
-    }
-}
-
 class FlyingPureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) : PureWhiteLatexYufeng(type, level), ISwimming {
-    override fun variantTick(level: Level?) {
-        super.variantTick(level)
-        maybeGetUnderlying() then {
-            flyingPureWhiteLatexYufengLike()
-        }
-    }
-
     override fun setAttributes(attributes: AttributeMap) {
         super.setAttributes(attributes)
         attributes[Attributes.ARMOR] = 100.0
@@ -114,6 +63,7 @@ class FlyingPureWhiteLatexYufeng(type: EntityType<out AEntity>, level: Level?) :
         attributes[Attributes.ATTACK_DAMAGE] = 200.0
         attributes[ChangedAttributes.TRANSFUR_DAMAGE.get()] = 200.0
         attributes[ModOper.aEntityLike.attributeKey.get()] = 0.0
+        attributes[ModOper.flyingPureWhiteLatexYufengLike.attributeKey.get()] = 1.0
     }
 
     override fun isFallFlying(old: Boolean): Boolean {

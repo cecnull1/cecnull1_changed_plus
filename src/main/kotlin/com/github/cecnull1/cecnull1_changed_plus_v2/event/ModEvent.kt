@@ -6,7 +6,6 @@ package com.github.cecnull1.cecnull1_changed_plus_v2.event
 import com.github.cecnull1.cecnull1_cforge.core.PipeCtrl.then
 import com.github.cecnull1.cecnull1_changed_plus_v2.Events.onCommonSetup
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
-import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onAccessoryDrop
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onBlockBreak
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onDimensionChange
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onEntityPickup
@@ -25,7 +24,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.utils.IKeepConscious
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.RealKeepForm
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.level
 import com.github.cecnull1.cecnull1lib.utils.changed.playerTransfurVariant
-import net.ltxprogrammer.changed.data.AccessorySlots
 import net.ltxprogrammer.changed.process.ProcessTransfur
 import net.minecraftforge.event.entity.EntityMountEvent
 import net.minecraftforge.event.entity.living.*
@@ -57,7 +55,6 @@ private val EVENT_HANDLERS: Map<KClass<*>, (Any) -> Unit> = buildMap {
     put(PlayerEvent.Clone::class) { onPlayerCloned(it as PlayerEvent.Clone) }
     put(PlayerEvent.PlayerChangedDimensionEvent::class) { onDimensionChange(it as PlayerEvent.PlayerChangedDimensionEvent) }
     put(PlayerEvent.PlayerLoggedInEvent::class) { onPlayerLogin(it as PlayerEvent.PlayerLoggedInEvent) }
-    put(AccessorySlots.DropItemEvent::class) { onAccessoryDrop(it as AccessorySlots.DropItemEvent) }
 
     put(ProcessTransfur.EntityVariantAssigned.ChangedVariant::class) { onEntityVariantAssigned(it as ProcessTransfur.EntityVariantAssigned.ChangedVariant) }
     put(ProcessTransfur.KeepConsciousEvent::class) { onKeepConscious(it as ProcessTransfur.KeepConsciousEvent) }

@@ -21,7 +21,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MEI_XI_Y
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities2.MOVE_ENTITY
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.CMinecartType
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FlyingPureWhiteLatexYufengType
-import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.FutiEntityType
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.ModEntities3.LatexPinkHumanType
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
@@ -32,8 +31,6 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.UserHumanModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
-import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceOperatorEntityGetTransfurVariant
-import com.github.cecnull1.cecnull1_changed_plus_v2.psi.PieceTrickTransfurLivingEntity
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.GenericRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.SpecialRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.newrl
@@ -66,7 +63,6 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
-import vazkii.psi.api.PsiAPI
 
 val bus = EventBus()
 
@@ -94,11 +90,6 @@ class Cecnull1ChangedPlus(context: FMLJavaModLoadingContext) {
         ModItems.REGISTER.register(modEventBus)
         ModGameRule.register()
         ModOper.operRegistry.register(modEventBus)
-
-        if (ModList.get().isLoaded("psi")) {
-            PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "transfur_living_entity"), PieceTrickTransfurLivingEntity::class.java)
-            PsiAPI.registerSpellPieceAndTexture(newrl(MODID, "entity_get_transfur_variant"), PieceOperatorEntityGetTransfurVariant::class.java)
-        }
     }
 }
 
@@ -138,6 +129,7 @@ object Events {
         event.add(EntityType.PLAYER, ModOper.notOnGround.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.wocwodejiaohenhua.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.hasAutoMove2.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.meiXiYuanLike.attributeKey.value)
     }
 
     fun onNullSafeAttributeCreationEvent(event: NullSafeAttributeCreationEvent) {
@@ -160,19 +152,15 @@ object Events {
         )
         event.put(
             MEI_XI_YUAN.get(),
-            ChangedEntity.createLatexAttributes().build()
+            ChangedEntity.createLatexAttributes().add(ModOper.meiXiYuanLike.attributeKey.get(), 1.0).build()
         )
         event.put(
             B_HORSE.get(),
             Horse.createBaseHorseAttributes().build()
         )
         event.put(
-            FutiEntityType.get(),
-            ChangedEntity.createLatexAttributes().build()
-        )
-        event.put(
             FlyingPureWhiteLatexYufengType.get(),
-            createAEntityAttributes().build()
+            createAEntityAttributes().add(ModOper.flyingPureWhiteLatexYufengLike.attributeKey.get(), 1.0).build()
         )
         event.put(
             LatexPinkHumanType.get(),
@@ -218,7 +206,6 @@ object ClientEvents {
             registerEntityRenderer(MEI_XI_YUAN.get(), ::LatexOrcaRenderer)
             registerEntityRenderer(B_HORSE.get(), ::HorseRenderer)
 
-            registerEntityRenderer(FutiEntityType.get(), ::GenericRenderer)
             registerEntityRenderer(FlyingPureWhiteLatexYufengType.get(), ::DarkLatexYufengRenderer)
             registerEntityRenderer(CMinecartType.get()) {
                 MinecartRenderer(it, ModelLayers.MINECART)
