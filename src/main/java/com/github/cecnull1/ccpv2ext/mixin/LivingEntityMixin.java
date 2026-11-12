@@ -60,8 +60,10 @@ public class LivingEntityMixin {
     private Vec3 autoMove(Vec3 original) {
         var livingEntity = (LivingEntity) (Object) this;
         var oper = OperValue.Companion.getOperNoItem(livingEntity, ModOper.INSTANCE.getHasAutoMove2());
+        var eV = (oper.getAttribute() == null ? 0.0 : oper.getAttribute().getValue())
+                +(oper.getEffect() == null ? 0.0 : oper.getEffect().getAmplifier()+1);
         return (CUtilsKt.notZero(oper)
-                ? new Vec3(original.x, original.y, Math.max(original.z, oper.getAttribute() == null ? 0.0 : oper.getAttribute().getValue()))
+                ? new Vec3(original.x, original.y, (original.z<0?-1:1)*Math.max(Math.abs(original.z), eV))
                 : original);
     }
 }

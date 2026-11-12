@@ -6,8 +6,11 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.Lang.MESSA
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
+import com.github.cecnull1.cecnull1_changed_plus_v2.fluid.ModFluid
+import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.dimensions
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.level
+import com.github.cecnull1.cecnull1_changed_plus_v2.utils.rlclass
 import com.github.cecnull1.cecnull1lib.utils.changed.*
 import com.github.cecnull1.cecnull1lib.utils.nbt.getModData
 import com.github.cecnull1.cecnull1lib.utils.nbt.set
@@ -27,6 +30,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.datafix.fixes.References
+import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
@@ -34,6 +38,7 @@ import net.minecraft.world.level.BlockGetter
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.EntityBlock
+import net.minecraft.world.level.block.LiquidBlock
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties
@@ -64,6 +69,8 @@ object ModBlocks {
         )
     }
     val BBLOCK: RegistryObject<BBlock> = REGISTRY_BLOCK.register("b_block") { BBlock() }
+
+    val AFluidBlock: RegistryObject<AFluidBlock> = REGISTRY_BLOCK.register(rlclass<AFluidBlock>(), ::AFluidBlock)
 
     val REGISTRY_BLOCKENTITY: DeferredRegister<BlockEntityType<*>> =
         DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MODID)
@@ -246,6 +253,24 @@ open class BBlock : Block(Properties.of().destroyTime(-1.0f).explosionResistance
         level.getBlockEntity(pos) then {
             if (this is BBlockEntity && entity is LivingEntity) {
                 this.startRiding(level, state, pos, entity)
+            }
+        }
+    }
+}
+
+class AFluidBlock: LiquidBlock(ModFluid.A_FLUID, Properties.of()) {
+    override fun entityInside(blockState: BlockState, level: Level, blockPos: BlockPos, entity: Entity) {
+        super.entityInside(blockState, level, blockPos, entity)
+        if (entity is LivingEntity) {
+            arrayOf(
+                ModOper.noPhy.effectKey.get(),
+                ModOper.forceInWater.effectKey.get(),
+                ModOper.forceSwim.effectKey.get(),
+                ModOper.hasAutoMove2.effectKey.get(),
+                ModOper.notOnGround.effectKey.get(),
+                ModOper.forceSprint.effectKey.get(),
+            ).forEach {
+                entity.addEffect(newEffectInstance(it, duration = 20*30))
             }
         }
     }

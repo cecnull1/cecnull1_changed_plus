@@ -1,9 +1,11 @@
 package com.github.cecnull1.ccpv2ext.mixin;
 
 import com.github.cecnull1.adeplike.api.OperValue;
-import com.github.cecnull1.ccpv2ext.CCPV2ExtMod;
 import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper;
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.CUtilsKt;
+import com.llamalad7.mixinextras.expression.Definition;
+import com.llamalad7.mixinextras.expression.Expression;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -67,5 +69,25 @@ public class EntityMixin {
                 ci.cancel();
             }
         }
+    }
+
+    @Definition(id = "noPhysics", field = "Lnet/minecraft/world/entity/Entity;noPhysics:Z")
+    @Expression("this.noPhysics")
+    @ModifyExpressionValue(method = {"move", "refreshDimensions", "push(Lnet/minecraft/world/entity/Entity;)V", "isInWall"}, at = @At("MIXINEXTRAS:EXPRESSION"))
+    private boolean move(boolean original) {
+        var entity = (Entity) (Object) this;
+        if (entity instanceof LivingEntity livingEntity) {
+            return CUtilsKt.notZero(OperValue.Companion.getOperNoItem(livingEntity, ModOper.INSTANCE.getNoPhy())) || original;
+        }
+        return original;
+    }
+
+    @ModifyReturnValue(method = "isInWall", at = @At("RETURN"))
+    private boolean isInWall(boolean original) {
+        var entity = (Entity) (Object) this;
+        if (entity instanceof LivingEntity livingEntity) {
+            return !CUtilsKt.notZero(OperValue.Companion.getOperNoItem(livingEntity, ModOper.INSTANCE.getNoInWall())) && original;
+        }
+        return original;
     }
 }

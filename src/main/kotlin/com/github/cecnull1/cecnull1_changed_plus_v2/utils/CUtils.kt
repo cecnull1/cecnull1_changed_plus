@@ -46,21 +46,21 @@ fun <T : Any> Stream<T?>.toImmutableSafeList(): List<T> {
 //        setShouldReceiveVelocityUpdates(this@copy.trackDeltas())
 //    }
 
-val LivingEntity.fieldIsJumping: Boolean
+inline val LivingEntity.fieldIsJumping: Boolean
     get() {
         return (this as LivingEntityAccessor).isJumping
     }
 
-val <T> RegistryObject<T>.value: T?
+inline val <T> RegistryObject<T>.value: T?
     get() {
         @Suppress("UNCHECKED_CAST")
         return (this as RegistryObjectAccessor).rawValue as T?
     }
 
-val LivingEntity.dimensions: EntityDimensions
+inline val LivingEntity.dimensions: EntityDimensions
     get() = (this as EntityAccessor).dimensions
 
-val ModelPart.children: Map<String, ModelPart>
+inline val ModelPart.children: Map<String, ModelPart>
     get() = (this as ModelPartAccessor).children
 
 /**

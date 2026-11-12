@@ -6,7 +6,8 @@
   "refmap": "ccpv2ext.refmap.json",
   "mixins": [
     "EntityMixin",
-    "LivingEntityMixin"
+    "LivingEntityMixin",
+    "ServerGamePacketListenerImplMixin"
   ],
   "client": [
   ],

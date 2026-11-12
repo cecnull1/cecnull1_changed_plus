@@ -35,10 +35,19 @@ object ModGameRule {
         )
     }
 
+    val tickRemoveNaiWuRan: GameRules.Key<BooleanValue> by lazy {
+        GameRules.register(
+            "$MODID:tickRemoveNaiWuRan",
+            GameRules.Category.PLAYER,
+            BooleanValue.create(false)
+        )
+    }
+
     fun register() {
         canFanJi
         canRealKeepForm
         realKeepForm
         isJiXianShiTF
+        tickRemoveNaiWuRan
     }
 }

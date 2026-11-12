@@ -13,6 +13,7 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.MODID
 import com.github.cecnull1.cecnull1_changed_plus_v2.constant.Constant.NBTKeys.BetterNeon.WFXC
 import com.github.cecnull1.cecnull1_changed_plus_v2.entity.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule.isJiXianShiTF
+import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule.tickRemoveNaiWuRan
 import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.*
@@ -156,6 +157,10 @@ object Event {
                 )
             }
             player.persistentData.remove(Constant.NBTKeys.BetterNeon.NORIDE2_BN_C_JH_TF)
+        }
+
+        if (player.level.gameRules.getBoolean(tickRemoveNaiWuRan)) {
+            player.persistentData.remove(Constant.NBTKeys.BetterNeon.NAI_WU_RAN)
         }
 
         fun sync() {

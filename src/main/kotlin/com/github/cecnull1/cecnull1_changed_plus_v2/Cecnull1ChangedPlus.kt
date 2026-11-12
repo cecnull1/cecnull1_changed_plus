@@ -26,14 +26,13 @@ import com.github.cecnull1.cecnull1_changed_plus_v2.event.*
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onLivingTick
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onPlayerTick
 import com.github.cecnull1.cecnull1_changed_plus_v2.event.Event.onTravelEvent
+import com.github.cecnull1.cecnull1_changed_plus_v2.fluid.ModFluid
 import com.github.cecnull1.cecnull1_changed_plus_v2.gamerule.ModGameRule
 import com.github.cecnull1.cecnull1_changed_plus_v2.item.ModItems
 import com.github.cecnull1.cecnull1_changed_plus_v2.model.UserHumanModel
 import com.github.cecnull1.cecnull1_changed_plus_v2.oper.ModOper
 import com.github.cecnull1.cecnull1_changed_plus_v2.packet.NetworkHandler
-import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.GenericRenderer
 import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.SpecialRenderer
-import com.github.cecnull1.cecnull1_changed_plus_v2.renderer.newrl
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.TypeRegistry.register
 import com.github.cecnull1.cecnull1_changed_plus_v2.utils.value
 import net.ltxprogrammer.changed.client.RegisterComplexRenderersEvent
@@ -41,13 +40,19 @@ import net.ltxprogrammer.changed.client.renderer.DarkLatexYufengRenderer
 import net.ltxprogrammer.changed.client.renderer.LatexOrcaRenderer
 import net.ltxprogrammer.changed.client.renderer.LatexPinkYuinDragonRenderer
 import net.ltxprogrammer.changed.client.renderer.SeatEntityRenderer
+import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer
+import net.ltxprogrammer.changed.client.renderer.accessory.SimpleClothingRenderer.ModelComponent
+import net.ltxprogrammer.changed.client.renderer.layers.AccessoryLayer
+import net.ltxprogrammer.changed.client.renderer.model.armor.ArmorModels
 import net.ltxprogrammer.changed.entity.ChangedEntity
+import net.ltxprogrammer.changed.init.ChangedItems
 import net.minecraft.client.model.geom.ModelLayers
 import net.minecraft.client.renderer.entity.BoatRenderer
 import net.minecraft.client.renderer.entity.EntityRendererProvider
 import net.minecraft.client.renderer.entity.HorseRenderer
 import net.minecraft.client.renderer.entity.MinecartRenderer
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.animal.horse.Horse
 import net.minecraftforge.api.distmarker.Dist
@@ -57,7 +62,6 @@ import net.minecraftforge.common.ForgeMod
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent
 import net.minecraftforge.eventbus.api.SubscribeEvent
-import net.minecraftforge.fml.ModList
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent
@@ -88,6 +92,8 @@ class Cecnull1ChangedPlus(context: FMLJavaModLoadingContext) {
         ModBlocks.REGISTRY_BLOCKENTITY.register(modEventBus)
         ModBlocks.REGISTRY_BLOCK.register(modEventBus)
         ModItems.REGISTER.register(modEventBus)
+        ModFluid.REGISTRY.register(modEventBus)
+        ModFluid.TYPE_REGISTRY.register(modEventBus)
         ModGameRule.register()
         ModOper.operRegistry.register(modEventBus)
     }
@@ -110,15 +116,14 @@ object Events {
     @JvmStatic
     @SubscribeEvent
     fun modEntityAttributes(event: EntityAttributeModificationEvent) {
-        event.add(EntityType.PLAYER, ModOper.test.attributeKey.value)
-        event.add(EntityType.PLAYER, ModOper.aEntityLike.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.hasHA.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.hasArmorHA.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.hasCFlying.attributeKey.value)
+
+        event.add(EntityType.PLAYER, ModOper.aEntityLike.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.hasNotCanTakeOffWetsuitLike.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.flyingPureWhiteLatexYufengLike.attributeKey.value)
-        event.add(EntityType.PLAYER, ModOper.hasCFlying.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.autoMove.attributeKey.value)
-
         event.add(EntityType.PLAYER, ModOper.forceSwim.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.forceSprint.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.forceInWater.attributeKey.value)
@@ -130,6 +135,10 @@ object Events {
         event.add(EntityType.PLAYER, ModOper.wocwodejiaohenhua.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.hasAutoMove2.attributeKey.value)
         event.add(EntityType.PLAYER, ModOper.meiXiYuanLike.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.noPhy.attributeKey.value)
+        event.add(EntityType.PLAYER, ModOper.noInWall.attributeKey.value)
+
+        event.add(EntityType.PLAYER, ModOper.test.attributeKey.value)
     }
 
     fun onNullSafeAttributeCreationEvent(event: NullSafeAttributeCreationEvent) {
@@ -182,6 +191,14 @@ object ClientEvents {
     @SubscribeEvent
     fun registerAccessoryRenderers(event: FMLClientSetupEvent) {
         event.enqueueWork {
+            AccessoryLayer.registerRenderer(
+                ModItems.LATEX_YW.get(), SimpleClothingRenderer.of(
+                    ArmorModels.CLOTHING_INNER, mutableSetOf(
+                        ModelComponent(ArmorModels.CLOTHING_INNER, EquipmentSlot.CHEST),
+                        ModelComponent(ArmorModels.CLOTHING_INNER, EquipmentSlot.LEGS)
+                    )
+                )
+            )
         }
     }
 
